@@ -1,18 +1,11 @@
 use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
-use simuverse::util::{
-    math::{Position, Size},
-    BufferObj,
-};
+use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
     FieldAnimationType, FieldPlayer, FieldType, ParticleColorType, Player, SettingObj,
 };
 use std::iter;
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::{WindowBuilder, WindowId},
-};
+use winit::{event_loop::EventLoop, window::WindowId};
 
 mod control_panel;
 use control_panel::ControlPanel;
@@ -146,7 +139,7 @@ impl Action for InteractiveApp {
 }
 
 impl InteractiveApp {
-    fn create_player<'a>(
+    fn create_player(
         app: &AppSurface,
         canvas_size: Size<u32>,
         canvas_buf: &BufferObj,

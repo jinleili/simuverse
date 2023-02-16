@@ -13,6 +13,7 @@ egui-wgpu = { version = "0.21.0" }
 egui-winit = { version = "0.21.0" }
 winit = { version = "0.28" }
 egui_extras = { version = "0.21.0", optional = true }
+enum-map = { version = "2", features = ["serde"] }
 
 bytemuck = "1.4"
 cfg-if = "1"

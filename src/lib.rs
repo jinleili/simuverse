@@ -2,6 +2,9 @@ use std::usize;
 
 pub mod framework;
 
+pub mod egui_lib;
+pub(crate) use egui_lib::syntax_highlighting;
+
 mod field_player;
 pub use field_player::FieldPlayer;
 
@@ -66,13 +69,27 @@ pub enum FieldType {
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum FieldAnimationType {
-    Basic,
+    Basic = 0,
     JuliaSet,
     Spirl,
     BlackHole,
     Poiseuille,
     LidDrivenCavity,
     Custom,
+}
+
+impl FieldAnimationType {
+    pub fn from_u32(ty: u32) -> Self {
+        match ty {
+            0 => FieldAnimationType::Basic,
+            1 => FieldAnimationType::JuliaSet,
+            2 => FieldAnimationType::Spirl,
+            3 => FieldAnimationType::BlackHole,
+            4 => FieldAnimationType::Poiseuille,
+            5 => FieldAnimationType::LidDrivenCavity,
+            _ => FieldAnimationType::Custom,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

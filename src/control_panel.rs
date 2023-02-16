@@ -12,6 +12,8 @@ pub struct ControlPanel {
     pub particle_size: i32,
     pub particle_color: u32,
     pub lifetime: i32,
+    pub wgsl_code: String,
+    code_index: u32,
 }
 
 impl ControlPanel {
@@ -24,8 +26,8 @@ impl ControlPanel {
 
         let margin = 8.0;
         let panel_width = 360.0;
-        let x = app.config.width as f32 / app.scale_factor - panel_width - margin;
-
+        // let x = app.config.width as f32 / app.scale_factor - panel_width - margin;
+        let x = margin;
         let pos_rect = Rect {
             min: Pos2 { x, y: margin },
             max: Pos2 {
@@ -57,6 +59,8 @@ impl ControlPanel {
             particle_size,
             particle_color: 0,
             lifetime: 120,
+            wgsl_code: "".into(),
+            code_index: 0,
         }
     }
 
@@ -69,56 +73,7 @@ impl ControlPanel {
         app: &AppSurface,
         rpass: &mut wgpu::RenderPass<'b>,
     ) -> (Vec<wgpu::CommandBuffer>, egui::TexturesDelta) {
-        let mut raw_input = self.state.take_egui_input(&app.view);
-        raw_input.screen_rect = Some(self.pos_rect);
-        let full_output = self.egui_ctx.run(raw_input, |ctx| {
-            egui::CentralPanel::default()
-                .frame(self.panel_frame)
-                .show(&ctx, |ui| {
-                    ui.heading("参数调整");
-                    egui::Grid::new("my_grid")
-                        .num_columns(2)
-                        .spacing([40.0, 12.0])
-                        .striped(true)
-                        .show(ui, |ui| {
-                            ui.label("粒子数：");
-                            ui.add(egui::Slider::new(&mut self.particles_count, 0..=40000));
-                            ui.end_row();
-
-                            ui.label("粒子大小：");
-                            ui.add(egui::Slider::new(&mut self.particle_size, 1..=8).text("像素"));
-                            ui.end_row();
-
-                            ui.label("粒子生存时长：");
-                            ui.add(egui::Slider::new(&mut self.lifetime, 15..=240).text("帧"));
-                            ui.end_row();
-
-                            ui.label("着色方案：");
-                            egui::ComboBox::from_label("")
-                                .selected_text(get_color_ty_name(self.particle_color))
-                                .show_ui(ui, |ui| {
-                                    ui.style_mut().wrap = Some(false);
-                                    ui.set_min_width(60.0);
-                                    ui.selectable_value(
-                                        &mut self.particle_color,
-                                        0,
-                                        get_color_ty_name(0),
-                                    );
-                                    ui.selectable_value(
-                                        &mut self.particle_color,
-                                        1,
-                                        get_color_ty_name(1),
-                                    );
-                                    ui.selectable_value(
-                                        &mut self.particle_color,
-                                        2,
-                                        get_color_ty_name(2),
-                                    );
-                                });
-                            ui.end_row();
-                        });
-                });
-        });
+        let full_output = self.run_egui(app);
 
         let clipped_primitives = self.egui_ctx.tessellate(full_output.shapes); // create triangles to paint
         let textures_delta = full_output.textures_delta;
@@ -158,6 +113,95 @@ impl ControlPanel {
         for id in &textures_delta.free {
             self.egui_renderer.free_texture(id);
         }
+    }
+
+    fn run_egui(&mut self, app: &app_surface::AppSurface) -> egui::FullOutput {
+        let mut raw_input = self.state.take_egui_input(&app.view);
+        raw_input.screen_rect = Some(self.pos_rect);
+
+        self.wgsl_code = simuverse::get_velocity_code_segment(
+            simuverse::FieldAnimationType::from_u32(self.code_index),
+        )
+        .into();
+
+        self.egui_ctx.run(raw_input, |ctx| {
+            let window = egui::Window::new("参数调整")
+                .id(egui::Id::new("particles_window_options")) // required since we change the title
+                .resizable(false)
+                .collapsible(true)
+                .title_bar(true)
+                .scroll2([true; 2])
+                .enabled(true);
+
+            window.show(ctx, |ui| {
+                egui::Grid::new("my_grid")
+                    .num_columns(2)
+                    .spacing([40.0, 12.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("粒子数：");
+                        ui.add(egui::Slider::new(&mut self.particles_count, 0..=40000));
+                        ui.end_row();
+
+                        ui.label("粒子大小：");
+                        ui.add(egui::Slider::new(&mut self.particle_size, 1..=8).text("像素"));
+                        ui.end_row();
+
+                        ui.label("粒子生存时长：");
+                        ui.add(egui::Slider::new(&mut self.lifetime, 15..=240).text("帧"));
+                        ui.end_row();
+
+                        ui.label("着色方案：");
+                        egui::ComboBox::from_label("")
+                            .selected_text(get_color_ty_name(self.particle_color))
+                            .show_ui(ui, |ui| {
+                                ui.style_mut().wrap = Some(false);
+                                ui.set_min_width(60.0);
+                                ui.selectable_value(
+                                    &mut self.particle_color,
+                                    0,
+                                    get_color_ty_name(0),
+                                );
+                                ui.selectable_value(
+                                    &mut self.particle_color,
+                                    1,
+                                    get_color_ty_name(1),
+                                );
+                                ui.selectable_value(
+                                    &mut self.particle_color,
+                                    2,
+                                    get_color_ty_name(2),
+                                );
+                            });
+                        ui.end_row();
+                    });
+                let mut theme =
+                    simuverse::egui_lib::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+
+                let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
+                    let mut layout_job = simuverse::egui_lib::syntax_highlighting::highlight(
+                        ui.ctx(),
+                        &theme,
+                        string,
+                        "rs".into(),
+                    );
+                    layout_job.wrap.max_width = wrap_width;
+                    ui.fonts(|f| f.layout_job(layout_job))
+                };
+
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.add(
+                        egui::TextEdit::multiline(&mut self.wgsl_code)
+                            .font(egui::TextStyle::Monospace) // for cursor height
+                            .code_editor()
+                            .desired_rows(10)
+                            .lock_focus(true)
+                            .desired_width(f32::INFINITY)
+                            .layouter(&mut layouter),
+                    );
+                });
+            });
+        })
     }
 }
 
