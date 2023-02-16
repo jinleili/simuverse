@@ -21,7 +21,7 @@ fn fs_main(vertex: VertexOutput) -> @location(0) vec4<f32> {
     var frag_color: vec4<f32>;
     if (p.alpha > 0.001) {
         // frag_color = vec4<f32>(particle_uniform.color.rgb, 0.0);
-        if (particle_uniform.color_ty == 2) {
+        if (particle_uniform.color_ty == 1) {
             // speed as color
             let velocity = abs(p.velocity_x) + abs(p.velocity_y);
             var speed: f32;
@@ -31,7 +31,7 @@ fn fs_main(vertex: VertexOutput) -> @location(0) vec4<f32> {
                 speed =  min(velocity / 0.25, 1.15);
             }
             frag_color = vec4<f32>(hsv2rgb(0.05 + speed * 0.75, 0.9, 1.0), p.alpha);
-        } else if (particle_uniform.color_ty == 1) {
+        } else if (particle_uniform.color_ty == 0) {
             // moving angle as color
             let angle = atan2(p.velocity_y, p.velocity_x) / (2.0 * PI);
             frag_color = vec4<f32>(hsv2rgb(angle + 0.5, 0.9, 1.0), p.alpha);

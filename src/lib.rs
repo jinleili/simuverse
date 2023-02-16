@@ -77,9 +77,19 @@ pub enum FieldAnimationType {
 
 #[derive(Clone, Copy)]
 pub enum ParticleColorType {
-    Uniform = 0,
-    MovementAngle = 1,
-    Speed = 2,
+    MovementAngle = 0,
+    Speed = 1,
+    Uniform = 2,
+}
+
+impl ParticleColorType {
+    pub fn from_u32(ty: u32) -> Self {
+        match ty {
+            0 => ParticleColorType::MovementAngle,
+            1 => ParticleColorType::Speed,
+            _ => ParticleColorType::Uniform,
+        }
+    }
 }
 
 #[repr(C)]

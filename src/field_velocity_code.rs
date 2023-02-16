@@ -44,8 +44,8 @@ pub fn get_velocity_code_segment(ty: FieldAnimationType) -> &'static str {
     let r = length(c);
     let theta = atan2(c.y, c.x);
     var v = vec2<f32>(c.y, -c.x) / r;
-    let t = sqrt(r * 20.0) + theta;
-    v *= sin(t) * length(v) * 20.0;
+    let t = sqrt(r * 15.0) + theta;
+    v *= sin(t) * length(v) * 15.0;
     return (v + c * 0.2) * field.ndc_pixel * 5.0;
     "#
         }

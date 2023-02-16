@@ -2,22 +2,15 @@ use app_surface::AppSurface;
 use egui::emath::{Pos2, Rect};
 use winit::event_loop::EventLoop;
 
-#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-enum Enum {
-    First,
-    Second,
-    Third,
-}
-
 pub struct ControlPanel {
     egui_ctx: egui::Context,
     state: egui_winit::State,
     panel_frame: egui::Frame,
+    pos_rect: Rect,
     egui_renderer: egui_wgpu::Renderer,
-    pub particle_num: i32,
-    pub particle_size: u32,
-    particle_color: Enum,
+    pub particles_count: i32,
+    pub particle_size: i32,
+    pub particle_color: u32,
     pub lifetime: i32,
 }
 
@@ -29,14 +22,22 @@ impl ControlPanel {
         let mut state = egui_winit::State::new(event_loop);
         state.set_pixels_per_point(app.scale_factor);
 
-        // let mut raw_input: egui::RawInput = egui::RawInput::default();
-        // raw_input.screen_rect = Some(Rect {
-        //     min: Pos2 { x: 20., y: 20. },
-        //     max: Pos2 { x: 400., y: 400. },
-        // });
+        let margin = 8.0;
+        let panel_width = 360.0;
+        let x = app.config.width as f32 / app.scale_factor - panel_width - margin;
 
+        let pos_rect = Rect {
+            min: Pos2 { x, y: margin },
+            max: Pos2 {
+                x: panel_width + x,
+                y: app.config.height as f32 / app.scale_factor - margin,
+            },
+        };
+
+        let mut bg = egui_ctx.style().visuals.window_fill();
+        bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 220);
         let panel_frame = egui::Frame {
-            fill: egui_ctx.style().visuals.window_fill(),
+            fill: bg,
             rounding: 10.0.into(),
             stroke: egui_ctx.style().visuals.widgets.noninteractive.fg_stroke,
             outer_margin: 0.5.into(), // so the stroke is within the bounds
@@ -45,21 +46,22 @@ impl ControlPanel {
         };
 
         let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
-        let particle_size = app.scale_factor.ceil() as u32 * 2;
+        let particle_size = app.scale_factor.ceil() as i32 * 2;
         Self {
             egui_ctx,
             state,
             panel_frame,
+            pos_rect,
             egui_renderer,
-            particle_num: 20000,
+            particles_count: 20000,
             particle_size,
-            particle_color: Enum::First,
+            particle_color: 0,
             lifetime: 120,
         }
     }
 
     pub fn on_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        self.state.on_event(&self.egui_ctx, event);
+        let _ = self.state.on_event(&self.egui_ctx, event);
     }
 
     pub fn begin_pass<'b, 'a: 'b>(
@@ -67,7 +69,9 @@ impl ControlPanel {
         app: &AppSurface,
         rpass: &mut wgpu::RenderPass<'b>,
     ) -> (Vec<wgpu::CommandBuffer>, egui::TexturesDelta) {
-        let full_output = self.egui_ctx.run(self.state.egui_input().clone(), |ctx| {
+        let mut raw_input = self.state.take_egui_input(&app.view);
+        raw_input.screen_rect = Some(self.pos_rect);
+        let full_output = self.egui_ctx.run(raw_input, |ctx| {
             egui::CentralPanel::default()
                 .frame(self.panel_frame)
                 .show(&ctx, |ui| {
@@ -78,7 +82,7 @@ impl ControlPanel {
                         .striped(true)
                         .show(ui, |ui| {
                             ui.label("粒子数：");
-                            ui.add(egui::Slider::new(&mut self.particle_num, 0..=100000));
+                            ui.add(egui::Slider::new(&mut self.particles_count, 0..=40000));
                             ui.end_row();
 
                             ui.label("粒子大小：");
@@ -91,24 +95,24 @@ impl ControlPanel {
 
                             ui.label("着色方案：");
                             egui::ComboBox::from_label("")
-                                .selected_text(format!("{:?}", &self.particle_color))
+                                .selected_text(get_color_ty_name(self.particle_color))
                                 .show_ui(ui, |ui| {
                                     ui.style_mut().wrap = Some(false);
                                     ui.set_min_width(60.0);
                                     ui.selectable_value(
                                         &mut self.particle_color,
-                                        Enum::First,
-                                        "运动方向",
+                                        0,
+                                        get_color_ty_name(0),
                                     );
                                     ui.selectable_value(
                                         &mut self.particle_color,
-                                        Enum::Second,
-                                        "Second",
+                                        1,
+                                        get_color_ty_name(1),
                                     );
                                     ui.selectable_value(
                                         &mut self.particle_color,
-                                        Enum::Third,
-                                        "Third",
+                                        2,
+                                        get_color_ty_name(2),
                                     );
                                 });
                             ui.end_row();
@@ -185,4 +189,12 @@ fn setup_custom_fonts(ctx: &egui::Context) {
         .push(ZH_TINY.to_owned());
 
     ctx.set_fonts(fonts);
+}
+
+fn get_color_ty_name(index: u32) -> &'static str {
+    match index {
+        0 => "运动方向",
+        1 => "运动速率",
+        _ => "白色",
+    }
 }

@@ -41,15 +41,6 @@ impl FieldPlayer {
         let (_, sx, sy) = crate::util::utils::matrix_helper::fullscreen_factor(
             (canvas_size.width as f32, canvas_size.height as f32).into(),
         );
-        println!(
-            "field_size: {:?} \n canvas_size: {:?}\n ndc_pixel: {:?}",
-            field_size,
-            canvas_size,
-            [
-                sx * 2.0 / canvas_size.width as f32,
-                sy * 2.0 / canvas_size.height as f32,
-            ]
-        );
 
         let field_uniform_data = FieldUniform {
             lattice_size: [field_size.width as i32, field_size.height as i32],

@@ -39,7 +39,7 @@ impl Action for InteractiveApp {
             FieldType::Fluid,
             FieldAnimationType::Spirl,
             ParticleColorType::MovementAngle,
-            panel.particle_num,
+            panel.particles_count,
             panel.lifetime as f32,
         );
         setting.update_canvas_size(&app, canvas_size);
@@ -139,6 +139,8 @@ impl Action for InteractiveApp {
 
         self.panel.end_pass(&textures_delta);
 
+        self.update_setting();
+
         Ok(())
     }
 }
@@ -159,6 +161,17 @@ impl InteractiveApp {
                 setting,
             )),
         };
+    }
+
+    fn update_setting(&mut self) {
+        if self.panel.particle_color != self.setting.color_ty as u32 {
+            let color_ty = ParticleColorType::from_u32(self.panel.particle_color);
+            self.setting.update_particle_color(&self.app, color_ty);
+        }
+        self.setting
+            .update_particles_count(&self.app, self.panel.particles_count);
+        self.setting
+            .update_particle_point_size(&self.app, self.panel.particle_size);
     }
 }
 

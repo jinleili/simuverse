@@ -62,7 +62,7 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
     use winit::dpi::PhysicalSize;
 
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new().with_title("Wgpu Simuverse").build(&event_loop).unwrap();
 
     // 计算一个默认显示高度
     let height = (if cfg!(target_arch = "wasm32") {

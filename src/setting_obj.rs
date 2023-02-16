@@ -82,6 +82,9 @@ impl SettingObj {
     }
 
     pub fn update_particles_count(&mut self, app: &app_surface::AppSurface, count: i32) {
+        if self.particles_count == count {
+            return;
+        }
         self.particles_count = count;
         self.update_particles_data(app);
     }
@@ -91,9 +94,7 @@ impl SettingObj {
         app: &app_surface::AppSurface,
         color_type: crate::ParticleColorType,
     ) {
-        if self.particles_uniform_data.color_ty == color_type as i32 {
-            return;
-        }
+        self.color_ty = color_type;
         self.particles_uniform_data.color_ty = color_type as i32;
         self.update_particles_uniform(app);
     }
