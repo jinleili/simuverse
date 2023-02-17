@@ -3,13 +3,15 @@ use std::usize;
 pub mod framework;
 
 pub mod egui_lib;
-pub(crate) use egui_lib::syntax_highlighting;
+
+mod control_panel;
+pub use control_panel::ControlPanel;
 
 mod field_player;
 pub use field_player::FieldPlayer;
 
 mod field_velocity_code;
-pub use field_velocity_code::get_velocity_code_segment;
+pub use field_velocity_code::get_velocity_code_snippet;
 
 mod setting_obj;
 pub use setting_obj::SettingObj;
@@ -49,6 +51,13 @@ pub trait Player {
     fn touch_end(&mut self, _app: &app_surface::AppSurface) {}
 
     fn reset(&mut self, _app: &app_surface::AppSurface) {}
+
+    fn update_by(
+        &mut self,
+        _app: &app_surface::AppSurface,
+        _control_panel: &mut crate::ControlPanel,
+    ) {
+    }
 
     fn compute(&mut self, _encoder: &mut wgpu::CommandEncoder) {}
 

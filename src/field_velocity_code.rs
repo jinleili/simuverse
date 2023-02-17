@@ -1,17 +1,15 @@
 use crate::FieldAnimationType;
 
-pub fn get_velocity_code_segment(ty: FieldAnimationType) -> &'static str {
+pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
     match ty {
-        FieldAnimationType::Basic => {
-            r#"
+        FieldAnimationType::Basic => r#"
     let new_y = f32(p.y) - f32(field.lattice_size.y) / 2.0;
     // 将像素位移速度转换到 NDC 坐标空间
     let v = vec2<f32>(2.0, -4.0) * field.ndc_pixel;
     return v * new_y;
     "#
-        }
-        FieldAnimationType::JuliaSet => {
-            r#"
+        .into(),
+        FieldAnimationType::JuliaSet => r#"
     // 将场坐标转换到 [-1.5, 1.5] 坐标范围
     var c = vec2<f32>(p) / vec2<f32>(field.lattice_size);
     c = c * 3.0 - vec2<f32>(1.5);
@@ -23,9 +21,8 @@ pub fn get_velocity_code_segment(ty: FieldAnimationType) -> &'static str {
     }
     return c * 0.1;
     "#
-        }
-        FieldAnimationType::BlackHole => {
-            r#"
+        .into(),
+        FieldAnimationType::BlackHole => r#"
     // 将场坐标转换到 [-3.5, 3.5] 坐标范围
     var c = vec2<f32>(p) / vec2<f32>(field.lattice_size);
     c = c * 7.0 - vec2<f32>(3.5);
@@ -34,9 +31,8 @@ pub fn get_velocity_code_segment(ty: FieldAnimationType) -> &'static str {
     let v = vec2<f32>(c.y, -c.x);
     return  v / r - c * 0.1;
     "#
-        }
-        FieldAnimationType::Spirl => {
-            r#"
+        .into(),
+        FieldAnimationType::Spirl => r#"
     // 将场坐标转换到 [-25, 25] 坐标范围
     var c = vec2<f32>(p) / vec2<f32>(field.lattice_size);
     c = c * 50.0 - vec2<f32>(25.0);
@@ -48,7 +44,7 @@ pub fn get_velocity_code_segment(ty: FieldAnimationType) -> &'static str {
     v *= sin(t) * length(v) * 15.0;
     return (v + c * 0.2) * field.ndc_pixel * 5.0;
     "#
-        }
-        _ => "",
+        .into(),
+        _ => "".into(),
     }
 }

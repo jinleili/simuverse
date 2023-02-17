@@ -13,7 +13,9 @@ pub struct ControlPanel {
     pub particle_color: u32,
     pub lifetime: i32,
     pub wgsl_code: String,
-    code_index: u32,
+    last_selected_code_snippet: i32,
+    selected_code_snippet: Option<i32>,
+    is_code_snippet_changed: bool,
 }
 
 impl ControlPanel {
@@ -59,13 +61,21 @@ impl ControlPanel {
             particle_size,
             particle_color: 0,
             lifetime: 120,
-            wgsl_code: "".into(),
-            code_index: 0,
+            wgsl_code: crate::get_velocity_code_snippet(crate::FieldAnimationType::from_u32(0)),
+            last_selected_code_snippet: 0,
+            selected_code_snippet: Some(0),
+            is_code_snippet_changed: false,
         }
     }
 
     pub fn on_event(&mut self, event: &winit::event::WindowEvent<'_>) {
         let _ = self.state.on_event(&self.egui_ctx, event);
+    }
+
+    pub fn is_code_snippet_changed(&mut self) -> bool {
+        let is_changed = self.is_code_snippet_changed.clone();
+        self.is_code_snippet_changed = false;
+        is_changed
     }
 
     pub fn begin_pass<'b, 'a: 'b>(
@@ -119,13 +129,20 @@ impl ControlPanel {
         let mut raw_input = self.state.take_egui_input(&app.view);
         raw_input.screen_rect = Some(self.pos_rect);
 
-        self.wgsl_code = simuverse::get_velocity_code_segment(
-            simuverse::FieldAnimationType::from_u32(self.code_index),
-        )
-        .into();
+        match self.selected_code_snippet {
+            Some(code_index) if code_index != self.last_selected_code_snippet => {
+                self.last_selected_code_snippet = code_index;
+                self.wgsl_code = crate::get_velocity_code_snippet(
+                    crate::FieldAnimationType::from_u32(code_index as u32),
+                )
+                .into();
+                self.is_code_snippet_changed = true;
+            }
+            _ => {}
+        }
 
         self.egui_ctx.run(raw_input, |ctx| {
-            let window = egui::Window::new("参数调整")
+            let window = egui::Window::new("矢量场粒子")
                 .id(egui::Id::new("particles_window_options")) // required since we change the title
                 .resizable(false)
                 .collapsible(true)
@@ -175,11 +192,19 @@ impl ControlPanel {
                             });
                         ui.end_row();
                     });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label("预设实现：");
+                    ui.selectable_value(&mut self.selected_code_snippet, Some(0), "简单");
+                    ui.selectable_value(&mut self.selected_code_snippet, Some(1), "Julia Set");
+                    ui.selectable_value(&mut self.selected_code_snippet, Some(2), "螺旋");
+                    ui.selectable_value(&mut self.selected_code_snippet, Some(3), "黑洞");
+                });
                 let mut theme =
-                    simuverse::egui_lib::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+                    crate::egui_lib::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
 
                 let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
-                    let mut layout_job = simuverse::egui_lib::syntax_highlighting::highlight(
+                    let mut layout_job = crate::egui_lib::syntax_highlighting::highlight(
                         ui.ctx(),
                         &theme,
                         string,

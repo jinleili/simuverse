@@ -2,6 +2,7 @@ use crate::util::math::Size;
 use crate::util::node::{BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
 use crate::{setting_obj::SettingObj, FieldUniform, Player};
+use app_surface::AppSurface;
 use wgpu::{CommandEncoderDescriptor, Device, Queue};
 
 use crate::{create_shader_module, insert_code_then_create};
@@ -11,6 +12,8 @@ pub struct FieldPlayer {
     field_uniform_data: FieldUniform,
     field_uniform: BufferObj,
     field_buf: BufferObj,
+    field_workgroup_count: (u32, u32, u32),
+    code_snippet: String,
     trajectory_update_shader: wgpu::ShaderModule,
     field_setting_node: ComputeNode,
     particles_update_node: ComputeNode,
@@ -66,10 +69,9 @@ impl FieldPlayer {
             Some("field buf"),
         );
 
-        let code_segment = crate::get_velocity_code_segment(setting.animation_type);
-
+        let code_snippet = crate::get_velocity_code_snippet(setting.animation_type);
         let setting_shader =
-            insert_code_then_create(&app.device, "field_setting", Some(code_segment), None);
+            insert_code_then_create(&app.device, "field_setting", Some(&code_snippet), None);
 
         let field_setting_node = ComputeNode::new(
             &app.device,
@@ -111,6 +113,8 @@ impl FieldPlayer {
             field_uniform_data,
             field_uniform,
             field_buf,
+            field_workgroup_count,
+            code_snippet,
             trajectory_update_shader,
             field_setting_node,
             particles_update_node,
@@ -136,6 +140,30 @@ impl Player for FieldPlayer {
             });
         self.field_setting_node.compute(&mut encoder);
         app.queue.submit(Some(encoder.finish()));
+    }
+
+    fn update_by(&mut self, app: &AppSurface, control_panel: &mut crate::ControlPanel) {
+        if !control_panel.is_code_snippet_changed() {
+            return;
+        }
+        println!("ooooooo");
+
+        let setting_shader = insert_code_then_create(
+            &app.device,
+            "field_setting",
+            Some(&control_panel.wgsl_code),
+            None,
+        );
+
+        self.field_setting_node = ComputeNode::new(
+            &app.device,
+            self.field_workgroup_count,
+            vec![&self.field_uniform],
+            vec![&self.field_buf],
+            vec![],
+            &setting_shader,
+        );
+        self.reset(app);
     }
 
     fn compute(&mut self, encoder: &mut wgpu::CommandEncoder) {

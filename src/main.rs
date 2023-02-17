@@ -2,13 +2,10 @@ use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
-    FieldAnimationType, FieldPlayer, FieldType, ParticleColorType, Player, SettingObj,
+    ControlPanel, FieldAnimationType, FieldPlayer, FieldType, ParticleColorType, Player, SettingObj,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
-
-mod control_panel;
-use control_panel::ControlPanel;
 
 struct InteractiveApp {
     app: AppSurface,
@@ -30,7 +27,7 @@ impl Action for InteractiveApp {
         let canvas_size: Size<u32> = (&app.config).into();
         let mut setting = SettingObj::new(
             FieldType::Fluid,
-            FieldAnimationType::Spirl,
+            FieldAnimationType::Basic,
             ParticleColorType::MovementAngle,
             panel.particles_count,
             panel.lifetime as f32,
@@ -165,6 +162,7 @@ impl InteractiveApp {
             .update_particles_count(&self.app, self.panel.particles_count);
         self.setting
             .update_particle_point_size(&self.app, self.panel.particle_size);
+        self.player.update_by(&self.app, &mut self.panel);
     }
 }
 
