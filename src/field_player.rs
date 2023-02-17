@@ -3,7 +3,7 @@ use crate::util::node::{BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
 use crate::{setting_obj::SettingObj, FieldUniform, Player};
 use app_surface::AppSurface;
-use wgpu::{CommandEncoderDescriptor, Device, Queue};
+use wgpu::{CommandEncoderDescriptor};
 
 use crate::{create_shader_module, insert_code_then_create};
 
@@ -30,7 +30,7 @@ impl FieldPlayer {
         setting: &SettingObj,
     ) -> Self {
         let pixel_distance = 4;
-        let field_size: app_surface::math::Size<u32> = (
+        let field_size: crate::util::math::Size<u32> = (
             canvas_size.width / pixel_distance,
             canvas_size.height / pixel_distance,
         )
@@ -146,7 +146,6 @@ impl Player for FieldPlayer {
         if !control_panel.is_code_snippet_changed() {
             return;
         }
-        println!("ooooooo");
 
         let setting_shader = insert_code_then_create(
             &app.device,
@@ -164,6 +163,14 @@ impl Player for FieldPlayer {
             &setting_shader,
         );
         self.reset(app);
+    }
+
+    fn update_workgroup_count(
+        &mut self,
+        _app: &app_surface::AppSurface,
+        workgroup_count: (u32, u32, u32),
+    ) {
+        self.particles_update_node.group_count = workgroup_count;
     }
 
     fn compute(&mut self, encoder: &mut wgpu::CommandEncoder) {

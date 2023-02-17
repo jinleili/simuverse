@@ -64,13 +64,13 @@ fn cs_main(@builtin(global_invocation_id) global_invocation_id: vec3<u32>) {
       particle.fade = 1.0;
     }
 
-    // 计算出粒子所在的场
+    // 计算出粒子所在的矢量场格子索引
     let ij = (particle.pos / field.lattice_pixel_size) - 0.5;
     let velocity = bilinear_interpolate_2f(ij);
-    particle.pos = particle.pos + (velocity * particle_uniform.speed_factor);
+    particle.pos += (velocity * particle_uniform.speed_factor);
     
     update_canvas(particle, velocity);
   }
    
-    particle_buf[p_index] = particle;
+  particle_buf[p_index] = particle;
 }

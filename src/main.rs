@@ -2,7 +2,8 @@ use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
-    ControlPanel, FieldAnimationType, FieldPlayer, FieldType, ParticleColorType, Player, SettingObj,
+    ControlPanel, FieldAnimationType, FieldPlayer, FieldType, FluidPlayer, ParticleColorType,
+    Player, SettingObj,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
@@ -26,7 +27,7 @@ impl Action for InteractiveApp {
 
         let canvas_size: Size<u32> = (&app.config).into();
         let mut setting = SettingObj::new(
-            FieldType::Fluid,
+            FieldType::Field,
             FieldAnimationType::Basic,
             ParticleColorType::MovementAngle,
             panel.particles_count,
@@ -143,6 +144,7 @@ impl InteractiveApp {
         setting: &SettingObj,
     ) -> Box<dyn Player> {
         return match setting.field_type {
+            FieldType::Fluid => Box::new(FluidPlayer::new(app, canvas_size, canvas_buf, setting)),
             _ => Box::new(FieldPlayer::new(
                 app,
                 app.config.format,
@@ -158,8 +160,14 @@ impl InteractiveApp {
             let color_ty = ParticleColorType::from_u32(self.panel.particle_color);
             self.setting.update_particle_color(&self.app, color_ty);
         }
-        self.setting
-            .update_particles_count(&self.app, self.panel.particles_count);
+        if self
+            .setting
+            .update_particles_count(&self.app, self.panel.particles_count)
+        {
+            // 更新了粒子数后，还须更新 workgroup count
+            self.player
+                .update_workgroup_count(&self.app, self.setting.particles_workgroup_count);
+        }
         self.setting
             .update_particle_point_size(&self.app, self.panel.particle_size);
         self.player.update_by(&self.app, &mut self.panel);

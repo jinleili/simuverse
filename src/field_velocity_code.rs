@@ -5,7 +5,7 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
         FieldAnimationType::Basic => r#"
     let new_y = f32(p.y) - f32(field.lattice_size.y) / 2.0;
     // 将像素位移速度转换到 NDC 坐标空间
-    let v = vec2<f32>(2.0, -4.0) * field.ndc_pixel;
+    let v = vec2<f32>(4.0, -8.0) * field.ndc_pixel;
     return v * new_y;
     "#
         .into(),
@@ -19,7 +19,7 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
         c = vec2<f32>(c.x * c.x - c.y * c.y, c.y * c.x + c.x * c.y);
         c = c + z;
     }
-    return c * 0.1;
+    return c * 0.2;
     "#
         .into(),
         FieldAnimationType::BlackHole => r#"
@@ -29,7 +29,7 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
     c *= field.proj_ratio;
     let r = dot(c, c);
     let v = vec2<f32>(c.y, -c.x);
-    return  v / r - c * 0.1;
+    return v / r - c * 0.2;
     "#
         .into(),
         FieldAnimationType::Spirl => r#"
@@ -41,8 +41,8 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
     let theta = atan2(c.y, c.x);
     var v = vec2<f32>(c.y, -c.x) / r;
     let t = sqrt(r * 15.0) + theta;
-    v *= sin(t) * length(v) * 15.0;
-    return (v + c * 0.2) * field.ndc_pixel * 5.0;
+    v *= sin(t) * length(v) * 50.0;
+    return (v + c) * field.ndc_pixel * 10.0;
     "#
         .into(),
         _ => "".into(),

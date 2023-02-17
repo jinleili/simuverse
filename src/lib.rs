@@ -2,13 +2,17 @@ use std::usize;
 
 pub mod framework;
 
-pub mod egui_lib;
+mod egui_lib;
+pub(crate) use egui_lib::*;
 
 mod control_panel;
 pub use control_panel::ControlPanel;
 
 mod field_player;
 pub use field_player::FieldPlayer;
+
+mod fluid;
+pub use fluid::FluidPlayer;
 
 mod field_velocity_code;
 pub use field_velocity_code::get_velocity_code_snippet;
@@ -52,12 +56,12 @@ pub trait Player {
 
     fn reset(&mut self, _app: &app_surface::AppSurface) {}
 
-    fn update_by(
+    fn update_by(&mut self, app: &app_surface::AppSurface, control_panel: &mut crate::ControlPanel);
+    fn update_workgroup_count(
         &mut self,
-        _app: &app_surface::AppSurface,
-        _control_panel: &mut crate::ControlPanel,
-    ) {
-    }
+        app: &app_surface::AppSurface,
+        workgroup_count: (u32, u32, u32),
+    );
 
     fn compute(&mut self, _encoder: &mut wgpu::CommandEncoder) {}
 

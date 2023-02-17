@@ -51,7 +51,7 @@ impl SettingObj {
                 life_time: 60.0,
                 fade_out_factor: 0.96,
                 speed_factor: if field_type == FieldType::Field {
-                    0.15
+                    1.0
                 } else {
                     8.15
                 },
@@ -81,12 +81,13 @@ impl SettingObj {
         self.update_particles_data(app);
     }
 
-    pub fn update_particles_count(&mut self, app: &app_surface::AppSurface, count: i32) {
+    pub fn update_particles_count(&mut self, app: &app_surface::AppSurface, count: i32) -> bool {
         if self.particles_count == count {
-            return;
+            return false;
         }
         self.particles_count = count;
         self.update_particles_data(app);
+        true
     }
 
     pub fn update_particle_color(
