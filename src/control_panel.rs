@@ -66,7 +66,7 @@ impl ControlPanel {
             particles_count: 12000,
             particle_size,
             particle_color: 0,
-            lifetime: 120,
+            lifetime: 90,
             wgsl_code: crate::get_velocity_code_snippet(crate::FieldAnimationType::from_u32(0)),
             last_selected_code_snippet: 0,
             selected_code_snippet: Some(0),
@@ -293,15 +293,10 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 }
 
-// const MONACO: &'static str = "monaco";
 const ZH_TINY: &'static str = "zh";
 
 fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
-    // fonts.font_data.insert(
-    //     MONACO.to_owned(),
-    //     egui::FontData::from_static(include_bytes!("../assets/Monaco.ttf")),
-    // );
     fonts.font_data.insert(
         ZH_TINY.to_owned(),
         egui::FontData::from_static(include_bytes!("../assets/PingFangTiny.ttf")),

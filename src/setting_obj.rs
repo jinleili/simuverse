@@ -12,7 +12,6 @@ pub struct SettingObj {
     pub fluid_viscosity: f32,
 
     pub particles_count: i32,
-    pub particle_lifetime: f32,
     pub particles_uniform_data: ParticleUniform,
     pub particles_uniform: Option<BufferObj>,
     pub particles_buf: Option<BufferObj>,
@@ -35,7 +34,6 @@ impl SettingObj {
             fluid_viscosity: 0.02,
             color_ty,
             particles_count,
-            particle_lifetime,
             particles_size: wgpu::Extent3d {
                 width: 0,
                 height: 0,
@@ -48,12 +46,12 @@ impl SettingObj {
                 color: [1.0; 4],
                 num: [0; 2],
                 point_size: 1,
-                life_time: 60.0,
+                life_time: particle_lifetime,
                 fade_out_factor: 0.96,
                 speed_factor: if field_type == FieldType::Field {
                     1.0
                 } else {
-                    8.15
+                    1.15
                 },
                 color_ty: color_ty as i32,
                 is_only_update_pos: 1,
@@ -90,6 +88,14 @@ impl SettingObj {
         true
     }
 
+    pub fn update_particle_life(&mut self, app: &app_surface::AppSurface, lifetime: f32) {
+        if (self.particles_uniform_data.life_time - lifetime).abs() < 1.0 {
+            return;
+        }
+        self.particles_uniform_data.life_time = lifetime;
+        self.update_particles_data(app);
+    }
+
     pub fn update_particle_color(
         &mut self,
         app: &app_surface::AppSurface,
@@ -120,7 +126,7 @@ impl SettingObj {
         let (particles_size, particles_workgroup_count, particles) = get_particles_data(
             self.canvas_size,
             self.particles_count,
-            self.particle_lifetime,
+            self.particles_uniform_data.life_time,
         );
         self.particles_size = particles_size;
         self.particles_workgroup_count = particles_workgroup_count;

@@ -26,9 +26,16 @@ impl Action for InteractiveApp {
         let panel = ControlPanel::new(&app, format, event_loop);
 
         let canvas_size: Size<u32> = (&app.config).into();
+        // let mut setting = SettingObj::new(
+        //     FieldType::Field,
+        //     FieldAnimationType::Basic,
+        //     ParticleColorType::MovementAngle,
+        //     panel.particles_count,
+        //     panel.lifetime as f32,
+        // );
         let mut setting = SettingObj::new(
-            FieldType::Field,
-            FieldAnimationType::Basic,
+            FieldType::Fluid,
+            FieldAnimationType::Poiseuille,
             ParticleColorType::MovementAngle,
             panel.particles_count,
             panel.lifetime as f32,
@@ -170,6 +177,7 @@ impl InteractiveApp {
         }
         self.setting
             .update_particle_point_size(&self.app, self.panel.particle_size);
+        self.setting.update_particle_life(&self.app, self.panel.lifetime as f32);
         self.player.update_by(&self.app, &mut self.panel);
     }
 }
