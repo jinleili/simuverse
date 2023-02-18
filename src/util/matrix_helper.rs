@@ -1,55 +1,38 @@
 use app_surface::math::Size;
-use nalgebra_glm as glm;
 
 #[allow(dead_code)]
 pub fn default_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
     let (p_matrix, mv_matrix) = perspective_fullscreen_mvp(viewport_size);
-    (p_matrix * mv_matrix).into()
+    (p_matrix * mv_matrix).to_cols_array_2d()
 }
 
 #[allow(dead_code)]
 pub fn fullscreen_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
     let (p_matrix, mv_matrix) = perspective_fullscreen_mvp(viewport_size);
-    (p_matrix * mv_matrix).into()
+    (p_matrix * mv_matrix).to_cols_array_2d()
 }
 
 // 将[-1, 1]的矩形空间映射到刚好填充整个视口
-pub fn perspective_fullscreen_mvp(viewport_size: Size<f32>) -> (glm::TMat4<f32>, glm::TMat4<f32>) {
+pub fn perspective_fullscreen_mvp(viewport_size: Size<f32>) -> (glam::Mat4, glam::Mat4) {
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
-    let radian: glm::TVec1<f32> = glm::vec1(fovy);
-    let p_matrix: glm::TMat4<f32> = glm::perspective_fov(
-        radian[0],
-        viewport_size.width,
-        viewport_size.height,
-        0.1,
-        1000.0,
-    );
+    let p_matrix =
+        glam::Mat4::perspective_rh(fovy, viewport_size.width / viewport_size.height, 0.1, 100.0);
+
     let factor = fullscreen_factor(viewport_size);
+    let vm_matrix = glam::Mat4::from_translation(glam::vec3(0.0, 0.0, factor.0));
+    let scale_matrix = glam::Mat4::from_scale(glam::Vec3::new(factor.1, factor.2, 1.0));
 
-    let mut vm_matrix: glm::TMat4<f32> = glm::TMat4::identity();
-    vm_matrix = glm::translate(&vm_matrix, &glm::vec3(0.0, 0.0, factor.0));
-    vm_matrix = glm::scale(&vm_matrix, &glm::vec3(factor.1, factor.2, 1.0));
-
-    (p_matrix, vm_matrix)
+    (p_matrix, vm_matrix * scale_matrix)
 }
 
 // 外部调用者使用返回的 fullscreen_factor 参数缩放顶点坐标可实现填充整个视口
-pub fn perspective_mvp(
-    viewport_size: Size<f32>,
-) -> (glm::TMat4<f32>, glm::TMat4<f32>, (f32, f32, f32)) {
+pub fn perspective_mvp(viewport_size: Size<f32>) -> (glam::Mat4, glam::Mat4, (f32, f32, f32)) {
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
-    let radian: glm::TVec1<f32> = glm::vec1(fovy);
-    let p_matrix: glm::TMat4<f32> = glm::perspective_fov(
-        radian[0],
-        viewport_size.width,
-        viewport_size.height,
-        0.1,
-        1000.0,
-    );
-    let factor = fullscreen_factor(viewport_size);
+    let p_matrix =
+        glam::Mat4::perspective_rh(fovy, viewport_size.width / viewport_size.height, 0.1, 100.0);
 
-    let mut vm_matrix: glm::TMat4<f32> = glm::TMat4::identity();
-    vm_matrix = glm::translate(&vm_matrix, &glm::vec3(0.0, 0.0, factor.0));
+    let factor = fullscreen_factor(viewport_size);
+    let vm_matrix = glam::Mat4::from_translation(glam::vec3(0.0, 0.0, factor.0));
 
     (p_matrix, vm_matrix, (factor.1, factor.2, factor.0))
 }
@@ -84,7 +67,7 @@ pub fn fullscreen_factor(viewport_size: Size<f32>) -> (f32, f32, f32) {
 #[allow(dead_code)]
 pub fn ortho_default_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
     let factor = fullscreen_factor(viewport_size);
-    let p_matrix: glm::TMat4<f32> = glm::ortho(
+    let p_matrix = glam::Mat4::orthographic_rh(
         -1.0 * factor.1,
         1.0 * factor.1,
         -1.0 * factor.2,
@@ -92,36 +75,5 @@ pub fn ortho_default_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
         -100.0,
         100.0,
     );
-    let vm_matrix = glm::TMat4::identity();
-    (p_matrix * vm_matrix).into()
-}
-
-#[allow(dead_code)]
-pub fn ortho_pixel_mvp(width: f32, height: f32) -> [[f32; 4]; 4] {
-    let p_matrix: glm::TMat4<f32> = ortho_pixel(width, height);
-    let vm_matrix = glm::TMat4::identity();
-    (p_matrix * vm_matrix).into()
-}
-
-#[allow(dead_code)]
-pub fn ortho_pixel(width: f32, height: f32) -> glm::TMat4<f32> {
-    // 屏幕中心为原点，z轴指向屏幕内为正，向上旋转为正
-    // https://nalgebra.org/projections/
-    // 在计算机中通常使用的是左手坐标系，而数学中则通常使用右手坐标系。
-    // 左手坐标系，z 轴方向指向屏幕内
-    glm::ortho(
-        -width / 2.0,
-        width / 2.0,
-        -height / 2.0,
-        height / 2.0,
-        -1000.0,
-        1000.0,
-    )
-}
-
-#[allow(dead_code)]
-pub fn dot(v1: [f32; 2], v2: [f32; 2]) -> f32 {
-    let vec1: glm::TVec2<f32> = v1.into();
-    let vec2: glm::TVec2<f32> = v2.into();
-    glm::dot(&vec1, &vec2)
+    (p_matrix * glam::Mat4::IDENTITY).to_cols_array_2d()
 }

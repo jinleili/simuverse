@@ -4,11 +4,7 @@ mod lattice;
 use lattice::*;
 
 mod particle_render_node;
-
 mod d2q9_node;
-
-mod aa_d2q9_node;
-use aa_d2q9_node::AAD2Q9Node;
 
 mod fluid_player;
 pub use fluid_player::FluidPlayer;

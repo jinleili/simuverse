@@ -267,7 +267,7 @@ impl D2Q9Node {
         let vy = force * ridian.sin();
         let info: Vec<LatticeInfo> = vec![LatticeInfo {
             material: LatticeType::ExternalForce as i32,
-            block_iter: 30,
+            block_iter: 90,
             vx,
             vy,
         }];

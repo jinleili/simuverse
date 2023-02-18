@@ -1,4 +1,4 @@
-use super::{d2q9_node::D2Q9Node, AAD2Q9Node, OBSTACLE_RADIUS};
+use super::{d2q9_node::D2Q9Node, OBSTACLE_RADIUS};
 use crate::{
     fluid::LbmUniform,
     node::{BufferlessFullscreenNode, ComputeNode},
@@ -17,8 +17,6 @@ pub struct FluidPlayer {
     lattice_pixel_size: u32,
     pre_pos: Position,
     fluid_compute_node: D2Q9Node,
-    // collide scheme
-    use_aa_pattern: bool,
     curl_cal_node: ComputeNode,
     particle_update_node: ComputeNode,
     render_node: BufferlessFullscreenNode,
@@ -33,7 +31,6 @@ impl FluidPlayer {
         setting: &SettingObj,
     ) -> Self {
         let device = &app_view.device;
-        let use_aa_pattern = false;
         let fluid_compute_node = D2Q9Node::new(app_view, canvas_size, setting);
         let lattice = fluid_compute_node.lattice;
 
@@ -124,7 +121,6 @@ impl FluidPlayer {
         FluidPlayer {
             canvas_size,
             lattice,
-            use_aa_pattern,
             lattice_pixel_size: fluid_compute_node.lattice_pixel_size,
             pre_pos: Position::new(0.0, 0.0),
             fluid_compute_node,
@@ -221,16 +217,14 @@ impl Player for FluidPlayer {
             label: Some("fluid solver"),
         });
 
-        for _ in 0..3 {
+        for _ in 0..2 {
             self.fluid_compute_node.compute_by_pass(&mut cpass, 0);
             self.particle_update_node.compute_by_pass(&mut cpass);
             // self.curl_cal_node.dispatch(&mut cpass);
 
-            if !self.use_aa_pattern {
-                self.fluid_compute_node.compute_by_pass(&mut cpass, 1);
-                self.particle_update_node.compute_by_pass(&mut cpass);
-                // self.curl_cal_node.dispatch(&mut cpass);
-            }
+            self.fluid_compute_node.compute_by_pass(&mut cpass, 1);
+            self.particle_update_node.compute_by_pass(&mut cpass);
+            // self.curl_cal_node.dispatch(&mut cpass);
         }
     }
 

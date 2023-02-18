@@ -230,7 +230,7 @@ impl ViewNode {
         let (p_matrix, vm_matrix, _factor) =
             crate::util::matrix_helper::perspective_mvp(attributes.view_size);
         let mvp = MVPUniform {
-            mvp_matrix: (p_matrix * vm_matrix).into(),
+            mvp_matrix: (p_matrix * vm_matrix).to_cols_array_2d(),
         };
         let mvp_buf = BufferObj::create_uniform_buffer(device, &mvp, Some("mvp uniform"));
         let uniform_buffers =

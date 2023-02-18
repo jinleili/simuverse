@@ -25,7 +25,6 @@ png = "0.17"
 pollster = "0.2"
 rand = "0.8"
 image = { version = "*" }
-nalgebra-glm = "*"
 glam = "0.22"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
