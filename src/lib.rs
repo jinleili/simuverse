@@ -6,7 +6,7 @@ mod egui_lib;
 pub(crate) use egui_lib::*;
 
 mod control_panel;
-pub use control_panel::ControlPanel;
+pub use control_panel::*;
 
 mod field_player;
 pub use field_player::FieldPlayer;

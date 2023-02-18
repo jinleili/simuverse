@@ -51,7 +51,7 @@ impl SettingObj {
                 speed_factor: if field_type == FieldType::Field {
                     1.0
                 } else {
-                    1.15
+                    4.15
                 },
                 color_ty: color_ty as i32,
                 is_only_update_pos: 1,

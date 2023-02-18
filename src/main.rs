@@ -2,20 +2,22 @@ use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
-    ControlPanel, FieldAnimationType, FieldPlayer, FieldType, FluidPlayer, ParticleColorType,
-    Player, SettingObj,
+    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, FieldType, FluidPlayer,
+    ParticleColorType, Player, SettingObj,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
 
 struct InteractiveApp {
     app: AppSurface,
+    egui_ctx: egui::Context,
+    egui_state: egui_winit::State,
+    egui_renderer: egui_wgpu::Renderer,
     panel: ControlPanel,
     canvas_size: Size<u32>,
     canvas_buf: BufferObj,
     setting: SettingObj,
     player: Box<dyn Player>,
-    frame_count: u64,
 }
 
 impl Action for InteractiveApp {
@@ -23,7 +25,14 @@ impl Action for InteractiveApp {
         let mut app = app;
         let format = app.config.format.remove_srgb_suffix();
         app.sdq.update_config_format(format);
-        let panel = ControlPanel::new(&app, format, event_loop);
+
+        // egui
+        let egui_ctx = egui::Context::default();
+        setup_custom_fonts(&egui_ctx);
+        let mut egui_state = egui_winit::State::new(event_loop);
+        egui_state.set_pixels_per_point(app.scale_factor);
+        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
+        let panel = ControlPanel::new(&app, &egui_ctx);
 
         let canvas_size: Size<u32> = (&app.config).into();
         // let mut setting = SettingObj::new(
@@ -51,12 +60,14 @@ impl Action for InteractiveApp {
 
         Self {
             app,
+            egui_ctx,
+            egui_state,
+            egui_renderer,
             panel,
             canvas_buf,
             canvas_size,
             setting,
             player,
-            frame_count: 0,
         }
     }
 
@@ -84,7 +95,7 @@ impl Action for InteractiveApp {
     }
 
     fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        self.panel.on_event(event);
+        let _ = self.egui_state.on_event(&self.egui_ctx, event);
     }
 
     fn request_redraw(&mut self) {
@@ -99,10 +110,41 @@ impl Action for InteractiveApp {
                 label: Some("Render Encoder"),
             });
 
+        // egui ui 更新
+        let mut raw_input = self.egui_state.take_egui_input(&self.app.view);
+        // raw_input.screen_rect = Some(self.pos_rect);
+        let egui_app = &mut self.panel;
+        let full_output = self.egui_ctx.run(raw_input, |ctx| {
+            egui_app.ui_contents(ctx);
+        });
+        let clipped_primitives = self.egui_ctx.tessellate(full_output.shapes);
+        let textures_delta = full_output.textures_delta;
+        let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
+            size_in_pixels: [self.app.config.width, self.app.config.height],
+            pixels_per_point: self.app.scale_factor,
+        };
+        let egui_cmd_bufs = {
+            for (id, image_delta) in &textures_delta.set {
+                self.egui_renderer.update_texture(
+                    &self.app.device,
+                    &self.app.queue,
+                    *id,
+                    image_delta,
+                );
+            }
+            self.egui_renderer.update_buffers(
+                &self.app.device,
+                &self.app.queue,
+                &mut encoder,
+                &clipped_primitives,
+                &screen_descriptor,
+            )
+        };
+
         self.player.compute(&mut encoder);
 
         let (output, frame_view) = self.app.get_current_frame_view();
-        let (egui_cmd_bufs, textures_delta) = {
+        {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &frame_view,
@@ -123,10 +165,10 @@ impl Action for InteractiveApp {
             self.player
                 .draw_by_rpass(&self.app, &mut rpass, &mut self.setting);
 
-            {
-                self.panel.begin_pass(&self.app, &mut rpass)
-            }
-        };
+            // egui ui 渲染
+            self.egui_renderer
+                .render(&mut rpass, &clipped_primitives, &screen_descriptor);
+        }
 
         self.app.queue.submit(
             egui_cmd_bufs
@@ -135,7 +177,9 @@ impl Action for InteractiveApp {
         );
         output.present();
 
-        self.panel.end_pass(&textures_delta);
+        for id in &textures_delta.free {
+            self.egui_renderer.free_texture(id);
+        }
 
         self.update_setting();
 
@@ -177,7 +221,8 @@ impl InteractiveApp {
         }
         self.setting
             .update_particle_point_size(&self.app, self.panel.particle_size);
-        self.setting.update_particle_life(&self.app, self.panel.lifetime as f32);
+        self.setting
+            .update_particle_life(&self.app, self.panel.lifetime as f32);
         self.player.update_by(&self.app, &mut self.panel);
     }
 }
