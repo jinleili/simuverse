@@ -1,12 +1,12 @@
 use crate::util::math::Size;
 use crate::util::BufferObj;
 use crate::{
-    get_particles_data, FieldAnimationType, FieldType, ParticleColorType, ParticleUniform,
+    get_particles_data, FieldAnimationType, SimuType, ParticleColorType, ParticleUniform,
 };
 
 pub struct SettingObj {
     canvas_size: Size<u32>,
-    pub field_type: FieldType,
+    pub field_type: SimuType,
     pub animation_type: FieldAnimationType,
     pub color_ty: ParticleColorType,
     pub fluid_viscosity: f32,
@@ -21,7 +21,7 @@ pub struct SettingObj {
 
 impl SettingObj {
     pub fn new(
-        field_type: FieldType,
+        field_type: SimuType,
         animation_type: FieldAnimationType,
         color_ty: ParticleColorType,
         particles_count: i32,
@@ -48,7 +48,7 @@ impl SettingObj {
                 point_size: 1,
                 life_time: particle_lifetime,
                 fade_out_factor: 0.96,
-                speed_factor: if field_type == FieldType::Field {
+                speed_factor: if field_type == SimuType::Field {
                     1.0
                 } else {
                     4.15
@@ -59,10 +59,10 @@ impl SettingObj {
         }
     }
 
-    pub fn update_field_type(&mut self, app: &app_surface::AppSurface, ty: FieldType) -> bool {
+    pub fn update_field_type(&mut self, app: &app_surface::AppSurface, ty: SimuType) -> bool {
         if self.field_type != ty {
             self.field_type = ty;
-            self.particles_uniform_data.speed_factor = if self.field_type == FieldType::Field {
+            self.particles_uniform_data.speed_factor = if self.field_type == SimuType::Field {
                 0.15
             } else {
                 8.15

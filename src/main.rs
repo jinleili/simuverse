@@ -2,7 +2,7 @@ use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
-    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, FieldType, FluidPlayer,
+    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, SimuType, FluidPlayer,
     ParticleColorType, Player, SettingObj,
 };
 use std::iter;
@@ -36,14 +36,14 @@ impl Action for InteractiveApp {
 
         let canvas_size: Size<u32> = (&app.config).into();
         // let mut setting = SettingObj::new(
-        //     FieldType::Field,
+        //     SimuType::Field,
         //     FieldAnimationType::Basic,
         //     ParticleColorType::MovementAngle,
         //     panel.particles_count,
         //     panel.lifetime as f32,
         // );
         let mut setting = SettingObj::new(
-            FieldType::Fluid,
+            SimuType::Fluid,
             FieldAnimationType::Poiseuille,
             ParticleColorType::MovementAngle,
             panel.particles_count,
@@ -195,7 +195,7 @@ impl InteractiveApp {
         setting: &SettingObj,
     ) -> Box<dyn Player> {
         return match setting.field_type {
-            FieldType::Fluid => Box::new(FluidPlayer::new(app, canvas_size, canvas_buf, setting)),
+            SimuType::Fluid => Box::new(FluidPlayer::new(app, canvas_size, canvas_buf, setting)),
             _ => Box::new(FieldPlayer::new(
                 app,
                 app.config.format,

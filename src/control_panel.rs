@@ -1,3 +1,4 @@
+use crate::SimuType;
 use app_surface::AppSurface;
 use egui::{
     emath::{Pos2, Rect},
@@ -16,6 +17,7 @@ pub struct ControlPanel {
     last_selected_code_snippet: i32,
     selected_code_snippet: Option<i32>,
     is_code_snippet_changed: bool,
+    selected_simu_type: SimuType,
 }
 
 impl ControlPanel {
@@ -60,6 +62,7 @@ impl ControlPanel {
             last_selected_code_snippet: 0,
             selected_code_snippet: Some(0),
             is_code_snippet_changed: false,
+            selected_simu_type: SimuType::Field,
         }
     }
 
@@ -216,10 +219,24 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 
     fn top_bar_ui(&mut self, ctx: &Context) {
-        egui::TopBottomPanel::top("wrap_app_top_bar").show(ctx, |ui| {
-            egui::trace!(ui);
+        let menu_items = vec![
+            ("🌾 矢量场", SimuType::Field),
+            ("💦 流体场", SimuType::Fluid),
+            ("🔏 隐形墨水", SimuType::Ink),
+        ];
+        egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.visuals_mut().button_frame = false;
+                ui.label("Wgpu Simuverse");
+                ui.separator();
+                for (name, anchor) in menu_items.into_iter() {
+                    if ui
+                        .selectable_label(self.selected_simu_type == anchor, name)
+                        .clicked()
+                    {
+                        self.selected_simu_type = anchor;
+                    }
+                }
             });
         });
     }
@@ -231,21 +248,39 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
     fonts.font_data.insert(
         ZH_TINY.to_owned(),
-        egui::FontData::from_static(include_bytes!("../assets/PingFangTiny.ttf")),
+        egui::FontData::from_static(include_bytes!("../assets/fonts/PingFangTiny.ttf")),
     );
-    // Put my font first (highest priority) for proportional text:
-    fonts
-        .families
-        .entry(egui::FontFamily::Proportional)
-        .or_default()
-        .insert(0, ZH_TINY.to_owned());
+    // Some good looking emojis. 
+    fonts.font_data.insert(
+        "NotoEmoji-Regular".to_owned(),
+        egui::FontData::from_static(include_bytes!("../assets/fonts/NotoEmoji-Regular.ttf")).tweak(
+            egui::FontTweak {
+                scale: 0.91,           // make it smaller
+                y_offset_factor: -0.15, // move it up
+                y_offset: 0.0,
+            },
+        ),
+    );
 
-    // Put my font as last fallback for monospace:
-    fonts
-        .families
-        .entry(egui::FontFamily::Monospace)
-        .or_default()
-        .push(ZH_TINY.to_owned());
+    // Bigger emojis, and more. <http://jslegers.github.io/emoji-icon-font/>:
+    fonts.font_data.insert(
+        "emoji-icon-font".to_owned(),
+        egui::FontData::from_static(include_bytes!("../assets/fonts/emoji-icon-font.ttf")).tweak(
+            egui::FontTweak {
+                scale: 0.88,           // make it smaller
+                y_offset_factor: 0.07, // move it down slightly
+                y_offset: 0.0,
+            },
+        ),
+    );
+    fonts.families.insert(
+        egui::FontFamily::Proportional,
+        vec![
+            ZH_TINY.to_owned(),
+            "NotoEmoji-Regular".to_owned(),
+            "emoji-icon-font".to_owned(),
+        ],
+    );
 
     ctx.set_fonts(fonts);
 }

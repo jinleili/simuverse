@@ -74,9 +74,10 @@ pub trait Player {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum FieldType {
-    Field,
+pub enum SimuType {
+    Field = 0,
     Fluid,
+    Ink,
     D3Fluid,
 }
 
