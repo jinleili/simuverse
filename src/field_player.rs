@@ -1,7 +1,7 @@
 use crate::util::math::Size;
 use crate::util::node::{BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
-use crate::{setting_obj::SettingObj, FieldUniform, Player};
+use crate::{SettingObj, FieldUniform, Player};
 use app_surface::AppSurface;
 use wgpu::{CommandEncoderDescriptor};
 

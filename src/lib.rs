@@ -5,8 +5,8 @@ pub mod framework;
 mod egui_lib;
 pub(crate) use egui_lib::*;
 
-mod control_panel;
-pub use control_panel::*;
+mod setting;
+pub use setting::*;
 
 mod field_player;
 pub use field_player::FieldPlayer;
@@ -17,22 +17,10 @@ pub use fluid::FluidPlayer;
 mod field_velocity_code;
 pub use field_velocity_code::get_velocity_code_snippet;
 
-mod setting_obj;
-pub use setting_obj::SettingObj;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use std::println as console_log;
-
 pub mod util;
 use util::math::{Position, Size};
-
-#[cfg(not(target_arch = "wasm32"))]
 use util::shader::{create_shader_module, insert_code_then_create};
-#[cfg(target_arch = "wasm32")]
-use web::{create_shader_module, insert_code_then_create};
-
-use util::vertex::PosColor as PosTangent;
-use util::vertex::PosOnly;
+use util::vertex::{PosColor as PosTangent, PosOnly};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -73,16 +61,18 @@ pub trait Player {
     );
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum SimuType {
+    #[default]
     Field = 0,
     Fluid,
     Ink,
     D3Fluid,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum FieldAnimationType {
+    #[default]
     Basic = 0,
     JuliaSet,
     Spirl,
@@ -106,8 +96,9 @@ impl FieldAnimationType {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum ParticleColorType {
+    #[default]
     MovementAngle = 0,
     Speed = 1,
     Uniform = 2,

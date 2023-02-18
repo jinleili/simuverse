@@ -2,8 +2,8 @@ use app_surface::{AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::{math::Size, BufferObj};
 use simuverse::{
-    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, SimuType, FluidPlayer,
-    ParticleColorType, Player, SettingObj,
+    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, FluidPlayer,
+    ParticleColorType, Player, SettingObj, SimuType,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
@@ -13,10 +13,9 @@ struct InteractiveApp {
     egui_ctx: egui::Context,
     egui_state: egui_winit::State,
     egui_renderer: egui_wgpu::Renderer,
-    panel: ControlPanel,
+    ctrl_panel: ControlPanel,
     canvas_size: Size<u32>,
     canvas_buf: BufferObj,
-    setting: SettingObj,
     player: Box<dyn Player>,
 }
 
@@ -32,41 +31,26 @@ impl Action for InteractiveApp {
         let mut egui_state = egui_winit::State::new(event_loop);
         egui_state.set_pixels_per_point(app.scale_factor);
         let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
-        let panel = ControlPanel::new(&app, &egui_ctx);
+        let ctrl_panel = ControlPanel::new(&app, &egui_ctx);
 
         let canvas_size: Size<u32> = (&app.config).into();
-        // let mut setting = SettingObj::new(
-        //     SimuType::Field,
-        //     FieldAnimationType::Basic,
-        //     ParticleColorType::MovementAngle,
-        //     panel.particles_count,
-        //     panel.lifetime as f32,
-        // );
-        let mut setting = SettingObj::new(
-            SimuType::Fluid,
-            FieldAnimationType::Poiseuille,
-            ParticleColorType::MovementAngle,
-            panel.particles_count,
-            panel.lifetime as f32,
-        );
-        setting.update_canvas_size(&app, canvas_size);
+
         let canvas_buf = simuverse::util::BufferObj::create_empty_storage_buffer(
             &app.device,
             (canvas_size.width * canvas_size.height * 12) as u64,
             false,
             Some("canvas_buf"),
         );
-        let player = Self::create_player(&app, canvas_size, &canvas_buf, &setting);
+        let player = Self::create_player(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
 
         Self {
             app,
             egui_ctx,
             egui_state,
             egui_renderer,
-            panel,
+            ctrl_panel,
             canvas_buf,
             canvas_size,
-            setting,
             player,
         }
     }
@@ -83,7 +67,9 @@ impl Action for InteractiveApp {
         self.app.resize_surface();
 
         let canvas_size: Size<u32> = (&self.app.config).into();
-        self.setting.update_canvas_size(&self.app, canvas_size);
+        self.ctrl_panel
+            .setting
+            .update_canvas_size(&self.app, canvas_size);
         self.canvas_size = canvas_size;
         self.canvas_buf = simuverse::util::BufferObj::create_empty_storage_buffer(
             &self.app.device,
@@ -91,7 +77,12 @@ impl Action for InteractiveApp {
             false,
             Some("canvas_buf"),
         );
-        self.player = Self::create_player(&self.app, canvas_size, &self.canvas_buf, &self.setting);
+        self.player = Self::create_player(
+            &self.app,
+            canvas_size,
+            &self.canvas_buf,
+            &self.ctrl_panel.setting,
+        );
     }
 
     fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
@@ -113,7 +104,7 @@ impl Action for InteractiveApp {
         // egui ui 更新
         let mut raw_input = self.egui_state.take_egui_input(&self.app.view);
         // raw_input.screen_rect = Some(self.pos_rect);
-        let egui_app = &mut self.panel;
+        let egui_app = &mut self.ctrl_panel;
         let full_output = self.egui_ctx.run(raw_input, |ctx| {
             egui_app.ui_contents(ctx);
         });
@@ -163,7 +154,7 @@ impl Action for InteractiveApp {
                 label: None,
             });
             self.player
-                .draw_by_rpass(&self.app, &mut rpass, &mut self.setting);
+                .draw_by_rpass(&self.app, &mut rpass, &mut self.ctrl_panel.setting);
 
             // egui ui 渲染
             self.egui_renderer
@@ -194,7 +185,7 @@ impl InteractiveApp {
         canvas_buf: &BufferObj,
         setting: &SettingObj,
     ) -> Box<dyn Player> {
-        return match setting.field_type {
+        return match setting.simu_type {
             SimuType::Fluid => Box::new(FluidPlayer::new(app, canvas_size, canvas_buf, setting)),
             _ => Box::new(FieldPlayer::new(
                 app,
@@ -207,23 +198,13 @@ impl InteractiveApp {
     }
 
     fn update_setting(&mut self) {
-        if self.panel.particle_color != self.setting.color_ty as u32 {
-            let color_ty = ParticleColorType::from_u32(self.panel.particle_color);
-            self.setting.update_particle_color(&self.app, color_ty);
-        }
-        if self
-            .setting
-            .update_particles_count(&self.app, self.panel.particles_count)
-        {
+        if let Some(workgroup_count) = self.ctrl_panel.update_setting(&self.app) {
             // 更新了粒子数后，还须更新 workgroup count
             self.player
-                .update_workgroup_count(&self.app, self.setting.particles_workgroup_count);
+                .update_workgroup_count(&self.app, workgroup_count);
         }
-        self.setting
-            .update_particle_point_size(&self.app, self.panel.particle_size);
-        self.setting
-            .update_particle_life(&self.app, self.panel.lifetime as f32);
-        self.player.update_by(&self.app, &mut self.panel);
+
+        self.player.update_by(&self.app, &mut self.ctrl_panel);
     }
 }
 

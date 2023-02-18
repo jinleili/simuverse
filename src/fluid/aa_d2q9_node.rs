@@ -3,7 +3,7 @@ use crate::util::math::{Position, Size};
 use crate::util::{node::ComputeNode, AnyTexture, BufferObj};
 
 use crate::{
-    create_shader_module, fluid::LbmUniform, setting_obj::SettingObj, FieldAnimationType,
+    create_shader_module, fluid::LbmUniform, SettingObj, FieldAnimationType,
     FieldUniform,
 };
 use wgpu::TextureFormat;

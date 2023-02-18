@@ -5,7 +5,7 @@ use crate::util::{
     BufferObj,
 };
 
-use crate::{fluid::LbmUniform, setting_obj::SettingObj, FieldAnimationType, Player};
+use crate::{fluid::LbmUniform, SettingObj, FieldAnimationType, Player};
 use wgpu::{CommandEncoderDescriptor, TextureFormat};
 
 use crate::create_shader_module;
