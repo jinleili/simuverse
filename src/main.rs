@@ -1,9 +1,8 @@
-use app_surface::{AppSurface, SurfaceFrame};
+use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
-use simuverse::util::{math::Size, BufferObj};
+use simuverse::util::BufferObj;
 use simuverse::{
-    setup_custom_fonts, ControlPanel, FieldAnimationType, FieldPlayer, FluidPlayer,
-    ParticleColorType, Player, SettingObj, SimuType,
+    setup_custom_fonts, ControlPanel, FieldPlayer, FluidPlayer, Player, SettingObj, SimuType,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
@@ -102,7 +101,7 @@ impl Action for InteractiveApp {
             });
 
         // egui ui 更新
-        let mut raw_input = self.egui_state.take_egui_input(&self.app.view);
+        let raw_input = self.egui_state.take_egui_input(&self.app.view);
         // raw_input.screen_rect = Some(self.pos_rect);
         let egui_app = &mut self.ctrl_panel;
         let full_output = self.egui_ctx.run(raw_input, |ctx| {
@@ -198,13 +197,24 @@ impl InteractiveApp {
     }
 
     fn update_setting(&mut self) {
-        if let Some(workgroup_count) = self.ctrl_panel.update_setting(&self.app) {
-            // 更新了粒子数后，还须更新 workgroup count
-            self.player
-                .update_workgroup_count(&self.app, workgroup_count);
-        }
+        let res = self.ctrl_panel.update_setting(&self.app);
+        if res.1 {
+            // 改变了模拟类型
+            self.player = Self::create_player(
+                &self.app,
+                (&self.app.config).into(),
+                &self.canvas_buf,
+                &self.ctrl_panel.setting,
+            );
+        } else {
+            if let Some(workgroup_count) = res.0 {
+                // 更新了粒子数后，还须更新 workgroup count
+                self.player
+                    .update_workgroup_count(&self.app, workgroup_count);
+            }
 
-        self.player.update_by(&self.app, &mut self.ctrl_panel);
+            self.player.update_by(&self.app, &mut self.ctrl_panel);
+        }
     }
 }
 

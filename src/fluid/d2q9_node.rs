@@ -1,16 +1,14 @@
 use std::{borrow::BorrowMut, u32};
 
 use super::{init_lattice_material, is_sd_sphere, LatticeInfo, LatticeType, OBSTACLE_RADIUS};
-use crate::util::{
-    node::{BindingGroupSetting, ComputeNode},
-    AnyTexture, BufferObj,
-};
-use crate::util::math::{Position, Size};
-
 use crate::{
-    create_shader_module, fluid::LbmUniform, SettingObj, FieldAnimationType,
-    FieldUniform,
+    create_shader_module,
+    fluid::LbmUniform,
+    node::{BindingGroupSetting, ComputeNode},
+    util::{AnyTexture, BufferObj},
+    FieldAnimationType, FieldUniform, SettingObj,
 };
+use app_surface::math::{Position, Size};
 use wgpu::TextureFormat;
 
 pub struct D2Q9Node {
@@ -63,7 +61,7 @@ impl D2Q9Node {
         let lbm_uniform_data =
             LbmUniform::new(tau, fluid_ty, (lattice.width * lattice.height) as i32);
 
-        let (_, sx, sy) = crate::util::utils::matrix_helper::fullscreen_factor(
+        let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
             (canvas_size.width as f32, canvas_size.height as f32).into(),
         );
         let field_uniform_data = FieldUniform {
@@ -200,7 +198,7 @@ impl D2Q9Node {
             boundary_pipelines,
             reset_node,
         };
-        
+
         instance.reset_lattice_info(device, queue);
 
         return instance;
@@ -287,7 +285,11 @@ impl D2Q9Node {
         }
     }
 
-    pub fn dispatch<'c, 'b: 'c>(&'b self, cpass: &mut wgpu::ComputePass<'c>, swap_index: usize) {
+    pub fn compute_by_pass<'c, 'b: 'c>(
+        &'b self,
+        cpass: &mut wgpu::ComputePass<'c>,
+        swap_index: usize,
+    ) {
         cpass.set_bind_group(0, &self.setting_nodes[swap_index].bind_group, &[]);
         cpass.set_pipeline(&self.collide_stream_pipelines[swap_index]);
         cpass.dispatch_workgroups(self.dispatch_group_count.0, self.dispatch_group_count.1, 1);

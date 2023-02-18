@@ -1,6 +1,6 @@
 use super::{is_sd_sphere, OBSTACLE_RADIUS};
 use crate::FieldAnimationType;
-use crate::util::math::Position;
+use app_surface::math::Position;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

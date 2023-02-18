@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub mod syntax_highlighting;
 
 pub(crate) fn show_code(ui: &mut egui::Ui, code: &str) {

@@ -1,18 +1,17 @@
-use super::{AAD2Q9Node, OBSTACLE_RADIUS, d2q9_node::D2Q9Node};
-use crate::util::math::{Position, Size};
-use crate::util::{
+use super::{d2q9_node::D2Q9Node, AAD2Q9Node, OBSTACLE_RADIUS};
+use crate::{
+    fluid::LbmUniform,
     node::{BufferlessFullscreenNode, ComputeNode},
-    BufferObj,
+    util::BufferObj,
+    FieldAnimationType, Player, SettingObj,
 };
-
-use crate::{fluid::LbmUniform, SettingObj, FieldAnimationType, Player};
-use wgpu::{CommandEncoderDescriptor, TextureFormat};
+use app_surface::math::{Position, Size};
+use wgpu::TextureFormat;
 
 use crate::create_shader_module;
 
 // 通用的流體模擬，產生外部依賴的流體量
 pub struct FluidPlayer {
-    animation_ty: FieldAnimationType,
     canvas_size: Size<u32>,
     lattice: wgpu::Extent3d,
     lattice_pixel_size: u32,
@@ -123,7 +122,6 @@ impl FluidPlayer {
         );
 
         FluidPlayer {
-            animation_ty: setting.animation_type,
             canvas_size,
             lattice,
             use_aa_pattern,
@@ -139,7 +137,7 @@ impl FluidPlayer {
 }
 
 impl Player for FluidPlayer {
-    fn on_click(&mut self, app: &app_surface::AppSurface, pos: crate::util::math::Position) {
+    fn on_click(&mut self, app: &app_surface::AppSurface, pos: Position) {
         if pos.x <= 0.0 || pos.y <= 0.0 {
             return;
         }
@@ -160,7 +158,7 @@ impl Player for FluidPlayer {
         self.pre_pos = Position::new(0.0, 0.0);
     }
 
-    fn touch_move(&mut self, app: &app_surface::AppSurface, pos: crate::util::math::Position) {
+    fn touch_move(&mut self, app: &app_surface::AppSurface, pos: Position) {
         if pos.x <= 0.0 || pos.y <= 0.0 {
             self.pre_pos = Position::zero();
             return;
@@ -199,15 +197,15 @@ impl Player for FluidPlayer {
 
     fn update_by(
         &mut self,
-        app: &app_surface::AppSurface,
-        control_panel: &mut crate::ControlPanel,
+        _app: &app_surface::AppSurface,
+        _control_panel: &mut crate::ControlPanel,
     ) {
     }
 
     fn update_workgroup_count(
         &mut self,
-        app: &app_surface::AppSurface,
-        workgroup_count: (u32, u32, u32),
+        _app: &app_surface::AppSurface,
+        _workgroup_count: (u32, u32, u32),
     ) {
     }
 
@@ -224,13 +222,13 @@ impl Player for FluidPlayer {
         });
 
         for _ in 0..3 {
-            self.fluid_compute_node.dispatch(&mut cpass, 0);
-            self.particle_update_node.dispatch(&mut cpass);
+            self.fluid_compute_node.compute_by_pass(&mut cpass, 0);
+            self.particle_update_node.compute_by_pass(&mut cpass);
             // self.curl_cal_node.dispatch(&mut cpass);
 
             if !self.use_aa_pattern {
-                self.fluid_compute_node.dispatch(&mut cpass, 1);
-                self.particle_update_node.dispatch(&mut cpass);
+                self.fluid_compute_node.compute_by_pass(&mut cpass, 1);
+                self.particle_update_node.compute_by_pass(&mut cpass);
                 // self.curl_cal_node.dispatch(&mut cpass);
             }
         }
@@ -238,9 +236,9 @@ impl Player for FluidPlayer {
 
     fn draw_by_rpass<'b, 'a: 'b>(
         &'a mut self,
-        app: &app_surface::AppSurface,
+        _app: &app_surface::AppSurface,
         rpass: &mut wgpu::RenderPass<'b>,
-        setting: &mut crate::SettingObj,
+        _setting: &mut crate::SettingObj,
     ) {
         // setting.particles_uniform_data.is_only_update_pos = 0;
         // setting.update_particles_uniform(app);
@@ -249,6 +247,6 @@ impl Player for FluidPlayer {
         // self.render_node.draw_rpass(rpass);
 
         // draw paticles
-        self.particle_render.draw_rpass(rpass);
+        self.particle_render.draw_by_pass(rpass);
     }
 }

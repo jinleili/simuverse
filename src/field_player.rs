@@ -1,19 +1,15 @@
-use crate::util::math::Size;
-use crate::util::node::{BufferlessFullscreenNode, ComputeNode};
+use crate::node::{BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
-use crate::{SettingObj, FieldUniform, Player};
-use app_surface::AppSurface;
-use wgpu::{CommandEncoderDescriptor};
+use crate::{FieldUniform, Player, SettingObj};
+use app_surface::{math::Size, AppSurface};
+use wgpu::CommandEncoderDescriptor;
 
 use crate::{create_shader_module, insert_code_then_create};
 
 pub struct FieldPlayer {
-    canvas_size: Size<u32>,
-    field_uniform_data: FieldUniform,
     field_uniform: BufferObj,
     field_buf: BufferObj,
     field_workgroup_count: (u32, u32, u32),
-    code_snippet: String,
     trajectory_update_shader: wgpu::ShaderModule,
     field_setting_node: ComputeNode,
     particles_update_node: ComputeNode,
@@ -30,7 +26,7 @@ impl FieldPlayer {
         setting: &SettingObj,
     ) -> Self {
         let pixel_distance = 4;
-        let field_size: crate::util::math::Size<u32> = (
+        let field_size: app_surface::math::Size<u32> = (
             canvas_size.width / pixel_distance,
             canvas_size.height / pixel_distance,
         )
@@ -41,7 +37,7 @@ impl FieldPlayer {
             (field_size.height + 15) / 16,
             1,
         );
-        let (_, sx, sy) = crate::util::utils::matrix_helper::fullscreen_factor(
+        let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
             (canvas_size.width as f32, canvas_size.height as f32).into(),
         );
 
@@ -109,12 +105,9 @@ impl FieldPlayer {
             false,
         );
         let mut instance = FieldPlayer {
-            canvas_size,
-            field_uniform_data,
             field_uniform,
             field_buf,
             field_workgroup_count,
-            code_snippet,
             trajectory_update_shader,
             field_setting_node,
             particles_update_node,
@@ -127,7 +120,7 @@ impl FieldPlayer {
     }
 
     pub fn update_field_by_cpass<'c, 'b: 'c>(&'b self, cpass: &mut wgpu::ComputePass<'c>) {
-        self.field_setting_node.dispatch(cpass);
+        self.field_setting_node.compute_by_pass(cpass);
     }
 }
 
@@ -183,7 +176,7 @@ impl Player for FieldPlayer {
         rpass: &mut wgpu::RenderPass<'b>,
         _setting: &mut crate::SettingObj,
     ) {
-        self.render_node.draw_rpass(rpass);
+        self.render_node.draw_by_pass(rpass);
         self.frame_num += 1;
     }
 }

@@ -1,13 +1,16 @@
 use super::{init_lattice_material, is_sd_sphere, LatticeInfo, LatticeType, OBSTACLE_RADIUS};
-use crate::util::math::{Position, Size};
-use crate::util::{node::ComputeNode, AnyTexture, BufferObj};
-
 use crate::{
-    create_shader_module, fluid::LbmUniform, SettingObj, FieldAnimationType,
-    FieldUniform,
+    create_shader_module,
+    fluid::LbmUniform,
+    node::ComputeNode,
+    util::{AnyTexture, BufferObj},
+    FieldAnimationType, FieldUniform, SettingObj,
 };
+use app_surface::math::{Position, Size};
+
 use wgpu::TextureFormat;
 
+#[allow(dead_code)]
 pub struct AAD2Q9Node {
     pub lattice: wgpu::Extent3d,
     pub lattice_pixel_size: u32,
@@ -22,6 +25,7 @@ pub struct AAD2Q9Node {
     pub reset_node: ComputeNode,
 }
 
+#[allow(dead_code)]
 impl AAD2Q9Node {
     pub fn new(
         app_view: &app_surface::AppSurface,
@@ -38,7 +42,10 @@ impl AAD2Q9Node {
         };
 
         let dispatch_group_count = ((lattice.width + 63) / 64, (lattice.height + 3) / 4, 1);
-        println!("AAD2Q9Node dispatch_group_count: {:?}", dispatch_group_count);
+        println!(
+            "AAD2Q9Node dispatch_group_count: {:?}",
+            dispatch_group_count
+        );
         // reynolds number: (length)(velocity)/(viscosity)
         // Kármán vortex street： 47 < Re < 10^5
         // let viscocity = (lattice.width as f32 * 0.05) / 320.0;
@@ -55,7 +62,7 @@ impl AAD2Q9Node {
         let lbm_uniform_data =
             LbmUniform::new(tau, fluid_ty, (lattice.width * lattice.height) as i32);
 
-        let (_, sx, sy) = crate::util::utils::matrix_helper::fullscreen_factor(
+        let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
             (canvas_size.width as f32, canvas_size.height as f32).into(),
         );
         let field_uniform_data = FieldUniform {
@@ -277,7 +284,11 @@ impl AAD2Q9Node {
         }
     }
 
-    pub fn dispatch<'c, 'b: 'c>(&'b self, cpass: &mut wgpu::ComputePass<'c>, _swap_index: usize) {
+    pub fn compute_by_pass<'c, 'b: 'c>(
+        &'b self,
+        cpass: &mut wgpu::ComputePass<'c>,
+        _swap_index: usize,
+    ) {
         self.collide_stream_node
             .dispatch_by_offsets(cpass, Some(vec![vec![0], vec![256]]));
     }

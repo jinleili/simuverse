@@ -1,5 +1,5 @@
 use crate::util::BufferObj;
-use crate::util::math::Size;
+use app_surface::math::Size;
 use wgpu::util::DeviceExt;
 
 use crate::{create_shader_module, TrajectoryUniform};
@@ -11,13 +11,14 @@ pub struct ParticleRenderNode {
     update_pipeline: wgpu::RenderPipeline,
     compose_pipeline: wgpu::RenderPipeline,
     vertices_buf: wgpu::Buffer,
-    frame_index: u32,
 }
 
 #[allow(dead_code)]
 impl ParticleRenderNode {
     pub fn new(
-        app_view: &app_surface::AppSurface, point_size: f32, canvas_size: Size<u32>,
+        app_view: &app_surface::AppSurface,
+        point_size: f32,
+        canvas_size: Size<u32>,
     ) -> Self {
         let device = &app_view.device;
         let sampler = crate::util::load_texture::bilinear_sampler(device);
@@ -39,19 +40,26 @@ impl ParticleRenderNode {
 
         let mut trajectory_views: Vec<wgpu::TextureView> = vec![];
         for i in 0..2 {
-            trajectory_views.push(trajectory_tex.tex.create_view(&wgpu::TextureViewDescriptor {
-                label: Some("trajectory"),
-                format: Some(format),
-                dimension: Some(wgpu::TextureViewDimension::D2),
-                aspect: wgpu::TextureAspect::All,
-                base_mip_level: 0,
-                mip_level_count: None,
-                base_array_layer: i,
-                array_layer_count: std::num::NonZeroU32::new(1),
-            }));
+            trajectory_views.push(
+                trajectory_tex
+                    .tex
+                    .create_view(&wgpu::TextureViewDescriptor {
+                        label: Some("trajectory"),
+                        format: Some(format),
+                        dimension: Some(wgpu::TextureViewDimension::D2),
+                        aspect: wgpu::TextureAspect::All,
+                        base_mip_level: 0,
+                        mip_level_count: None,
+                        base_array_layer: i,
+                        array_layer_count: std::num::NonZeroU32::new(1),
+                    }),
+            );
         }
         let uniform_data = TrajectoryUniform {
-            screen_factor: [2.0 / canvas_size.width as f32, 2.0 / canvas_size.height as f32],
+            screen_factor: [
+                2.0 / canvas_size.width as f32,
+                2.0 / canvas_size.height as f32,
+            ],
             trajectory_view_index: 0,
             bg_view_index: 1,
         };
@@ -89,12 +97,18 @@ impl ParticleRenderNode {
             },
         ];
         let entries: Vec<wgpu::BindGroupEntry> = vec![
-            wgpu::BindGroupEntry { binding: 0, resource: uniform_buf.buffer.as_entire_binding() },
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: uniform_buf.buffer.as_entire_binding(),
+            },
             wgpu::BindGroupEntry {
                 binding: 1,
                 resource: wgpu::BindingResource::TextureView(&trajectory_tex.tex_view),
             },
-            wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&sampler) },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: wgpu::BindingResource::Sampler(&sampler),
+            },
         ];
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -163,12 +177,13 @@ impl ParticleRenderNode {
             update_pipeline,
             compose_pipeline,
             vertices_buf,
-            frame_index: 0,
         }
     }
 
     pub fn update_trajectory<'a, 'b: 'a>(
-        &'b self, encoder: &mut wgpu::CommandEncoder, particles_buf: &'b BufferObj,
+        &'b self,
+        encoder: &mut wgpu::CommandEncoder,
+        particles_buf: &'b BufferObj,
         particle_count: i32,
     ) {
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -177,7 +192,12 @@ impl ParticleRenderNode {
                 view: &self.trajectory_views[1],
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 0.0,
+                    }),
                     store: true,
                 },
             })],
@@ -197,7 +217,9 @@ impl ParticleRenderNode {
     }
 
     pub fn draw_rpass<'a, 'b: 'a>(
-        &'b self, rpass: &mut wgpu::RenderPass<'b>, _particles_buf: &'b BufferObj,
+        &'b self,
+        rpass: &mut wgpu::RenderPass<'b>,
+        _particles_buf: &'b BufferObj,
         _particle_count: i32,
     ) {
         // compose
@@ -208,9 +230,12 @@ impl ParticleRenderNode {
 }
 
 fn generate_pipeline(
-    device: &wgpu::Device, targets: Vec<Option<wgpu::ColorTargetState>>,
-    pipeline_layout: &wgpu::PipelineLayout, shader: &wgpu::ShaderModule,
-    entry_points: (&'static str, &'static str), is_bufferless: bool,
+    device: &wgpu::Device,
+    targets: Vec<Option<wgpu::ColorTargetState>>,
+    pipeline_layout: &wgpu::PipelineLayout,
+    shader: &wgpu::ShaderModule,
+    entry_points: (&'static str, &'static str),
+    is_bufferless: bool,
 ) -> wgpu::RenderPipeline {
     let vertex_attr_array =
         wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32, 3 => Float32];

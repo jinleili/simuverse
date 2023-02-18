@@ -5,6 +5,8 @@ pub mod framework;
 mod egui_lib;
 pub(crate) use egui_lib::*;
 
+pub(crate) mod node;
+
 mod setting;
 pub use setting::*;
 
@@ -17,8 +19,9 @@ pub use fluid::FluidPlayer;
 mod field_velocity_code;
 pub use field_velocity_code::get_velocity_code_snippet;
 
+use app_surface::math::{Position, Size};
+
 pub mod util;
-use util::math::{Position, Size};
 use util::shader::{create_shader_module, insert_code_then_create};
 use util::vertex::{PosColor as PosTangent, PosOnly};
 

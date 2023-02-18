@@ -10,5 +10,4 @@ fn bilinear_interpolate_1f(uv: vec2<f32>) -> f32 {
          src_1f(minX, minY + 1) * ((1.0 - fx) * fy) +
          src_1f(minX + 1, minY) * (fx * (1.0 - fy)) +
          src_1f(minX + 1, minY + 1) * (fx * fy);
-  // return 0.0;
 }
