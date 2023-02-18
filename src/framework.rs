@@ -1,3 +1,4 @@
+use app_surface::math::Position;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
@@ -10,12 +11,17 @@ pub trait Action {
     fn current_window_id(&self) -> WindowId;
     fn resize(&mut self);
     fn request_redraw(&mut self);
+    fn update(&mut self) {}
+    fn render(&mut self) -> Result<(), wgpu::SurfaceError>;
+
     fn input(&mut self, _event: &WindowEvent) -> bool {
         false
     }
     fn on_ui_event(&mut self, _event: &winit::event::WindowEvent<'_>) {}
-    fn update(&mut self) {}
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError>;
+    fn on_click(&mut self, _pos: Position) {}
+    fn touch_begin(&mut self) {}
+    fn touch_move(&mut self, _pos: Position) {}
+    fn touch_end(&mut self) {}
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -62,13 +68,16 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
     use winit::dpi::PhysicalSize;
 
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().with_title("Wgpu Simuverse").build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("Wgpu Simuverse")
+        .build(&event_loop)
+        .unwrap();
 
     // 计算一个默认显示高度
     let height = (if cfg!(target_arch = "wasm32") {
         550.0
     } else {
-        600.0
+        750.0
     } * window.scale_factor()) as u32;
 
     let width = if let Some(ratio) = wh_ratio {
@@ -137,15 +146,16 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
 }
 
 fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A) {
-    let mut state = instance;
+    let mut app = instance;
+    let mut last_touch_point = Position::zero();
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == state.current_window_id() => {
-                state.on_ui_event(event);
-                if !state.input(event) {
+            } if window_id == app.current_window_id() => {
+                app.on_ui_event(event);
+                if !app.input(event) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
@@ -158,22 +168,45 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(_physical_size) => {
-                            state.resize();
+                            app.resize();
                         }
                         WindowEvent::ScaleFactorChanged { .. } => {
-                            // new_inner_size is &mut so w have to dereference it twice
-                            state.resize();
+                            app.resize();
+                        }
+                        WindowEvent::MouseInput {
+                            device_id: _,
+                            state,
+                            button,
+                            ..
+                        } => {
+                            match button {
+                                MouseButton::Left => {
+                                    if *state == ElementState::Pressed {
+                                        app.on_click(last_touch_point);
+                                    } else {
+                                        app.touch_end();
+                                    }
+                                }
+                                _ => (),
+                            };
+                        }
+                        WindowEvent::CursorMoved { position, .. } => {
+                            // if left_bt_pressed {
+
+                            // }
+                            last_touch_point = Position::new(position.x as f32, position.y as f32);
+                            app.touch_move(last_touch_point);
                         }
                         _ => {}
                     }
                 }
             }
-            Event::RedrawRequested(window_id) if window_id == state.current_window_id() => {
-                state.update();
-                match state.render() {
+            Event::RedrawRequested(window_id) if window_id == app.current_window_id() => {
+                app.update();
+                match app.render() {
                     Ok(_) => {}
                     // 当展示平面的上下文丢失，就需重新配置
-                    Err(wgpu::SurfaceError::Lost) => state.resize(),
+                    Err(wgpu::SurfaceError::Lost) => app.resize(),
                     // 系统内存不足时，程序应该退出。
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // 所有其他错误（过期、超时等）应在下一帧解决
@@ -182,7 +215,7 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
             }
             Event::RedrawEventsCleared => {
                 // 除非我们手动请求，RedrawRequested 将只会触发一次。
-                state.request_redraw();
+                app.request_redraw();
             }
             _ => {}
         }

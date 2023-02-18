@@ -88,6 +88,14 @@ impl Action for InteractiveApp {
         let _ = self.egui_state.on_event(&self.egui_ctx, event);
     }
 
+    fn on_click(&mut self, pos: app_surface::math::Position) {
+        self.player.on_click(&self.app, pos);
+    }
+
+    fn touch_move(&mut self, pos: app_surface::math::Position) {
+        self.player.touch_move(&self.app, pos);
+    }
+
     fn request_redraw(&mut self) {
         self.app.view.request_redraw();
     }
@@ -102,7 +110,6 @@ impl Action for InteractiveApp {
 
         // egui ui 更新
         let raw_input = self.egui_state.take_egui_input(&self.app.view);
-        // raw_input.screen_rect = Some(self.pos_rect);
         let egui_app = &mut self.ctrl_panel;
         let full_output = self.egui_ctx.run(raw_input, |ctx| {
             egui_app.ui_contents(ctx);

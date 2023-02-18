@@ -64,18 +64,16 @@ pub trait Player {
     );
 }
 
-#[derive(Clone, Copy, PartialEq, Default)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum SimuType {
-    #[default]
     Field = 0,
     Fluid,
     Ink,
     D3Fluid,
 }
 
-#[derive(Clone, Copy, PartialEq, Default)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FieldAnimationType {
-    #[default]
     Basic = 0,
     JuliaSet,
     Spirl,
@@ -275,36 +273,6 @@ fn init_trajectory_particles(
     data
 }
 
-fn init_3d_particles(num: wgpu::Extent3d) -> Vec<Particle3D> {
-    let mut data: Vec<Particle3D> = vec![];
-    let mut rng = rand::thread_rng();
-    let step_x = 2.0 / num.width as f32;
-    let step_y = 2.0 / num.height as f32;
-    let step_z = 2.0 / num.depth_or_array_layers as f32;
-
-    let unif_x = rand::distributions::Uniform::new_inclusive(-step_x, step_x);
-    let unif_y = rand::distributions::Uniform::new_inclusive(-step_y, step_y);
-    let unif_z = rand::distributions::Uniform::new_inclusive(-step_z, step_z);
-
-    for x in 0..num.width {
-        let pixel_x = step_x * x as f32;
-        for y in 0..num.height {
-            for z in 0..num.depth_or_array_layers {
-                let pos = [
-                    -1.0 + pixel_x + unif_x.sample(&mut rng),
-                    -1.0 + step_y * y as f32 + unif_y.sample(&mut rng),
-                    -1.0 + step_z * z as f32 + unif_z.sample(&mut rng),
-                    1.0,
-                ];
-                let pos_initial = [rng.gen_range(0.0..step_x), pos[1], pos[2], 1.0];
-                data.push(Particle3D { pos, pos_initial });
-            }
-        }
-    }
-
-    data
-}
-
 pub fn generate_circle_plane(r: f32, fan_segment: usize) -> (Vec<PosOnly>, Vec<u32>) {
     // WebGPU 1.0 not support Triangle_Fan primitive
     let mut vertex_list: Vec<PosOnly> = Vec::with_capacity(fan_segment + 2);
@@ -376,7 +344,6 @@ pub fn generate_disc_plane(
     }
     let index = (fan_segment - 1) as u32 * 2;
     index_list.append(&mut vec![index, index + 1, 0, 0, index + 1, 1]);
-    // println!("{:?}", index_list);
 
     return (vertex_list, index_list);
 }

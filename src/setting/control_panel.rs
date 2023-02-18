@@ -2,7 +2,7 @@ use crate::{FieldAnimationType, ParticleColorType, SettingObj, SimuType};
 use app_surface::AppSurface;
 use egui::{
     emath::{Pos2, Rect},
-    Context,
+    Color32, Context, RichText, Ui,
 };
 
 pub struct ControlPanel {
@@ -42,12 +42,15 @@ impl ControlPanel {
         setting.update_canvas_size(&app, (&app.config).into());
 
         let margin = 8.0;
-        let panel_width = 360.0;
+        let panel_width = 320.0;
         let panel_height = app.config.height as f32 / app.scale_factor - margin * 2.0;
         // let x = app.config.width as f32 / app.scale_factor - panel_width - margin;
         let x = margin;
         let pos_rect = Rect {
-            min: Pos2 { x, y: margin },
+            min: Pos2 {
+                x,
+                y: margin + 20.0,
+            },
             max: Pos2 {
                 x: panel_width + x,
                 y: panel_height + margin,
@@ -146,7 +149,7 @@ impl ControlPanel {
 
         self.top_bar_ui(ctx);
 
-        let window = egui::Window::new("参数设置")
+        let window = egui::Window::new("设置")
             .id(egui::Id::new("particles_window_options")) // required since we change the title
             .resizable(false)
             .collapsible(true)
@@ -160,7 +163,7 @@ impl ControlPanel {
         window.show(ctx, |ui| {
             egui::Grid::new("my_grid")
                 .num_columns(2)
-                .spacing([40.0, 12.0])
+                .spacing([10.0, 12.0])
                 .striped(true)
                 .show(ui, |ui| {
                     ui.label("粒子数：");
@@ -188,54 +191,96 @@ impl ControlPanel {
                     ui.end_row();
                 });
             ui.separator();
-            ui.horizontal(|ui| {
-                ui.heading("速度矢量场计算  ");
-                ui.add_enabled(true, egui::Label::new("目前还不支持实时编辑"));
+            match self.selected_simu_type {
+                SimuType::Field => self.code_snippet_ui(ui),
+                SimuType::Fluid => {
+                    ui.heading("LBM 流体场交互");
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label("0. 点击屏幕给流体场中");
+                        ui.colored_label(Color32::from_rgb(110, 235, 110), "添加障碍物");
+                    });
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label("1. 划动屏幕给流体场中");
+                        ui.colored_label(Color32::from_rgb(110, 255, 110), "实施扰动");
+                    });
+                }
+                _ => (),
+            }
+        });
+    }
+
+    fn top_bar_ui(&mut self, ctx: &Context) {
+        let menu_items = vec![
+            ("🌾 矢量场", SimuType::Field),
+            ("💦 流体场", SimuType::Fluid),
+            ("🔏 隐形墨水", SimuType::Ink),
+        ];
+        egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.visuals_mut().button_frame = false;
+                ui.label("🌌 Wgpu Simuverse");
+                ui.separator();
+                for (name, anchor) in menu_items.into_iter() {
+                    if ui
+                        .selectable_label(self.selected_simu_type == anchor, name)
+                        .clicked()
+                    {
+                        self.selected_simu_type = anchor;
+                    }
+                }
             });
+        });
+    }
 
-            ui.horizontal(|ui| {
-                ui.label("预设实现：");
-                ui.selectable_value(&mut self.selected_code_snippet, Some(0), "简单");
-                ui.selectable_value(&mut self.selected_code_snippet, Some(1), "Julia Set");
-                ui.selectable_value(&mut self.selected_code_snippet, Some(2), "螺旋");
-                ui.selectable_value(&mut self.selected_code_snippet, Some(3), "黑洞");
-            });
+    fn code_snippet_ui(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            ui.heading("速度矢量场计算  ");
+            ui.add_enabled(true, egui::Label::new("目前还不支持实时编辑"));
+        });
 
-            let theme = crate::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+        ui.horizontal(|ui| {
+            ui.label("预设实现：");
+            ui.selectable_value(&mut self.selected_code_snippet, Some(0), "简单");
+            ui.selectable_value(&mut self.selected_code_snippet, Some(1), "Julia Set");
+            ui.selectable_value(&mut self.selected_code_snippet, Some(2), "螺旋");
+            ui.selectable_value(&mut self.selected_code_snippet, Some(3), "黑洞");
+        });
 
-            let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
-                let mut layout_job = crate::syntax_highlighting::highlight(
-                    ui.ctx(),
-                    &theme,
-                    &crate::remove_leading_indentation(string),
-                    "rs".into(),
-                );
-                layout_job.wrap.max_width = wrap_width;
-                ui.fonts(|f| f.layout_job(layout_job))
-            };
+        let theme = crate::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
 
-            crate::syntax_highlighting::code_view_ui(
-                ui,
-                "fn get_velocity(p: vec2<i32>) -> vec2<f32> {",
+        let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
+            let mut layout_job = crate::syntax_highlighting::highlight(
+                ui.ctx(),
+                &theme,
+                &crate::remove_leading_indentation(string),
+                "rs".into(),
             );
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.add(
-                    egui::TextEdit::multiline(&mut self.wgsl_code)
-                        .font(egui::TextStyle::Monospace) // for cursor height
-                        .code_editor()
-                        .desired_rows(6)
-                        .lock_focus(true)
-                        .desired_width(500.)
-                        .layouter(&mut layouter),
-                );
-            });
-            crate::syntax_highlighting::code_view_ui(ui, "}");
+            layout_job.wrap.max_width = wrap_width;
+            ui.fonts(|f| f.layout_job(layout_job))
+        };
 
-            ui.collapsing("矢量场计算着色器源码", |ui| {
-                egui::ScrollArea::both().show(ui, |ui| {
-                    crate::show_code(
-                        ui,
-                        r#"
+        crate::syntax_highlighting::code_view_ui(
+            ui,
+            "fn get_velocity(p: vec2<i32>) -> vec2<f32> {",
+        );
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            ui.add(
+                egui::TextEdit::multiline(&mut self.wgsl_code)
+                    .font(egui::TextStyle::Monospace) // for cursor height
+                    .code_editor()
+                    .desired_rows(6)
+                    .lock_focus(true)
+                    .desired_width(500.)
+                    .layouter(&mut layouter),
+            );
+        });
+        crate::syntax_highlighting::code_view_ui(ui, "}");
+
+        ui.collapsing("矢量场计算着色器源码", |ui| {
+            egui::ScrollArea::both().show(ui, |ui| {
+                crate::show_code(
+                    ui,
+                    r#"
 struct FieldUniform {
   // 矢量场格子数
   lattice_size: vec2<i32>,
@@ -271,31 +316,7 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
 }
   
     "#,
-                    );
-                });
-            });
-        });
-    }
-
-    fn top_bar_ui(&mut self, ctx: &Context) {
-        let menu_items = vec![
-            ("🌾 矢量场", SimuType::Field),
-            ("💦 流体场", SimuType::Fluid),
-            ("🔏 隐形墨水", SimuType::Ink),
-        ];
-        egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
-            ui.horizontal_wrapped(|ui| {
-                ui.visuals_mut().button_frame = false;
-                ui.label("🌌 Wgpu Simuverse");
-                ui.separator();
-                for (name, anchor) in menu_items.into_iter() {
-                    if ui
-                        .selectable_label(self.selected_simu_type == anchor, name)
-                        .clicked()
-                    {
-                        self.selected_simu_type = anchor;
-                    }
-                }
+                );
             });
         });
     }
@@ -319,7 +340,6 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
                 y_offset: 0.0,
             }),
     );
-
     // Bigger emojis, and more. <http://jslegers.github.io/emoji-icon-font/>:
     fonts.font_data.insert(
         "emoji-icon-font".to_owned(),
@@ -338,6 +358,14 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
             "emoji-icon-font".to_owned(),
         ],
     );
+
+    // Put my font as last fallback for monospace:
+    // 如果没有这项设置，`syntax_highlighting::code_view_ui` 无法渲染任何字符
+    fonts
+        .families
+        .entry(egui::FontFamily::Monospace)
+        .or_default()
+        .push(ZH_TINY.to_owned());
 
     ctx.set_fonts(fonts);
 }
