@@ -7,7 +7,8 @@ rust-version = "1.64"
 
 [dependencies]
 # 兼容 egui-winit 0.21
-app-surface = { git = "https://github.com/jinleili/wgpu-in-app", rev = "8271c28" }
+# 临时修复：https://github.com/gfx-rs/wgpu/issues/2540
+app-surface = { git = "https://github.com/jinleili/wgpu-in-app", rev = "b62a36a" }
 egui = { version = "0.21.0", default-features = false }
 egui-wgpu = { version = "0.21.0" }
 egui-winit = { version = "0.21.0" }

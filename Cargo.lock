@@ -118,7 +118,7 @@ dependencies = [
 [[package]]
 name = "app-surface"
 version = "0.1.3"
-source = "git+https://github.com/jinleili/wgpu-in-app?rev=8271c28#8271c2845ef3d37039bc740fc5fe95f33443ea8d"
+source = "git+https://github.com/jinleili/wgpu-in-app?rev=b62a36a#b62a36a92c5fa1af26e0d788d7cfb5998cec477e"
 dependencies = [
  "android_logger",
  "ash",
