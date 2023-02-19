@@ -8,6 +8,7 @@ pub struct BufferlessFullscreenNode {
 
 #[allow(dead_code)]
 impl BufferlessFullscreenNode {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         device: &wgpu::Device,
         format: TextureFormat,
@@ -118,36 +119,34 @@ pub fn create_bind_group(
 ) -> wgpu::BindGroup {
     let mut entries: Vec<wgpu::BindGroupEntry> = vec![];
     let mut b_index = 0_u32;
-    for i in 0..uniforms.len() {
-        let buffer_obj = uniforms[i];
+    for uniform in &uniforms {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
-            resource: buffer_obj.buffer.as_entire_binding(),
+            resource: uniform.buffer.as_entire_binding(),
         });
         b_index += 1;
     }
 
-    for i in 0..storage_buffers.len() {
-        let buffer_obj = storage_buffers[i];
+    for storage_buf in &storage_buffers {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
-            resource: buffer_obj.buffer.as_entire_binding(),
+            resource: storage_buf.buffer.as_entire_binding(),
         });
         b_index += 1;
     }
 
-    for i in 0..textures.len() {
+    for a_tex in &textures {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
-            resource: wgpu::BindingResource::TextureView(&textures[i].tex_view),
+            resource: wgpu::BindingResource::TextureView(&a_tex.tex_view),
         });
         b_index += 1;
     }
 
-    for i in 0..samplers.len() {
+    for sampler in &samplers {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
-            resource: wgpu::BindingResource::Sampler(samplers[i]),
+            resource: wgpu::BindingResource::Sampler(sampler),
         });
         b_index += 1;
     }

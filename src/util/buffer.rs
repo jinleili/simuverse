@@ -77,7 +77,7 @@ impl BufferObj {
         let mut size = min_binding_size;
         let data: &[u8] = if let Some(slice) = slice {
             size *= slice.len() as wgpu::BufferAddress;
-            bytemuck::cast_slice(&slice)
+            bytemuck::cast_slice(slice)
         } else {
             bytemuck::bytes_of(item.unwrap())
         };

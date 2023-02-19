@@ -65,13 +65,11 @@ impl Plane {
             for v in 0..=self.v_segments {
                 let y: f32 = self.most_bottom_y() + segment_height * (v as f32);
                 let tex_coord_v: f32 = tex_rect.y + tex_rect.height - v_gap * (v as f32);
-                // println!("tex_coord: {}, {} ", tex_coord_u, tex_coord_v);
                 vertices.push(PosTex::vertex_f32([x, y, 0.0], [tex_coord_u, tex_coord_v]));
             }
         }
 
         (vertices, self.get_element_indices())
-        // (vertices, self.get_line_indices())
     }
 
     //  最左边的 x 坐标
@@ -131,7 +129,6 @@ impl Plane {
                 let tex_coord_v: f32 = tex_rect.y + v_gap * (self.v_segments - v) as f32;
                 let tex_coord_v1: f32 = rect2_y + v_gap1 * (self.v_segments - v) as f32;
 
-                // println!("tex_coord: {}, {} ", tex_coord_u, tex_coord_v);
                 vertices.push(PosTex2::vertex_f32(
                     [x, y, 0.0],
                     [tex_coord_u, tex_coord_v],
@@ -148,7 +145,7 @@ impl Plane {
         self.generate_vertices_by_texcoord(Rect::from_origin_n_size(0.0, 0.0, 1.0, 1.0))
     }
 
-    // 返回的是线断列表，而不是线段条带
+    // 返回的是线段列表，而不是线段条带
     pub fn get_line_indices(&self) -> Vec<u32> {
         let mut indices: Vec<u32> = Vec::new();
         // 2 个线段有 3 个结点，所以需要 (self.v_segments + 1) * h
@@ -183,7 +180,6 @@ impl Plane {
         indices
     }
 
-    // 返回的是 triangle list，而不是 triangle strip
     pub fn get_element_indices(&self) -> Vec<u32> {
         let mut indices: Vec<u32> = Vec::new();
         // 2 个线段有 3 个结点，所以需要 (self.v_segments + 1) * h

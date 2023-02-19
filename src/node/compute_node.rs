@@ -34,6 +34,7 @@ impl ComputeNode {
         )
     }
 
+    #[allow(dead_code)]
     pub fn new_with_dynamic_uniforms(
         device: &wgpu::Device,
         group_count: (u32, u32, u32),
@@ -111,7 +112,7 @@ impl ComputeNode {
         if let Some(constants) = push_constants {
             for (stage, range) in constants.iter() {
                 ranges.push(wgpu::PushConstantRange {
-                    stages: stage.clone(),
+                    stages: *stage,
                     range: range.clone(),
                 })
             }

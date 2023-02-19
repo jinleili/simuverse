@@ -12,20 +12,16 @@ egui = { version = "0.21.0", default-features = false }
 egui-wgpu = { version = "0.21.0" }
 egui-winit = { version = "0.21.0" }
 winit = { version = "0.28" }
-egui_extras = { version = "0.21.0", optional = true }
-enum-map = { version = "2", features = ["serde"] }
-
-bytemuck = "1.4"
-cfg-if = "1"
-env_logger = "0.9"
-futures-intrusive = "0.4"
-log = "0.4"
 wgpu = "0.15"
-png = "0.17"
+glam = "0.22"
+# syntax_highlighting 需要 enum-map
+enum-map = { version = "2", features = ["serde"] }
+bytemuck = "1.4"
+env_logger = "0.9"
+log = "0.4"
 pollster = "0.2"
 rand = "0.8"
 image = { version = "*" }
-glam = "0.22"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"

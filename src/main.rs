@@ -2,12 +2,13 @@ use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::BufferObj;
 use simuverse::{
-    setup_custom_fonts, ControlPanel, FieldPlayer, FluidPlayer, Player, SettingObj, SimuType,
+    setup_custom_fonts, ControlPanel, FieldSimulator, FluidSimulator, SettingObj, SimuType,
+    Simulator,
 };
 use std::iter;
 use winit::{event_loop::EventLoop, window::WindowId};
 
-struct InteractiveApp {
+struct SimuverseApp {
     app: AppSurface,
     egui_ctx: egui::Context,
     egui_state: egui_winit::State,
@@ -15,10 +16,10 @@ struct InteractiveApp {
     ctrl_panel: ControlPanel,
     canvas_size: Size<u32>,
     canvas_buf: BufferObj,
-    player: Box<dyn Player>,
+    simulator: Box<dyn Simulator>,
 }
 
-impl Action for InteractiveApp {
+impl Action for SimuverseApp {
     fn new(app: AppSurface, event_loop: &EventLoop<()>) -> Self {
         let mut app = app;
         let format = app.config.format.remove_srgb_suffix();
@@ -40,7 +41,7 @@ impl Action for InteractiveApp {
             false,
             Some("canvas_buf"),
         );
-        let player = Self::create_player(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
+        let simulator = Self::create_simulator(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
 
         Self {
             app,
@@ -50,7 +51,7 @@ impl Action for InteractiveApp {
             ctrl_panel,
             canvas_buf,
             canvas_size,
-            player,
+            simulator,
         }
     }
 
@@ -76,7 +77,7 @@ impl Action for InteractiveApp {
             false,
             Some("canvas_buf"),
         );
-        self.player = Self::create_player(
+        self.simulator = Self::create_simulator(
             &self.app,
             canvas_size,
             &self.canvas_buf,
@@ -89,11 +90,11 @@ impl Action for InteractiveApp {
     }
 
     fn on_click(&mut self, pos: app_surface::math::Position) {
-        self.player.on_click(&self.app, pos);
+        self.simulator.on_click(&self.app, pos);
     }
 
     fn touch_move(&mut self, pos: app_surface::math::Position) {
-        self.player.touch_move(&self.app, pos);
+        self.simulator.touch_move(&self.app, pos);
     }
 
     fn request_redraw(&mut self) {
@@ -138,7 +139,7 @@ impl Action for InteractiveApp {
             )
         };
 
-        self.player.compute(&mut encoder);
+        self.simulator.compute(&mut encoder);
 
         let (output, frame_view) = self.app.get_current_frame_view();
         {
@@ -159,7 +160,7 @@ impl Action for InteractiveApp {
                 depth_stencil_attachment: None,
                 label: None,
             });
-            self.player
+            self.simulator
                 .draw_by_rpass(&self.app, &mut rpass, &mut self.ctrl_panel.setting);
 
             // egui ui 渲染
@@ -184,30 +185,30 @@ impl Action for InteractiveApp {
     }
 }
 
-impl InteractiveApp {
-    fn create_player(
+impl SimuverseApp {
+    fn create_simulator(
         app: &AppSurface,
         canvas_size: Size<u32>,
         canvas_buf: &BufferObj,
         setting: &SettingObj,
-    ) -> Box<dyn Player> {
-        return match setting.simu_type {
-            SimuType::Fluid => Box::new(FluidPlayer::new(app, canvas_size, canvas_buf, setting)),
-            _ => Box::new(FieldPlayer::new(
+    ) -> Box<dyn Simulator> {
+        match setting.simu_type {
+            SimuType::Fluid => Box::new(FluidSimulator::new(app, canvas_size, canvas_buf, setting)),
+            _ => Box::new(FieldSimulator::new(
                 app,
                 app.config.format,
                 canvas_size,
                 canvas_buf,
                 setting,
             )),
-        };
+        }
     }
 
     fn update_setting(&mut self) {
         let res = self.ctrl_panel.update_setting(&self.app);
         if res.1 {
             // 改变了模拟类型
-            self.player = Self::create_player(
+            self.simulator = Self::create_simulator(
                 &self.app,
                 (&self.app.config).into(),
                 &self.canvas_buf,
@@ -216,15 +217,15 @@ impl InteractiveApp {
         } else {
             if let Some(workgroup_count) = res.0 {
                 // 更新了粒子数后，还须更新 workgroup count
-                self.player
+                self.simulator
                     .update_workgroup_count(&self.app, workgroup_count);
             }
 
-            self.player.update_by(&self.app, &mut self.ctrl_panel);
+            self.simulator.update_by(&self.app, &mut self.ctrl_panel);
         }
     }
 }
 
 pub fn main() {
-    run::<InteractiveApp>(Some(1.6));
+    run::<SimuverseApp>(Some(1.6));
 }

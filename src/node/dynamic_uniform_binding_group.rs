@@ -12,17 +12,14 @@ impl DynamicUniformBindingGroup {
         let mut layouts: Vec<wgpu::BindGroupLayoutEntry> = vec![];
         let mut entries: Vec<wgpu::BindGroupEntry> = vec![];
 
-        let mut b_index = 0;
-        for i in 0..uniforms.len() {
-            let buffer_obj = uniforms[i];
-
+        for (b_index, (buffer_obj, visibility)) in uniforms.iter().enumerate() {
             layouts.push(wgpu::BindGroupLayoutEntry {
-                binding: b_index,
-                visibility: buffer_obj.1,
+                binding: b_index as u32,
+                visibility: *visibility,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: true,
-                    // min_binding_size: buffer_obj.0.min_binding_size,
+                    // min_binding_size: uniform.0.min_binding_size,
                     min_binding_size: None,
                 },
                 count: None,
@@ -32,9 +29,9 @@ impl DynamicUniformBindingGroup {
             // and not .slice(..)
             // for dynamic uniform buffers, BindingResource::Buffer specifies a "window" into the buffer that is then offset by your dynamic offset value
             entries.push(wgpu::BindGroupEntry {
-                binding: b_index,
+                binding: b_index as u32,
                 resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: &buffer_obj.0.buffer,
+                    buffer: &buffer_obj.buffer,
                     offset: 0,
                     // size: buffer_obj.0.min_binding_size,
                     size: wgpu::BufferSize::new(
@@ -42,7 +39,6 @@ impl DynamicUniformBindingGroup {
                     ),
                 }),
             });
-            b_index += 1;
         }
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &layouts,
@@ -55,6 +51,9 @@ impl DynamicUniformBindingGroup {
             label: None,
         });
 
-        DynamicUniformBindingGroup { bind_group_layout, bind_group }
+        DynamicUniformBindingGroup {
+            bind_group_layout,
+            bind_group,
+        }
     }
 }

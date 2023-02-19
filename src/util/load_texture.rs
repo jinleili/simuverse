@@ -16,7 +16,7 @@ pub fn from_path(
     usage: wgpu::TextureUsages,
     set_to_grayscale: bool,
 ) -> (AnyTexture, Sampler) {
-    let path = if image_path.split("/").count() > 5 {
+    let path = if image_path.split('/').count() > 5 {
         // is already a full path
         PathBuf::from(image_path)
     } else {
@@ -93,68 +93,11 @@ pub fn update_by_path(
     );
 }
 
-#[allow(dead_code)]
-pub fn from_buffer(
-    buffer: &wgpu::Buffer,
-    app_view: &app_surface::AppSurface,
-    encoder: &mut wgpu::CommandEncoder,
-    width: u32,
-    height: u32,
-    pixel_size: u32,
-    format: TextureFormat,
-    usage: wgpu::TextureUsages,
-) -> (AnyTexture, Sampler) {
-    let texture_extent = wgpu::Extent3d {
-        width,
-        height,
-        depth_or_array_layers: 1,
-    };
-    let texture = app_view.device.create_texture(&wgpu::TextureDescriptor {
-        size: texture_extent,
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format,
-        usage,
-        label: None,
-        view_formats: &[],
-    });
-    let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-
-    // BufferCopyView 必须 >= TextureCopyView
-    encoder.copy_buffer_to_texture(
-        wgpu::ImageCopyBuffer {
-            buffer,
-            layout: wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(NonZeroU32::new(pixel_size * width).unwrap()),
-                rows_per_image: Some(NonZeroU32::new(height).unwrap()),
-            },
-        },
-        wgpu::ImageCopyTexture {
-            texture: &texture,
-            mip_level: 0,
-            origin: wgpu::Origin3d::ZERO,
-            aspect: wgpu::TextureAspect::All,
-        },
-        texture_extent,
-    );
-    let any_tex = AnyTexture {
-        size: texture_extent,
-        tex: texture,
-        tex_view: texture_view,
-        view_dimension: wgpu::TextureViewDimension::D2,
-        format,
-    };
-
-    (any_tex, default_sampler(&app_view.device))
-}
-
 fn load_from_path(
     path: PathBuf,
     set_to_grayscale: bool,
 ) -> (Vec<u8>, wgpu::Extent3d, TextureFormat) {
-    let img = image::open(&path.as_path()).unwrap();
+    let img = image::open(path.as_path()).unwrap();
     let (width, height) = img.dimensions();
     let texture_extent = wgpu::Extent3d {
         width,

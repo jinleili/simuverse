@@ -10,8 +10,8 @@ struct FieldUniform {
   proj_ratio: vec2<f32>,
   // 单个像素在 NDC 空间中的大小
   ndc_pixel: vec2<f32>,
-  // 0: pixel speed, field player used 
-  // 1: lbm lattice speed, fluid player used. Its value is usually no greater than 0.2
+  // 0: pixel speed, field simulator used 
+  // 1: lbm lattice speed, fluid simulator used. Its value is usually no greater than 0.2
   speed_ty: i32,
 };
 

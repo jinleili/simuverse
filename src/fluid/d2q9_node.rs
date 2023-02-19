@@ -23,7 +23,7 @@ pub struct D2Q9Node {
     setting_nodes: Vec<BindingGroupSetting>,
     collide_stream_pipelines: Vec<wgpu::ComputePipeline>,
     boundary_pipelines: Vec<wgpu::ComputePipeline>,
-    pub dispatch_group_count: (u32, u32, u32),
+    pub workgroup_count: (u32, u32, u32),
     pub reset_node: ComputeNode,
 }
 
@@ -43,12 +43,10 @@ impl D2Q9Node {
             depth_or_array_layers: 1,
         };
 
-        let dispatch_group_count = ((lattice.width + 63) / 64, (lattice.height + 3) / 4, 1);
-        println!("d2q9Node dispatch_group_count: {:?}", dispatch_group_count);
+        let workgroup_count = ((lattice.width + 63) / 64, (lattice.height + 3) / 4, 1);
         // reynolds number: (length)(velocity)/(viscosity)
         // Kármán vortex street： 47 < Re < 10^5
         // let viscocity = (lattice.width as f32 * 0.05) / 320.0;
-        // println!("-- {} --", viscocity);
         // 通过外部参数来重置流体粒子碰撞松解时间 tau = (3.0 * x + 0.5), x：[0~1] 趋大，松解时间趋快
         let tau = 3.0 * setting.fluid_viscosity + 0.5;
         // let tau = 3.0 * viscocity + 0.5;
@@ -172,7 +170,7 @@ impl D2Q9Node {
         collide_stream_buffers[1].borrow_mut().read_only = false;
         let reset_node = ComputeNode::new(
             device,
-            dispatch_group_count,
+            workgroup_count,
             vec![&lbm_uniform_buf, &fluid_uniform_buf],
             vec![
                 &collide_stream_buffers[0],
@@ -193,7 +191,7 @@ impl D2Q9Node {
             lattice_info_data,
             info_buf,
             setting_nodes,
-            dispatch_group_count,
+            workgroup_count,
             collide_stream_pipelines,
             boundary_pipelines,
             reset_node,
@@ -201,7 +199,7 @@ impl D2Q9Node {
 
         instance.reset_lattice_info(device, queue);
 
-        return instance;
+        instance
     }
 
     pub fn reset(&mut self, encoder: &mut wgpu::CommandEncoder) {
@@ -292,8 +290,8 @@ impl D2Q9Node {
     ) {
         cpass.set_bind_group(0, &self.setting_nodes[swap_index].bind_group, &[]);
         cpass.set_pipeline(&self.collide_stream_pipelines[swap_index]);
-        cpass.dispatch_workgroups(self.dispatch_group_count.0, self.dispatch_group_count.1, 1);
+        cpass.dispatch_workgroups(self.workgroup_count.0, self.workgroup_count.1, 1);
         cpass.set_pipeline(&self.boundary_pipelines[swap_index]);
-        cpass.dispatch_workgroups(self.dispatch_group_count.0, self.dispatch_group_count.1, 1);
+        cpass.dispatch_workgroups(self.workgroup_count.0, self.workgroup_count.1, 1);
     }
 }

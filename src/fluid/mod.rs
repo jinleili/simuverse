@@ -3,11 +3,11 @@ const OBSTACLE_RADIUS: f32 = 32.0;
 mod lattice;
 use lattice::*;
 
-mod particle_render_node;
 mod d2q9_node;
+mod particle_render_node;
 
-mod fluid_player;
-pub use fluid_player::FluidPlayer;
+mod fluid_simulator;
+pub use fluid_simulator::FluidSimulator;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -65,9 +65,5 @@ pub struct TickTock {
 }
 
 fn is_sd_sphere(p: &app_surface::math::Position, r: f32) -> bool {
-    if p.length() > r {
-        false
-    } else {
-        true
-    }
+    p.length() <= r
 }

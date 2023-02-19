@@ -1,23 +1,23 @@
 use crate::node::{BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
-use crate::{FieldUniform, Player, SettingObj};
+use crate::{FieldUniform, SettingObj, Simulator};
 use app_surface::{math::Size, AppSurface};
 use wgpu::CommandEncoderDescriptor;
 
 use crate::{create_shader_module, insert_code_then_create};
 
-pub struct FieldPlayer {
+pub struct FieldSimulator {
     field_uniform: BufferObj,
     field_buf: BufferObj,
     field_workgroup_count: (u32, u32, u32),
-    trajectory_update_shader: wgpu::ShaderModule,
+    _trajectory_update_shader: wgpu::ShaderModule,
     field_setting_node: ComputeNode,
     particles_update_node: ComputeNode,
     render_node: BufferlessFullscreenNode,
     frame_num: usize,
 }
 
-impl FieldPlayer {
+impl FieldSimulator {
     pub fn new(
         app: &app_surface::AppSurface,
         canvas_format: wgpu::TextureFormat,
@@ -82,10 +82,10 @@ impl FieldPlayer {
         let particles_update_node = ComputeNode::new(
             &app.device,
             setting.particles_workgroup_count,
-            vec![&field_uniform, &setting.particles_uniform.as_ref().unwrap()],
+            vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
             vec![
                 &field_buf,
-                &setting.particles_buf.as_ref().unwrap(),
+                setting.particles_buf.as_ref().unwrap(),
                 canvas_buf,
             ],
             vec![],
@@ -96,7 +96,7 @@ impl FieldPlayer {
         let render_node = BufferlessFullscreenNode::new(
             &app.device,
             canvas_format,
-            vec![&field_uniform, &setting.particles_uniform.as_ref().unwrap()],
+            vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
             vec![canvas_buf],
             vec![],
             vec![],
@@ -104,11 +104,11 @@ impl FieldPlayer {
             None,
             false,
         );
-        let mut instance = FieldPlayer {
+        let mut instance = FieldSimulator {
             field_uniform,
             field_buf,
             field_workgroup_count,
-            trajectory_update_shader,
+            _trajectory_update_shader: trajectory_update_shader,
             field_setting_node,
             particles_update_node,
             render_node,
@@ -124,7 +124,7 @@ impl FieldPlayer {
     }
 }
 
-impl Player for FieldPlayer {
+impl Simulator for FieldSimulator {
     fn reset(&mut self, app: &app_surface::AppSurface) {
         let mut encoder = app
             .device

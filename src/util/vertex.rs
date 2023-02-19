@@ -29,7 +29,7 @@ impl PosOnly {
 impl Vertex for PosOnly {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![wgpu::VertexAttribute {
-            shader_location: offset + 0,
+            shader_location: offset,
             format: wgpu::VertexFormat::Float32x3,
             offset: 0,
         }]
@@ -54,7 +54,7 @@ impl Vertex for PosTangent {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![
             wgpu::VertexAttribute {
-                shader_location: offset + 0,
+                shader_location: offset,
                 format: wgpu::VertexFormat::Float32x3,
                 offset: 0,
             },
@@ -89,7 +89,7 @@ impl Vertex for PosColor {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![
             wgpu::VertexAttribute {
-                shader_location: offset + 0,
+                shader_location: offset,
                 format: wgpu::VertexFormat::Float32x3,
                 offset: 0,
             },
@@ -138,22 +138,13 @@ impl PosTex {
             tex_coord: self.tex_coord,
         }
     }
-
-    // pub fn vb_descriptor<'a>(offset: u32) -> wgpu::VertexBufferDescriptor<'a> {
-
-    //     wgpu::VertexBufferDescriptor {
-    //             stride: std::mem::size_of::<Self>() as wgpu::BufferAddress,
-    //             step_mode: wgpu::InputStepMode::Vertex,
-    //             attributes: &PosTex::vertex_attributes(offset)
-    //         }
-    // }
 }
 
 impl Vertex for PosTex {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![
             wgpu::VertexAttribute {
-                shader_location: offset + 0,
+                shader_location: offset,
                 format: wgpu::VertexFormat::Float32x3,
                 offset: 0,
             },
@@ -201,7 +192,7 @@ impl Vertex for PosTex2 {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![
             wgpu::VertexAttribute {
-                shader_location: offset + 0,
+                shader_location: offset,
                 format: wgpu::VertexFormat::Float32x3,
                 offset: 0,
             },
@@ -242,7 +233,7 @@ impl Vertex for PosWeight {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
         vec![
             wgpu::VertexAttribute {
-                shader_location: offset + 0,
+                shader_location: offset,
                 format: wgpu::VertexFormat::Float32x3,
                 offset: 0,
             },
@@ -252,89 +243,5 @@ impl Vertex for PosWeight {
                 offset: 4 * 3,
             },
         ]
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PosBrush {
-    pos: [f32; 3],
-    uv: [f32; 2],
-    // weight, time_interval, pressure
-    params: [f32; 3],
-}
-
-#[allow(dead_code)]
-impl PosBrush {
-    pub fn new(pos: [f32; 3], uv: [f32; 2], params: [f32; 3]) -> Self {
-        PosBrush { pos, uv, params }
-    }
-}
-
-impl Vertex for PosBrush {
-    fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
-        vec![
-            wgpu::VertexAttribute {
-                shader_location: offset + 0,
-                format: wgpu::VertexFormat::Float32x3,
-                offset: 0,
-            },
-            wgpu::VertexAttribute {
-                shader_location: offset + 1,
-                format: wgpu::VertexFormat::Float32x3,
-                offset: 4 * 3,
-            },
-            wgpu::VertexAttribute {
-                shader_location: offset + 2,
-                format: wgpu::VertexFormat::Float32x3,
-                offset: 4 * (3 + 2),
-            },
-        ]
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PosParticleIndex {
-    pos: [u32; 3],
-}
-
-#[allow(dead_code)]
-impl PosParticleIndex {
-    pub fn new(pos: [u32; 3]) -> Self {
-        PosParticleIndex { pos }
-    }
-}
-
-impl Vertex for PosParticleIndex {
-    fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
-        vec![wgpu::VertexAttribute {
-            shader_location: offset + 0,
-            format: wgpu::VertexFormat::Uint32x3,
-            offset: 0,
-        }]
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PosParticle {
-    pos: [f32; 3],
-}
-
-#[allow(dead_code)]
-impl PosParticle {
-    pub fn new(pos: [f32; 3]) -> Self {
-        PosParticle { pos }
-    }
-}
-
-impl Vertex for PosParticle {
-    fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
-        vec![wgpu::VertexAttribute {
-            shader_location: offset + 0,
-            format: wgpu::VertexFormat::Float32x3,
-            offset: 0,
-        }]
     }
 }

@@ -3,7 +3,7 @@ use crate::{
     fluid::LbmUniform,
     node::{BufferlessFullscreenNode, ComputeNode},
     util::BufferObj,
-    FieldAnimationType, Player, SettingObj,
+    FieldAnimationType, SettingObj, Simulator,
 };
 use app_surface::math::{Position, Size};
 use wgpu::TextureFormat;
@@ -11,19 +11,19 @@ use wgpu::TextureFormat;
 use crate::create_shader_module;
 
 // 通用的流體模擬，產生外部依賴的流體量
-pub struct FluidPlayer {
+pub struct FluidSimulator {
     canvas_size: Size<u32>,
     lattice: wgpu::Extent3d,
     lattice_pixel_size: u32,
     pre_pos: Position,
     fluid_compute_node: D2Q9Node,
-    curl_cal_node: ComputeNode,
+    _curl_cal_node: ComputeNode,
     particle_update_node: ComputeNode,
-    render_node: BufferlessFullscreenNode,
+    _render_node: BufferlessFullscreenNode,
     particle_render: BufferlessFullscreenNode,
 }
 
-impl FluidPlayer {
+impl FluidSimulator {
     pub fn new(
         app_view: &app_surface::AppSurface,
         canvas_size: Size<u32>,
@@ -54,7 +54,7 @@ impl FluidPlayer {
         );
         let curl_cal_node = ComputeNode::new(
             device,
-            fluid_compute_node.dispatch_group_count,
+            fluid_compute_node.workgroup_count,
             vec![
                 &fluid_compute_node.lbm_uniform_buf,
                 &fluid_compute_node.fluid_uniform_buf,
@@ -74,9 +74,9 @@ impl FluidPlayer {
             app_view.config.format,
             vec![
                 &fluid_compute_node.fluid_uniform_buf,
-                &setting.particles_uniform.as_ref().unwrap(),
+                setting.particles_uniform.as_ref().unwrap(),
             ],
-            vec![&canvas_buf],
+            vec![canvas_buf],
             vec![&fluid_compute_node.macro_tex, &curl_tex],
             vec![&sampler],
             &render_shader,
@@ -95,9 +95,9 @@ impl FluidPlayer {
             vec![
                 &fluid_compute_node.lbm_uniform_buf,
                 &fluid_compute_node.fluid_uniform_buf,
-                &setting.particles_uniform.as_ref().unwrap(),
+                setting.particles_uniform.as_ref().unwrap(),
             ],
-            vec![&setting.particles_buf.as_ref().unwrap(), &canvas_buf],
+            vec![setting.particles_buf.as_ref().unwrap(), canvas_buf],
             vec![(&fluid_compute_node.macro_tex, None)],
             &update_shader,
         );
@@ -108,9 +108,9 @@ impl FluidPlayer {
             app_view.config.format,
             vec![
                 &fluid_compute_node.fluid_uniform_buf,
-                &setting.particles_uniform.as_ref().unwrap(),
+                setting.particles_uniform.as_ref().unwrap(),
             ],
-            vec![&canvas_buf],
+            vec![canvas_buf],
             vec![],
             vec![],
             &particle_shader,
@@ -118,21 +118,21 @@ impl FluidPlayer {
             false,
         );
 
-        FluidPlayer {
+        FluidSimulator {
             canvas_size,
             lattice,
             lattice_pixel_size: fluid_compute_node.lattice_pixel_size,
             pre_pos: Position::new(0.0, 0.0),
             fluid_compute_node,
-            curl_cal_node,
+            _curl_cal_node: curl_cal_node,
             particle_update_node,
-            render_node,
+            _render_node: render_node,
             particle_render,
         }
     }
 }
 
-impl Player for FluidPlayer {
+impl Simulator for FluidSimulator {
     fn on_click(&mut self, app: &app_surface::AppSurface, pos: Position) {
         if pos.x <= 0.0 || pos.y <= 0.0 {
             return;

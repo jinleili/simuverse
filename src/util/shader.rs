@@ -27,10 +27,7 @@ pub fn application_root_dir() -> String {
                 target_os = "windows",
                 target_os = "linux"
             )) {
-                path = path
-                    .join("../../../assets/")
-                    .canonicalize()
-                    .unwrap();
+                path = path.join("../../../assets/").canonicalize().unwrap();
             }
 
             String::from(path.to_str().unwrap())
@@ -59,14 +56,14 @@ pub fn insert_code_then_create(
     // std::env::current_dir() 在 xcode debug 时只能获得相对路径： “/”
     let base_dir = application_root_dir();
     let (fold, shader_name) = if cfg!(any(target_os = "ios", target_arch = "wasm32")) {
-        ("preprocessed-wgsl", shader_name.replace("/", "_"))
+        ("preprocessed-wgsl", shader_name.replace('/', "_"))
     } else {
         ("wgsl", shader_name.to_string())
     };
     let code = request_shader_code(&base_dir, fold, &shader_name);
 
     let shader_source = if cfg!(any(target_os = "ios", target_arch = "wasm32")) {
-        code.to_string()
+        code
     } else {
         let mut shader_source = String::new();
         parse_shader_source(&code, &mut shader_source, &base_dir);
@@ -113,7 +110,7 @@ fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String 
     let code = match read_to_string(&path) {
         Ok(code) => code,
         Err(e) => {
-            panic!("Unable to read {:?}: {:?}", path, e)
+            panic!("Unable to read {path:?}: {e:?}")
         }
     };
     code
@@ -121,16 +118,14 @@ fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String 
 
 fn parse_shader_source(source: &str, output: &mut String, base_path: &str) {
     for line in source.lines() {
-        if line.starts_with(SHADER_IMPORT) {
-            let imports = line[SHADER_IMPORT.len()..].split(',');
+        if let Some(stripped) = line.strip_prefix(SHADER_IMPORT) {
+            let imports = stripped.split(',');
             // For each import, get the source, and recurse.
             for import in imports {
                 if let Some(include) = get_shader_funcs(import, base_path) {
                     parse_shader_source(&include, output, base_path);
                 } else {
-                    println!("shader parse error -------");
-                    println!("can't find shader functions: {}", import);
-                    println!("--------------------------");
+                    println!("shader parse error \n can't find shader functions: {import}");
                 }
             }
         } else {
@@ -158,7 +153,7 @@ fn get_shader_funcs(key: &str, base_path: &str) -> Option<String> {
         .join(key.replace('"', ""));
     let shader = match read_to_string(&path) {
         Ok(code) => code,
-        Err(e) => panic!("Unable to read {:?}: {:?}", path, e),
+        Err(e) => panic!("Unable to read {path:?}: {e:?}"),
     };
     Some(shader)
 }

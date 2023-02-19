@@ -197,11 +197,11 @@ impl ViewNode {
             wgpu::TextureFormat::Bgra8Unorm
         };
 
-        let stages: Vec<wgpu::ShaderStages> = if attributes.shader_stages.len() > 0 {
+        let stages: Vec<wgpu::ShaderStages> = if !attributes.shader_stages.is_empty() {
             attributes.shader_stages
         } else {
             let mut stages: Vec<wgpu::ShaderStages> = vec![wgpu::ShaderStages::VERTEX];
-            let uniform_buffers_len = if attributes.uniform_buffers.len() > 0 {
+            let uniform_buffers_len = if !attributes.uniform_buffers.is_empty() {
                 attributes.uniform_buffers.len()
             } else {
                 1
@@ -217,8 +217,8 @@ impl ViewNode {
         };
 
         let sampler = crate::util::load_texture::default_sampler(device);
-        let new_samplers: Vec<&wgpu::Sampler> = if attributes.tex_views.len() > 0 {
-            if attributes.samplers.len() > 0 {
+        let new_samplers: Vec<&wgpu::Sampler> = if !attributes.tex_views.is_empty() {
+            if !attributes.samplers.is_empty() {
                 attributes.samplers
             } else {
                 vec![&sampler]
@@ -234,7 +234,7 @@ impl ViewNode {
         };
         let mvp_buf = BufferObj::create_uniform_buffer(device, &mvp, Some("mvp uniform"));
         let uniform_buffers =
-            if attributes.uniform_buffers.len() == 0 && attributes.view_size.width > 0.0 {
+            if attributes.uniform_buffers.is_empty() && attributes.view_size.width > 0.0 {
                 vec![&mvp_buf]
             } else {
                 attributes.uniform_buffers
@@ -298,18 +298,16 @@ impl ViewNode {
         let default_layout_attributes = T::vertex_attributes(0);
         let vertex_buffer_layouts = if let Some(layouts) = attributes.vertex_buffer_layouts {
             layouts
+        } else if std::mem::size_of::<T>() > 0 {
+            vec![wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
+                step_mode: wgpu::VertexStepMode::Vertex,
+                attributes: &default_layout_attributes,
+            }]
         } else {
-            if std::mem::size_of::<T>() > 0 {
-                vec![wgpu::VertexBufferLayout {
-                    array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &default_layout_attributes,
-                }]
-            } else {
-                vec![]
-            }
+            vec![]
         };
-        let (dy_uniform_bg, pipeline_layout) = if attributes.dynamic_uniforms.len() > 0 {
+        let (dy_uniform_bg, pipeline_layout) = if !attributes.dynamic_uniforms.is_empty() {
             let dy_bg = super::DynamicUniformBindingGroup::new(device, attributes.dynamic_uniforms);
             let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
@@ -331,12 +329,12 @@ impl ViewNode {
             label: Some("image_view pipeline"),
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &attributes.shader_module,
+                module: attributes.shader_module,
                 entry_point: "vs_main",
                 buffers: &vertex_buffer_layouts,
             },
             fragment: Some(wgpu::FragmentState {
-                module: &attributes.shader_module,
+                module: attributes.shader_module,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: corlor_format,

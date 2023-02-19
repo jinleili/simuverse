@@ -1,14 +1,10 @@
 use crate::{FieldAnimationType, ParticleColorType, SettingObj, SimuType};
 use app_surface::AppSurface;
-use egui::{
-    emath::{Pos2, Rect},
-    Color32, Context, RichText, Ui,
-};
+use egui::{Color32, Context, Ui};
 
 pub struct ControlPanel {
     pub setting: SettingObj,
     panel_frame: egui::Frame,
-    pos_rect: Rect,
     window_size: egui::emath::Vec2,
     pub particles_count: i32,
     pub particle_size: i32,
@@ -39,23 +35,11 @@ impl ControlPanel {
             lifetime as f32,
             particle_size,
         );
-        setting.update_canvas_size(&app, (&app.config).into());
+        setting.update_canvas_size(app, (&app.config).into());
 
         let margin = 8.0;
         let panel_width = 320.0;
         let panel_height = app.config.height as f32 / app.scale_factor - margin * 2.0;
-        // let x = app.config.width as f32 / app.scale_factor - panel_width - margin;
-        let x = margin;
-        let pos_rect = Rect {
-            min: Pos2 {
-                x,
-                y: margin + 20.0,
-            },
-            max: Pos2 {
-                x: panel_width + x,
-                y: panel_height + margin,
-            },
-        };
 
         // 实测出来的数值，避免圆角被裁剪
         let window_size: egui::emath::Vec2 = [panel_width - 26.0, panel_height - 12.].into();
@@ -74,7 +58,6 @@ impl ControlPanel {
         Self {
             setting,
             panel_frame,
-            pos_rect,
             window_size,
             particles_count,
             particle_size,
@@ -89,7 +72,7 @@ impl ControlPanel {
     }
 
     pub fn is_code_snippet_changed(&mut self) -> bool {
-        let is_changed = self.is_code_snippet_changed.clone();
+        let is_changed = self.is_code_snippet_changed;
         self.is_code_snippet_changed = false;
         is_changed
     }
@@ -108,9 +91,8 @@ impl ControlPanel {
             workgroup_count_changed = Some(self.setting.particles_workgroup_count);
         }
         self.setting
-            .update_particle_point_size(&app, self.particle_size);
-        self.setting
-            .update_particle_life(&app, self.lifetime as f32);
+            .update_particle_point_size(app, self.particle_size);
+        self.setting.update_particle_life(app, self.lifetime as f32);
 
         let mut simu_ty_changed = false;
         if self.selected_simu_type != self.setting.simu_type {
@@ -125,7 +107,7 @@ impl ControlPanel {
                 self.lifetime as f32,
                 self.particle_size,
             );
-            setting.update_canvas_size(&app, (&app.config).into());
+            setting.update_canvas_size(app, (&app.config).into());
             self.setting = setting;
 
             simu_ty_changed = true;
@@ -140,8 +122,7 @@ impl ControlPanel {
                 self.last_selected_code_snippet = code_index;
                 self.wgsl_code = crate::get_velocity_code_snippet(
                     crate::FieldAnimationType::from_u32(code_index as u32),
-                )
-                .into();
+                );
                 self.is_code_snippet_changed = true;
             }
             _ => {}
@@ -253,7 +234,7 @@ impl ControlPanel {
                 ui.ctx(),
                 &theme,
                 &crate::remove_leading_indentation(string),
-                "rs".into(),
+                "rs",
             );
             layout_job.wrap.max_width = wrap_width;
             ui.fonts(|f| f.layout_job(layout_job))
@@ -322,7 +303,7 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 }
 
-const ZH_TINY: &'static str = "zh";
+const ZH_TINY: &str = "zh";
 
 pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();

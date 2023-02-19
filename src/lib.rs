@@ -10,11 +10,11 @@ pub(crate) mod node;
 mod setting;
 pub use setting::*;
 
-mod field_player;
-pub use field_player::FieldPlayer;
+mod field_simulator;
+pub use field_simulator::FieldSimulator;
 
 mod fluid;
-pub use fluid::FluidPlayer;
+pub use fluid::FluidSimulator;
 
 mod field_velocity_code;
 pub use field_velocity_code::get_velocity_code_snippet;
@@ -34,7 +34,7 @@ pub struct MVPMatUniform {
     normal: [[f32; 4]; 4],
 }
 
-pub trait Player {
+pub trait Simulator {
     fn update_uniforms(&mut self, _app: &app_surface::AppSurface, _setting: &crate::SettingObj) {}
 
     fn on_click(&mut self, _app: &app_surface::AppSurface, _pos: Position) {}
@@ -128,8 +128,8 @@ pub struct FieldUniform {
     pub proj_ratio: [f32; 2],
     // 单个像素在 NDC 空间中的大小
     pub ndc_pixel: [f32; 2],
-    // 0: pixel speed, field player used
-    // 1: lbm lattice speed, fluid player used. Its value is usually no greater than 0.2
+    // 0: pixel speed, field simulator used
+    // 1: lbm lattice speed, fluid simulator used. Its value is usually no greater than 0.2
     pub speed_ty: i32,
     // 用于字节对齐
     pub _padding: f32,
@@ -294,7 +294,7 @@ pub fn generate_circle_plane(r: f32, fan_segment: usize) -> (Vec<PosOnly>, Vec<u
             index_list.push(i as u32 + 1);
         }
     }
-    return (vertex_list, index_list);
+    (vertex_list, index_list)
 }
 
 // 光盘平面
@@ -345,5 +345,5 @@ pub fn generate_disc_plane(
     let index = (fan_segment - 1) as u32 * 2;
     index_list.append(&mut vec![index, index + 1, 0, 0, index + 1, 1]);
 
-    return (vertex_list, index_list);
+    (vertex_list, index_list)
 }
