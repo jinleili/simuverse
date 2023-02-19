@@ -1,4 +1,4 @@
-const OBSTACLE_RADIUS: f32 = 32.0;
+const OBSTACLE_RADIUS: f32 = 28.0;
 
 mod lattice;
 use lattice::*;

@@ -1,12 +1,5 @@
 use app_surface::math::Size;
 
-#[allow(dead_code)]
-pub fn default_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
-    let (p_matrix, mv_matrix) = perspective_fullscreen_mvp(viewport_size);
-    (p_matrix * mv_matrix).to_cols_array_2d()
-}
-
-#[allow(dead_code)]
 pub fn fullscreen_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
     let (p_matrix, mv_matrix) = perspective_fullscreen_mvp(viewport_size);
     (p_matrix * mv_matrix).to_cols_array_2d()
@@ -65,7 +58,7 @@ pub fn fullscreen_factor(viewport_size: Size<f32>) -> (f32, f32, f32) {
 }
 
 #[allow(dead_code)]
-pub fn ortho_default_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
+pub fn ortho_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
     let factor = fullscreen_factor(viewport_size);
     let p_matrix = glam::Mat4::orthographic_rh(
         -1.0 * factor.1,

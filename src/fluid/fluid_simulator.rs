@@ -198,11 +198,13 @@ impl Simulator for FluidSimulator {
     ) {
     }
 
+    
     fn update_workgroup_count(
         &mut self,
         _app: &app_surface::AppSurface,
-        _workgroup_count: (u32, u32, u32),
+        workgroup_count: (u32, u32, u32),
     ) {
+        self.particle_update_node.group_count = workgroup_count;
     }
 
     fn reset(&mut self, app: &app_surface::AppSurface) {

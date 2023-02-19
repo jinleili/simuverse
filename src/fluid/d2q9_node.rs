@@ -36,7 +36,7 @@ impl D2Q9Node {
     ) -> Self {
         let device = &app_view.device;
         let queue = &app_view.queue;
-        let lattice_pixel_size = 2;
+        let lattice_pixel_size = (2.0 * app_view.scale_factor).ceil() as u32;
         let lattice = wgpu::Extent3d {
             width: canvas_size.width / lattice_pixel_size,
             height: canvas_size.height / lattice_pixel_size,

@@ -194,7 +194,7 @@ impl ControlPanel {
         let menu_items = vec![
             ("🌾 矢量场", SimuType::Field),
             ("💦 流体场", SimuType::Fluid),
-            ("🔏 隐形墨水", SimuType::Ink),
+            // ("🔏 隐形墨水", SimuType::Ink),
         ];
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
