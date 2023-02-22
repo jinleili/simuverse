@@ -30,13 +30,13 @@ pub struct D2Q9Node {
 #[allow(dead_code)]
 impl D2Q9Node {
     pub fn new(
-        app_view: &app_surface::AppSurface,
+        app: &app_surface::AppSurface,
         canvas_size: Size<u32>,
         setting: &SettingObj,
     ) -> Self {
-        let device = &app_view.device;
-        let queue = &app_view.queue;
-        let lattice_pixel_size = (2.0 * app_view.scale_factor).ceil() as u32;
+        let device = &app.device;
+        let queue = &app.queue;
+        let lattice_pixel_size = (2.0 * app.scale_factor).ceil() as u32;
         let lattice = wgpu::Extent3d {
             width: canvas_size.width / lattice_pixel_size,
             height: canvas_size.height / lattice_pixel_size,
@@ -99,7 +99,7 @@ impl D2Q9Node {
                 depth_or_array_layers: 1,
             },
             None,
-            Some(wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING),
+            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
             Some("macro_tex"),
         );
 

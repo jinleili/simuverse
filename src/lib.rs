@@ -5,7 +5,10 @@ pub mod framework;
 mod egui_lib;
 pub(crate) use egui_lib::*;
 
+pub(crate) mod geometries;
+
 pub(crate) mod node;
+pub mod noise;
 
 mod setting;
 pub use setting::*;
@@ -25,12 +28,15 @@ pub mod util;
 use util::shader::{create_shader_module, insert_code_then_create};
 use util::vertex::{PosColor as PosTangent, PosOnly};
 
+pub static DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct MVPMatUniform {
     mv: [[f32; 4]; 4],
     proj: [[f32; 4]; 4],
     mvp: [[f32; 4]; 4],
+    mv_no_rotation: [[f32; 4]; 4],
     normal: [[f32; 4]; 4],
 }
 
@@ -68,7 +74,7 @@ pub trait Simulator {
 pub enum SimuType {
     Field = 0,
     Fluid,
-    Ink,
+    Noise,
     D3Fluid,
 }
 
@@ -277,15 +283,17 @@ pub fn generate_circle_plane(r: f32, fan_segment: usize) -> (Vec<PosOnly>, Vec<u
     // WebGPU 1.0 not support Triangle_Fan primitive
     let mut vertex_list: Vec<PosOnly> = Vec::with_capacity(fan_segment + 2);
     let z = 0.0_f32;
-    vertex_list.push(PosOnly::new([0.0, 0.0, z]));
-    vertex_list.push(PosOnly::new([r, 0.0, z]));
+    vertex_list.push(PosOnly { pos: [0.0, 0.0, z] });
+    vertex_list.push(PosOnly { pos: [r, 0.0, z] });
 
     let mut index_list: Vec<u32> = Vec::with_capacity(fan_segment * 3);
 
     let step = (std::f32::consts::PI * 2.0) / fan_segment as f32;
     for i in 1..=fan_segment {
         let angle = step * i as f32;
-        vertex_list.push(PosOnly::new([r * angle.cos(), r * angle.sin(), z]));
+        vertex_list.push(PosOnly {
+            pos: [r * angle.cos(), r * angle.sin(), z],
+        });
         index_list.push(0);
         index_list.push(i as u32);
         if i == fan_segment {
@@ -306,8 +314,14 @@ pub fn generate_disc_plane(
     // WebGPU 1.0 not support Triangle_Fan primitive
     let mut vertex_list: Vec<PosTangent> = Vec::with_capacity(fan_segment);
     let z = 0.0_f32;
-    vertex_list.push(PosTangent::new([min_r, 0.0, z], [0.0, 1.0, z, 1.0]));
-    vertex_list.push(PosTangent::new([max_r, 0.0, z], [0.0, 1.0, z, 1.0]));
+    vertex_list.push(PosTangent {
+        pos: [min_r, 0.0, z],
+        color: [0.0, 1.0, z, 1.0],
+    });
+    vertex_list.push(PosTangent {
+        pos: [max_r, 0.0, z],
+        color: [0.0, 1.0, z, 1.0],
+    });
 
     let tangent_r = 1.0;
     let tan_offset_angle = std::f32::consts::FRAC_PI_2;
@@ -324,14 +338,14 @@ pub fn generate_disc_plane(
             0.0,
             1.0,
         ];
-        vertex_list.push(PosTangent::new(
-            [min_r * angle.cos(), min_r * angle.sin(), z],
-            tangent,
-        ));
-        vertex_list.push(PosTangent::new(
-            [max_r * angle.cos(), max_r * angle.sin(), z],
-            tangent,
-        ));
+        vertex_list.push(PosTangent {
+            pos: [min_r * angle.cos(), min_r * angle.sin(), z],
+            color: tangent,
+        });
+        vertex_list.push(PosTangent {
+            pos: [max_r * angle.cos(), max_r * angle.sin(), z],
+            color: tangent,
+        });
         let index = i as u32 * 2;
         index_list.append(&mut vec![
             index - 2,

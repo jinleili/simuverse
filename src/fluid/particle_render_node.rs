@@ -15,16 +15,12 @@ pub struct ParticleRenderNode {
 
 #[allow(dead_code)]
 impl ParticleRenderNode {
-    pub fn new(
-        app_view: &app_surface::AppSurface,
-        point_size: f32,
-        canvas_size: Size<u32>,
-    ) -> Self {
-        let device = &app_view.device;
+    pub fn new(app: &app_surface::AppSurface, point_size: f32, canvas_size: Size<u32>) -> Self {
+        let device = &app.device;
         let sampler = crate::util::load_texture::bilinear_sampler(device);
         // Render pipeline is incompatible with render pass
         // Incompatible color attachment: [Rgba8Unorm] != [Bgra8Unorm]
-        let format = app_view.config.format;
+        let format = app.config.format;
         let trajectory_tex = crate::util::load_texture::empty(
             device,
             format,
@@ -34,7 +30,7 @@ impl ParticleRenderNode {
                 depth_or_array_layers: 2,
             },
             Some(wgpu::TextureViewDimension::D2Array),
-            Some(wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT),
+            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
             Some("trajectory_tex"),
         );
 

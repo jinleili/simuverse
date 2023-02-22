@@ -1,4 +1,4 @@
-use crate::util::{AnyTexture, BufferObj};
+use crate::{util::{AnyTexture, BufferObj}, DEPTH_FORMAT};
 use wgpu::{PrimitiveTopology, ShaderModule, TextureFormat};
 
 pub struct BufferlessFullscreenNode {
@@ -18,8 +18,8 @@ impl BufferlessFullscreenNode {
         samplers: Vec<&wgpu::Sampler>,
         shader_module: &ShaderModule,
         color_blend_state: Option<wgpu::BlendState>,
-        use_depth_stencil: bool,
     ) -> Self {
+        let use_depth_stencil = true;
         let pipeline_vertex_buffers = [];
         let blend_state = if color_blend_state.is_some() {
             color_blend_state
@@ -53,7 +53,7 @@ impl BufferlessFullscreenNode {
             },
             depth_stencil: if use_depth_stencil {
                 Some(wgpu::DepthStencilState {
-                    format: wgpu::TextureFormat::Depth32Float,
+                    format: DEPTH_FORMAT,
                     depth_write_enabled: true,
                     depth_compare: wgpu::CompareFunction::Less,
                     stencil: wgpu::StencilState::default(),

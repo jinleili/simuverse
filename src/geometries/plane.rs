@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use crate::util::vertex::{PosUv, PosUv2};
 use app_surface::math::Rect;
-use crate::util::vertex::{PosTex, PosTex2};
 
 pub struct Plane {
     width: f32,
@@ -48,13 +48,13 @@ impl Plane {
     }
 
     // 支持指定纹理区域
-    pub fn generate_vertices_by_texcoord(&self, tex_rect: Rect) -> (Vec<PosTex>, Vec<u32>) {
+    pub fn generate_vertices_by_texcoord(&self, tex_rect: Rect) -> (Vec<PosUv>, Vec<u32>) {
         let segment_width = self.width / self.h_segments as f32;
         let segment_height = self.height / self.v_segments as f32;
         let h_gap = tex_rect.width / (self.h_segments as f32);
         let v_gap = tex_rect.height / (self.v_segments as f32);
 
-        let mut vertices: Vec<PosTex> = Vec::new();
+        let mut vertices: Vec<PosUv> = Vec::new();
 
         // 从左下角开始，按列遍历
         // 下边的写法等同于 for (let h=0; h<(h_segments + 1); h++) {}
@@ -65,7 +65,10 @@ impl Plane {
             for v in 0..=self.v_segments {
                 let y: f32 = self.most_bottom_y() + segment_height * (v as f32);
                 let tex_coord_v: f32 = tex_rect.y + tex_rect.height - v_gap * (v as f32);
-                vertices.push(PosTex::vertex_f32([x, y, 0.0], [tex_coord_u, tex_coord_v]));
+                vertices.push(PosUv {
+                    pos: [x, y, 0.0],
+                    uv: [tex_coord_u, tex_coord_v],
+                });
             }
         }
 
@@ -94,7 +97,7 @@ impl Plane {
         &self,
         tex_rect: Rect,
         rect2: Option<Rect>,
-    ) -> (Vec<PosTex2>, Vec<u32>) {
+    ) -> (Vec<PosUv2>, Vec<u32>) {
         let segment_width = self.width / self.h_segments as f32;
         let segment_height = self.height / self.v_segments as f32;
         let h_gap = tex_rect.width / (self.h_segments as f32);
@@ -115,7 +118,7 @@ impl Plane {
             )
         };
 
-        let mut vertices: Vec<PosTex2> = Vec::new();
+        let mut vertices: Vec<PosUv2> = Vec::new();
 
         // 从左下角开始，按列遍历
         // 下边的写法等同于 for (let h=0; h<(h_segments + 1); h++) {}
@@ -129,11 +132,11 @@ impl Plane {
                 let tex_coord_v: f32 = tex_rect.y + v_gap * (self.v_segments - v) as f32;
                 let tex_coord_v1: f32 = rect2_y + v_gap1 * (self.v_segments - v) as f32;
 
-                vertices.push(PosTex2::vertex_f32(
-                    [x, y, 0.0],
-                    [tex_coord_u, tex_coord_v],
-                    [tex_coord_u1, tex_coord_v1],
-                ));
+                vertices.push(PosUv2 {
+                    pos: [x, y, 0.0],
+                    uv0: [tex_coord_u, tex_coord_v],
+                    uv1: [tex_coord_u1, tex_coord_v1],
+                });
             }
         }
 
@@ -141,7 +144,7 @@ impl Plane {
         // (vertices, self.get_line_indices())
     }
 
-    pub fn generate_vertices(&self) -> (Vec<PosTex>, Vec<u32>) {
+    pub fn generate_vertices(&self) -> (Vec<PosUv>, Vec<u32>) {
         self.generate_vertices_by_texcoord(Rect::from_origin_n_size(0.0, 0.0, 1.0, 1.0))
     }
 

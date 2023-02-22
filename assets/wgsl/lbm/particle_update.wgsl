@@ -53,8 +53,8 @@ fn update_canvas(particle: TrajectoryParticle, velocity: vec2<f32>) {
 }
 
 @compute @workgroup_size(16, 16)
-fn cs_main(@builtin(global_invocation_id) global_invocation_id: vec3<u32>) {
-    let uv = vec2<i32>(global_invocation_id.xy);
+fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let uv = vec2<i32>(gid.xy);
     if (uv.x >= particle_uniform.num.x || uv.y >= particle_uniform.num.y) {
         return;
     }

@@ -1,12 +1,18 @@
-# Wgpu Simuverse
-基于 wgpu 的交互式模拟程序，提供粒子场、流体场、隐形墨水、自然界纹理的模拟效果。
+# Simuverse
 
-## Web 端支持
-由于使用了[计算管线](https://jinleili.github.io/learn-wgpu-zh/intermediate/compute-pipeline/), 无法通过 `--features=webgl` 来构建 wasm，等 [wgpu 0.15 引入的 web 端 bug](https://github.com/gfx-rs/wgpu/issues/3430) 修复之后将会添加 Web 端支持。
+![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.64-green.svg)
+[![Build Status](https://github.com/gfx-rs/jinleili/simuverse/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jinleili/simuverse#license)
 
-## 运行效果
+Simulate particle fields, fluid dynamics, and natural textures based on [wgpu](https://github.com/gfx-rs/wgpu) + [egui](https://github.com/emilk/egui).
 
-## 运行
-```rust
-cargo run
-```
+It is not only a complete example but also an extension of the [学习 wgpu](https://github.com/jinleili/learn-wgpu-zh).
+
+## Web Support
+Due to the use of [compute pipelines](https://jinleili.github.io/learn-wgpu-zh/intermediate/compute-pipeline/), it's not possible to build a WebAssembly binary using the `--features=webgl` feature. However, once the web platform bug in wgpu 0.15 is fixed, web support will be added. The bug is discussed in this [issue](https://github.com/gfx-rs/wgpu/issues/3430).
+
+## Screenshot
+
+
+## License
+Licensed under the [MIT License](https://github.com/grovesNL/glyphon/blob/main/LICENSE-MIT).

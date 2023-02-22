@@ -9,9 +9,6 @@ pub use load_texture::AnyTexture;
 pub mod shader;
 pub mod vertex;
 
-mod plane;
-pub use plane::Plane;
-
 use bytemuck::{Pod, Zeroable};
 
 #[repr(C)]

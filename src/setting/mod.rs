@@ -3,3 +3,6 @@ pub use control_panel::*;
 
 mod setting_obj;
 pub use setting_obj::SettingObj;
+
+mod noise_setting;
+pub use noise_setting::NoiseSetting;

@@ -1,8 +1,8 @@
 use super::BindingGroupSetting;
 use crate::util::vertex::Vertex;
-use crate::util::Plane;
 use crate::util::{AnyTexture, BufferObj, MVPUniform};
-use app_surface::math::{Position, Rect, Size};
+use crate::DEPTH_FORMAT;
+use app_surface::math::{Rect, Size};
 use bytemuck::Pod;
 use std::ops::{Deref, DerefMut};
 use wgpu::util::DeviceExt;
@@ -68,7 +68,7 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
                 color_blend_state: Some(wgpu::BlendState::ALPHA_BLENDING),
                 primitive_topology: wgpu::PrimitiveTopology::TriangleList,
                 cull_mode: Some(wgpu::Face::Back),
-                use_depth_stencil: false,
+                use_depth_stencil: true,
                 shader_module,
                 shader_stages: vec![],
             },
@@ -161,6 +161,10 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
 
     pub fn build(self, device: &wgpu::Device) -> ViewNode {
         debug_assert!(
+            self.vertices_and_indices.is_some(),
+            "Vertices and indices must be provided"
+        );
+        debug_assert!(
             self.shader_stages.len()
                 >= self.uniform_buffers.len()
                     + self.samplers.len()
@@ -174,7 +178,7 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
 
 #[allow(dead_code)]
 pub struct ViewNode {
-    pub vertex_buf: Option<BufferObj>,
+    pub vertex_buf: BufferObj,
     pub index_buf: wgpu::Buffer,
     pub index_count: usize,
     pub bg_setting: BindingGroupSetting,
@@ -249,63 +253,29 @@ impl ViewNode {
         );
 
         // Create the vertex and index buffers
-        let (vertex_buf, index_data) = if let Some(vi) = attributes.vertices_and_indices {
-            let vertex_buf = if std::mem::size_of_val(&vi.0[0]) > 0 {
-                Some(BufferObj::create_buffer(
-                    device,
-                    Some(&vi.0),
-                    None,
-                    wgpu::BufferUsages::VERTEX,
-                    Some("vertex_buf"),
-                ))
-            } else {
-                None
-            };
-            (vertex_buf, vi.1)
-        } else {
-            let factor = crate::util::matrix_helper::fullscreen_factor(attributes.view_size);
-            let rect = Rect::new(2.0 * factor.1, 2.0 * factor.2, Position::zero());
-            let plane = Plane::new_by_rect(rect, 1, 1);
-            if let Some(rect) = attributes.tex_rect {
-                let (vertex_data, index_data) = plane.generate_vertices_by_texcoord2(rect, None);
-                let vertex_buf = BufferObj::create_buffer(
-                    device,
-                    Some(&vertex_data),
-                    None,
-                    wgpu::BufferUsages::VERTEX,
-                    Some("vertex_buf"),
-                );
-
-                (Some(vertex_buf), index_data)
-            } else {
-                let (vertex_data, index_data) = plane.generate_vertices();
-                let vertex_buf = BufferObj::create_buffer(
-                    device,
-                    Some(&vertex_data),
-                    None,
-                    wgpu::BufferUsages::VERTEX,
-                    Some("vertex_buf"),
-                );
-                (Some(vertex_buf), index_data)
-            }
-        };
+        let vi = attributes.vertices_and_indices.unwrap();
+        let vertex_buf = BufferObj::create_buffer(
+            device,
+            Some(&vi.0),
+            None,
+            wgpu::BufferUsages::VERTEX,
+            Some("Vertex buffer"),
+        );
         let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(&index_data),
+            label: Some("index buffer"),
+            contents: bytemuck::cast_slice(&vi.1),
             usage: wgpu::BufferUsages::INDEX,
         });
 
         let default_layout_attributes = T::vertex_attributes(0);
         let vertex_buffer_layouts = if let Some(layouts) = attributes.vertex_buffer_layouts {
             layouts
-        } else if std::mem::size_of::<T>() > 0 {
+        } else {
             vec![wgpu::VertexBufferLayout {
                 array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &default_layout_attributes,
             }]
-        } else {
-            vec![]
         };
         let (dy_uniform_bg, pipeline_layout) = if !attributes.dynamic_uniforms.is_empty() {
             let dy_bg = super::DynamicUniformBindingGroup::new(device, attributes.dynamic_uniforms);
@@ -349,10 +319,9 @@ impl ViewNode {
                 polygon_mode: wgpu::PolygonMode::Fill,
                 ..Default::default()
             },
-            // ??????
             depth_stencil: if attributes.use_depth_stencil {
                 Some(wgpu::DepthStencilState {
-                    format: wgpu::TextureFormat::Depth32Float,
+                    format: DEPTH_FORMAT,
                     depth_write_enabled: true,
                     depth_compare: wgpu::CompareFunction::Less,
                     stencil: wgpu::StencilState::default(),
@@ -370,25 +339,11 @@ impl ViewNode {
             view_height: attributes.view_size.height,
             vertex_buf,
             index_buf,
-            index_count: index_data.len(),
+            index_count: vi.1.len(),
             bg_setting,
             dy_uniform_bg,
             pipeline,
             clear_color: wgpu::Color::BLACK,
-        }
-    }
-
-    // 视口的宽高发生变化
-    pub fn resize(&mut self, queue: &wgpu::Queue, tex_rect: Option<Rect>) {
-        if let Some(buf) = &self.vertex_buf {
-            let vertex_data = if let Some(rect) = tex_rect {
-                let (vertex_data, _) = Plane::new(1, 1).generate_vertices_by_texcoord(rect);
-                vertex_data
-            } else {
-                let (vertex_data, _) = Plane::new(1, 1).generate_vertices();
-                vertex_data
-            };
-            queue.write_buffer(&buf.buffer, 0, bytemuck::cast_slice(&vertex_data))
         }
     }
 
@@ -457,8 +412,6 @@ impl ViewNode {
         rpass.set_pipeline(&self.pipeline);
         rpass.set_bind_group(0, &self.bg_setting.bind_group, &[]);
         rpass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint32);
-        if self.vertex_buf.is_some() {
-            rpass.set_vertex_buffer(0, self.vertex_buf.as_ref().unwrap().buffer.slice(..));
-        }
+        rpass.set_vertex_buffer(0, self.vertex_buf.buffer.slice(..));
     }
 }

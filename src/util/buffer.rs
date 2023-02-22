@@ -11,31 +11,56 @@ pub struct BufferObj {
 
 #[allow(dead_code)]
 impl BufferObj {
-    pub fn create_storage_buffer<T>(device: &wgpu::Device, slice: &[T], label: Option<&'static str>) -> Self
+    pub fn create_storage_buffer<T>(
+        device: &wgpu::Device,
+        slice: &[T],
+        label: Option<&'static str>,
+    ) -> Self
     where
         T: 'static + Pod + Copy,
     {
-        BufferObj::create_buffer(device, Some(slice), None, wgpu::BufferUsages::STORAGE, label)
+        BufferObj::create_buffer(
+            device,
+            Some(slice),
+            None,
+            wgpu::BufferUsages::STORAGE,
+            label,
+        )
     }
 
     pub fn create_empty_storage_buffer(
-        device: &wgpu::Device, size: wgpu::BufferAddress, can_read_back: bool, label: Option<&'static str>,
+        device: &wgpu::Device,
+        size: wgpu::BufferAddress,
+        can_read_back: bool,
+        label: Option<&'static str>,
     ) -> Self {
         let buffer = device.create_buffer(&wgpu::BufferDescriptor {
             size,
             usage: if can_read_back {
-                wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::COPY_SRC
+                wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_DST
+                    | wgpu::BufferUsages::COPY_SRC
             } else {
                 wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST
             },
             label,
             mapped_at_creation: false,
         });
-        BufferObj { buffer, size, min_binding_size: None, has_dynamic_offset: false, read_only: false }
+        BufferObj {
+            buffer,
+            size,
+            min_binding_size: None,
+            has_dynamic_offset: false,
+            read_only: false,
+        }
     }
 
-    pub fn create_empty_dynamic_uniform_buffer(
-        device: &wgpu::Device, size: wgpu::BufferAddress, min_binding_size: u64, label: Option<&'static str>,
+    pub fn create_empty_uniform_buffer(
+        device: &wgpu::Device,
+        size: wgpu::BufferAddress,
+        min_binding_size: u64,
+        is_dynamic: bool,
+        label: Option<&'static str>,
     ) -> Self {
         let buffer = device.create_buffer(&wgpu::BufferDescriptor {
             size,
@@ -47,27 +72,50 @@ impl BufferObj {
             buffer,
             size,
             min_binding_size: wgpu::BufferSize::new(min_binding_size),
-            has_dynamic_offset: true,
+            has_dynamic_offset: is_dynamic,
             read_only: true,
         }
     }
 
-    pub fn create_uniform_buffer<T>(device: &wgpu::Device, uniform: &T, label: Option<&'static str>) -> Self
+    pub fn create_uniform_buffer<T>(
+        device: &wgpu::Device,
+        uniform: &T,
+        label: Option<&'static str>,
+    ) -> Self
     where
         T: 'static + Pod + Copy,
     {
-        BufferObj::create_buffer(device, None, Some(uniform), wgpu::BufferUsages::UNIFORM, label)
+        BufferObj::create_buffer(
+            device,
+            None,
+            Some(uniform),
+            wgpu::BufferUsages::UNIFORM,
+            label,
+        )
     }
 
-    pub fn create_uniforms_buffer<T>(device: &wgpu::Device, slice: &[T], label: Option<&'static str>) -> Self
+    pub fn create_uniforms_buffer<T>(
+        device: &wgpu::Device,
+        slice: &[T],
+        label: Option<&'static str>,
+    ) -> Self
     where
         T: 'static + Pod + Copy,
     {
-        BufferObj::create_buffer(device, Some(slice), None, wgpu::BufferUsages::UNIFORM, label)
+        BufferObj::create_buffer(
+            device,
+            Some(slice),
+            None,
+            wgpu::BufferUsages::UNIFORM,
+            label,
+        )
     }
 
     pub fn create_buffer<T>(
-        device: &wgpu::Device, slice: Option<&[T]>, item: Option<&T>, usage: wgpu::BufferUsages,
+        device: &wgpu::Device,
+        slice: Option<&[T]>,
+        item: Option<&T>,
+        usage: wgpu::BufferUsages,
         label: Option<&'static str>,
     ) -> Self
     where

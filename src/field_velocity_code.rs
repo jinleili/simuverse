@@ -19,7 +19,7 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
         c = vec2<f32>(c.x * c.x - c.y * c.y, c.y * c.x + c.x * c.y);
         c = c + z;
     }
-    return c * 0.2;
+    return c * 0.6;
     "#
         .into(),
         FieldAnimationType::BlackHole => r#"
@@ -42,7 +42,7 @@ pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
     var v = vec2<f32>(c.y, -c.x) / r;
     let t = sqrt(r * 15.0) + theta;
     v *= sin(t) * length(v) * 50.0;
-    return (v + c) * field.ndc_pixel * 10.0;
+    return (v + c) * field.ndc_pixel * 15.0;
     "#
         .into(),
         _ => "".into(),

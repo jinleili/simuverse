@@ -2,10 +2,11 @@ use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::BufferObj;
 use simuverse::{
-    setup_custom_fonts, ControlPanel, FieldSimulator, FluidSimulator, SettingObj, SimuType,
-    Simulator,
+    noise::TextureSimulator, setup_custom_fonts, ControlPanel, FieldSimulator, FluidSimulator,
+    SettingObj, SimuType, Simulator, DEPTH_FORMAT,
 };
 use std::iter;
+use wgpu::TextureView;
 use winit::{event_loop::EventLoop, window::WindowId};
 
 struct SimuverseApp {
@@ -17,6 +18,7 @@ struct SimuverseApp {
     canvas_size: Size<u32>,
     canvas_buf: BufferObj,
     simulator: Box<dyn Simulator>,
+    depth_view: TextureView,
 }
 
 impl Action for SimuverseApp {
@@ -30,7 +32,7 @@ impl Action for SimuverseApp {
         setup_custom_fonts(&egui_ctx);
         let mut egui_state = egui_winit::State::new(event_loop);
         egui_state.set_pixels_per_point(app.scale_factor);
-        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
+        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, Some(DEPTH_FORMAT), 1);
         let ctrl_panel = ControlPanel::new(&app, &egui_ctx);
 
         let canvas_size: Size<u32> = (&app.config).into();
@@ -43,6 +45,22 @@ impl Action for SimuverseApp {
         );
         let simulator = Self::create_simulator(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
 
+        let depth_texture = app.device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width: app.config.width,
+                height: app.config.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEPTH_FORMAT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            label: None,
+            view_formats: &[],
+        });
+        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
         Self {
             app,
             egui_ctx,
@@ -52,6 +70,7 @@ impl Action for SimuverseApp {
             canvas_buf,
             canvas_size,
             simulator,
+            depth_view,
         }
     }
 
@@ -157,7 +176,14 @@ impl Action for SimuverseApp {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
                 label: None,
             });
             self.simulator
@@ -194,6 +220,7 @@ impl SimuverseApp {
     ) -> Box<dyn Simulator> {
         match setting.simu_type {
             SimuType::Fluid => Box::new(FluidSimulator::new(app, canvas_size, canvas_buf, setting)),
+            SimuType::Noise => Box::new(TextureSimulator::new(app)),
             _ => Box::new(FieldSimulator::new(
                 app,
                 app.config.format,
@@ -214,13 +241,14 @@ impl SimuverseApp {
                 &self.canvas_buf,
                 &self.ctrl_panel.setting,
             );
+        } else if self.ctrl_panel.selected_simu_type == SimuType::Noise {
+            self.simulator.update_by(&self.app, &mut self.ctrl_panel);
         } else {
             if let Some(workgroup_count) = res.0 {
                 // 更新了粒子数后，还须更新 workgroup count
                 self.simulator
                     .update_workgroup_count(&self.app, workgroup_count);
             }
-
             self.simulator.update_by(&self.app, &mut self.ctrl_panel);
         }
     }

@@ -12,7 +12,6 @@ use crate::create_shader_module;
 
 // 通用的流體模擬，產生外部依賴的流體量
 pub struct FluidSimulator {
-    canvas_size: Size<u32>,
     lattice: wgpu::Extent3d,
     lattice_pixel_size: u32,
     pre_pos: Position,
@@ -25,13 +24,13 @@ pub struct FluidSimulator {
 
 impl FluidSimulator {
     pub fn new(
-        app_view: &app_surface::AppSurface,
+        app: &app_surface::AppSurface,
         canvas_size: Size<u32>,
         canvas_buf: &BufferObj,
         setting: &SettingObj,
     ) -> Self {
-        let device = &app_view.device;
-        let fluid_compute_node = D2Q9Node::new(app_view, canvas_size, setting);
+        let device = &app.device;
+        let fluid_compute_node = D2Q9Node::new(app, canvas_size, setting);
         let lattice = fluid_compute_node.lattice;
 
         let curl_shader =
@@ -49,7 +48,7 @@ impl FluidSimulator {
                 depth_or_array_layers: 1,
             },
             None,
-            Some(wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING),
+            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
             Some("curl_tex"),
         );
         let curl_cal_node = ComputeNode::new(
@@ -71,7 +70,7 @@ impl FluidSimulator {
         let sampler = crate::util::load_texture::bilinear_sampler(device);
         let render_node = BufferlessFullscreenNode::new(
             device,
-            app_view.config.format,
+            app.config.format,
             vec![
                 &fluid_compute_node.fluid_uniform_buf,
                 setting.particles_uniform.as_ref().unwrap(),
@@ -81,7 +80,6 @@ impl FluidSimulator {
             vec![&sampler],
             &render_shader,
             None,
-            false,
         );
 
         let update_shader = create_shader_module(
@@ -105,7 +103,7 @@ impl FluidSimulator {
         let particle_shader = create_shader_module(device, "present", None);
         let particle_render = BufferlessFullscreenNode::new(
             device,
-            app_view.config.format,
+            app.config.format,
             vec![
                 &fluid_compute_node.fluid_uniform_buf,
                 setting.particles_uniform.as_ref().unwrap(),
@@ -115,11 +113,9 @@ impl FluidSimulator {
             vec![],
             &particle_shader,
             None,
-            false,
         );
 
         FluidSimulator {
-            canvas_size,
             lattice,
             lattice_pixel_size: fluid_compute_node.lattice_pixel_size,
             pre_pos: Position::new(0.0, 0.0),
@@ -219,7 +215,7 @@ impl Simulator for FluidSimulator {
             label: Some("fluid solver"),
         });
 
-        for _ in 0..2 {
+        for _ in 0..1 {
             self.fluid_compute_node.compute_by_pass(&mut cpass, 0);
             self.particle_update_node.compute_by_pass(&mut cpass);
             // self.curl_cal_node.dispatch(&mut cpass);

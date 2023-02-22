@@ -96,7 +96,7 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
         use winit::platform::web::WindowExtWebSys;
         web_sys::window()
             .and_then(|win| win.document())
-            .and_then(|doc| {
+            .map(|doc| {
                 match doc.get_element_by_id("wasm-example") {
                     Some(dst) => {
                         let height = 500;
@@ -116,12 +116,10 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
                             &(canvas.style().css_text()
                                 + "background-color: black; display: block; margin: 20px auto;"),
                         );
-                        doc.body().and_then(|body| {
-                            Some(body.append_child(&web_sys::Element::from(canvas)))
-                        });
+                        doc.body()
+                            .map(|body| body.append_child(&web_sys::Element::from(canvas)));
                     }
                 };
-                Some(())
             })
             .expect("Couldn't append canvas to document body.");
     };

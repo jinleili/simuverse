@@ -12,7 +12,7 @@ pub struct AnyTexture {
 #[allow(dead_code)]
 pub fn from_path(
     image_path: &str,
-    app_view: &app_surface::AppSurface,
+    app: &app_surface::AppSurface,
     usage: wgpu::TextureUsages,
     set_to_grayscale: bool,
 ) -> (AnyTexture, Sampler) {
@@ -24,7 +24,7 @@ pub fn from_path(
     };
     let (texels, texture_extent, format) = load_from_path(path, set_to_grayscale);
     let pixel_bytes = single_pixel_bytes(format);
-    let texture = app_view.device.create_texture(&wgpu::TextureDescriptor {
+    let texture = app.device.create_texture(&wgpu::TextureDescriptor {
         size: texture_extent,
         mip_level_count: 1,
         sample_count: 1,
@@ -38,7 +38,7 @@ pub fn from_path(
         format: Some(format.remove_srgb_suffix()),
         ..Default::default()
     });
-    app_view.queue.write_texture(
+    app.queue.write_texture(
         wgpu::ImageCopyTexture {
             texture: &texture,
             mip_level: 0,
@@ -61,13 +61,13 @@ pub fn from_path(
         format,
     };
 
-    (any_tex, default_sampler(&app_view.device))
+    (any_tex, default_sampler(&app.device))
 }
 
 #[allow(dead_code)]
 pub fn update_by_path(
     image_path: &str,
-    app_view: &app_surface::AppSurface,
+    app: &app_surface::AppSurface,
     texture: &Texture,
     set_to_grayscale: bool,
 ) {
@@ -76,7 +76,7 @@ pub fn update_by_path(
     let (texels, texture_extent, format) = load_from_path(path, set_to_grayscale);
     let pixel_bytes = single_pixel_bytes(format);
 
-    app_view.queue.write_texture(
+    app.queue.write_texture(
         wgpu::ImageCopyTexture {
             texture,
             mip_level: 0,
@@ -127,26 +127,18 @@ pub fn empty(
     format: TextureFormat,
     extent: Extent3d,
     view_dimension: Option<wgpu::TextureViewDimension>,
-    usage: Option<wgpu::TextureUsages>,
+    usage: wgpu::TextureUsages,
     label: Option<&'static str>,
 ) -> AnyTexture {
-    let usage = if let Some(u) = usage {
-        u
-    } else {
-        wgpu::TextureUsages::RENDER_ATTACHMENT
-            | wgpu::TextureUsages::COPY_DST
-            | wgpu::TextureUsages::TEXTURE_BINDING
-            | wgpu::TextureUsages::STORAGE_BINDING
-    };
     let view_dimension = if let Some(vd) = view_dimension {
         vd
     } else {
         wgpu::TextureViewDimension::D2
     };
-    let (tex_dimension, array_layer_count) = if view_dimension == wgpu::TextureViewDimension::D3 {
-        (wgpu::TextureDimension::D3, 1)
+    let tex_dimension = if view_dimension == wgpu::TextureViewDimension::D3 {
+        wgpu::TextureDimension::D3
     } else {
-        (wgpu::TextureDimension::D2, extent.depth_or_array_layers)
+        wgpu::TextureDimension::D2
     };
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         size: extent,
@@ -162,18 +154,10 @@ pub fn empty(
     if let Some(lb) = label {
         view_label = lb.to_string() + "_" + &view_label;
     }
-    let tex_view_descriptor = wgpu::TextureViewDescriptor {
+    let texture_view = texture.create_view(&wgpu::TextureViewDescriptor {
         label: Some(&view_label),
-        format: Some(format),
-        dimension: Some(view_dimension),
-        aspect: wgpu::TextureAspect::All,
-        base_mip_level: 0,
-        mip_level_count: None,
-        base_array_layer: 0,
-        array_layer_count: std::num::NonZeroU32::new(array_layer_count),
-    };
-    let texture_view = texture.create_view(&tex_view_descriptor);
-    // let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        ..Default::default()
+    });
 
     AnyTexture {
         size: extent,

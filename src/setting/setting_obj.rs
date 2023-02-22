@@ -62,9 +62,9 @@ impl SettingObj {
         if self.simu_type != ty {
             self.simu_type = ty;
             self.particles_uniform_data.speed_factor = if self.simu_type == SimuType::Field {
-                0.15
+                1.0
             } else {
-                8.15
+                4.15
             };
             self.update_particles_uniform(app);
             true

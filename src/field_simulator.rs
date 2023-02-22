@@ -102,7 +102,6 @@ impl FieldSimulator {
             vec![],
             &render_shader,
             None,
-            false,
         );
         let mut instance = FieldSimulator {
             field_uniform,

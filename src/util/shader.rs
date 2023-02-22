@@ -92,14 +92,15 @@ pub fn insert_code_then_create(
 }
 
 #[cfg(target_arch = "wasm32")]
-fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String {
+fn request_shader_code(_base_dir: &str, _fold: &str, _shader_name: &str) -> String {
     // 主线程中同步的 XMLHttpRequest 已不赞成使用(2021/05/07)
-    let mut request = web_sys::XmlHttpRequest::new().unwrap();
-    request.set_response_type(web_sys::XmlHttpRequestResponseType::None);
-    let url = base_dir.to_string() + "/" + &shader_name + ".wgsl";
-    request.open_with_async("get", &url, false);
-    request.send();
-    request.response_text().unwrap().unwrap()
+    // let mut request = web_sys::XmlHttpRequest::new().unwrap();
+    // request.set_response_type(web_sys::XmlHttpRequestResponseType::None);
+    // let url = base_dir.to_string() + "/" + &shader_name + ".wgsl";
+    // request.open_with_async("get", &url, false);
+    // request.send();
+    // request.response_text().unwrap().unwrap()
+    "".into()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

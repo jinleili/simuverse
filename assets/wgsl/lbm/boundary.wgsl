@@ -1,8 +1,8 @@
 #include "lbm/layout_and_fn.wgsl"
 
 @compute @workgroup_size(64, 4)
-fn cs_main(@builtin(global_invocation_id) global_invocation_id: vec3<u32>) {
-    let uv = vec2<i32>(global_invocation_id.xy);
+fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let uv = vec2<i32>(gid.xy);
     if (uv.x >= field.lattice_size.x || uv.y >= field.lattice_size.y) {
       return;
     }

@@ -1,4 +1,4 @@
-use crate::{FieldAnimationType, ParticleColorType, SettingObj, SimuType};
+use crate::{FieldAnimationType, NoiseSetting, ParticleColorType, SettingObj, SimuType};
 use app_surface::AppSurface;
 use egui::{Color32, Context, Ui};
 
@@ -14,7 +14,8 @@ pub struct ControlPanel {
     last_selected_code_snippet: i32,
     selected_code_snippet: Option<i32>,
     is_code_snippet_changed: bool,
-    selected_simu_type: SimuType,
+    pub selected_simu_type: SimuType,
+    pub noise_setting: NoiseSetting,
 }
 
 impl ControlPanel {
@@ -45,7 +46,7 @@ impl ControlPanel {
         let window_size: egui::emath::Vec2 = [panel_width - 26.0, panel_height - 12.].into();
 
         let mut bg = egui_ctx.style().visuals.window_fill();
-        bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 210);
+        bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 230);
         let panel_frame = egui::Frame {
             fill: bg,
             rounding: 10.0.into(),
@@ -68,6 +69,7 @@ impl ControlPanel {
             selected_code_snippet: Some(0),
             is_code_snippet_changed: false,
             selected_simu_type,
+            noise_setting: NoiseSetting::new(),
         }
     }
 
@@ -130,7 +132,7 @@ impl ControlPanel {
 
         self.top_bar_ui(ctx);
 
-        let window = egui::Window::new("设置")
+        let window = egui::Window::new("Settings")
             .id(egui::Id::new("particles_window_options")) // required since we change the title
             .resizable(false)
             .collapsible(true)
@@ -142,47 +144,27 @@ impl ControlPanel {
             .enabled(true);
 
         window.show(ctx, |ui| {
-            egui::Grid::new("my_grid")
-                .num_columns(2)
-                .spacing([10.0, 12.0])
-                .striped(true)
-                .show(ui, |ui| {
-                    ui.label("粒子数：");
-                    ui.add(egui::Slider::new(&mut self.particles_count, 2000..=40000));
-                    ui.end_row();
-
-                    ui.label("粒子大小：");
-                    ui.add(egui::Slider::new(&mut self.particle_size, 1..=8).text("像素"));
-                    ui.end_row();
-
-                    ui.label("粒子生存时长：");
-                    ui.add(egui::Slider::new(&mut self.lifetime, 40..=240).text("帧"));
-                    ui.end_row();
-
-                    ui.label("着色方案：");
-                    egui::ComboBox::from_label("")
-                        .selected_text(get_color_ty_name(self.particle_color))
-                        .show_ui(ui, |ui| {
-                            ui.style_mut().wrap = Some(false);
-                            ui.set_min_width(60.0);
-                            ui.selectable_value(&mut self.particle_color, 0, get_color_ty_name(0));
-                            ui.selectable_value(&mut self.particle_color, 1, get_color_ty_name(1));
-                            ui.selectable_value(&mut self.particle_color, 2, get_color_ty_name(2));
-                        });
-                    ui.end_row();
-                });
-            ui.separator();
             match self.selected_simu_type {
-                SimuType::Field => self.code_snippet_ui(ui),
+                SimuType::Field | SimuType::Fluid => self.particles_ctrl_ui(ui),
+                SimuType::Noise => self.noise_setting.ui_contents(ui),
+                _ => {}
+            }
+
+            match self.selected_simu_type {
+                SimuType::Field => {
+                    ui.separator();
+                    self.code_snippet_ui(ui);
+                }
                 SimuType::Fluid => {
-                    ui.heading("LBM 流体场交互");
+                    ui.separator();
+                    ui.heading("LBM fluid field interaction");
                     ui.horizontal_wrapped(|ui| {
-                        ui.label("0. 点击屏幕给流体场中");
-                        ui.colored_label(Color32::from_rgb(110, 235, 110), "添加障碍物");
+                        ui.label("0. Click the screen to");
+                        ui.colored_label(Color32::from_rgb(110, 235, 110), "add obstacles");
                     });
                     ui.horizontal_wrapped(|ui| {
-                        ui.label("1. 划动屏幕给流体场中");
-                        ui.colored_label(Color32::from_rgb(110, 255, 110), "实施扰动");
+                        ui.label("1. Swipe the screen to");
+                        ui.colored_label(Color32::from_rgb(110, 255, 110), "apply disturbance");
                     });
                 }
                 _ => (),
@@ -192,9 +174,9 @@ impl ControlPanel {
 
     fn top_bar_ui(&mut self, ctx: &Context) {
         let menu_items = vec![
-            ("🌾 矢量场", SimuType::Field),
-            ("💦 流体场", SimuType::Fluid),
-            // ("🔏 隐形墨水", SimuType::Ink),
+            ("🌾 Vector Field", SimuType::Field),
+            ("💦 LBM Fluid", SimuType::Fluid),
+            ("💥 Perlin Noise", SimuType::Noise),
         ];
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
@@ -211,6 +193,38 @@ impl ControlPanel {
                 }
             });
         });
+    }
+
+    fn particles_ctrl_ui(&mut self, ui: &mut Ui) {
+        egui::Grid::new("my_grid")
+            .num_columns(2)
+            .spacing([10.0, 12.0])
+            .striped(true)
+            .show(ui, |ui| {
+                ui.label("Particles count：");
+                ui.add(egui::Slider::new(&mut self.particles_count, 2000..=40000));
+                ui.end_row();
+
+                ui.label("Particle size：");
+                ui.add(egui::Slider::new(&mut self.particle_size, 1..=8).text("pixel"));
+                ui.end_row();
+
+                ui.label("Particle lifetime：");
+                ui.add(egui::Slider::new(&mut self.lifetime, 40..=240).text("frame"));
+                ui.end_row();
+
+                ui.label("Particle color：");
+                egui::ComboBox::from_label("")
+                    .selected_text(get_color_ty_name(self.particle_color))
+                    .show_ui(ui, |ui| {
+                        ui.style_mut().wrap = Some(false);
+                        ui.set_min_width(60.0);
+                        ui.selectable_value(&mut self.particle_color, 0, get_color_ty_name(0));
+                        ui.selectable_value(&mut self.particle_color, 1, get_color_ty_name(1));
+                        ui.selectable_value(&mut self.particle_color, 2, get_color_ty_name(2));
+                    });
+                ui.end_row();
+            });
     }
 
     fn code_snippet_ui(&mut self, ui: &mut Ui) {
@@ -353,8 +367,8 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
 
 fn get_color_ty_name(index: u32) -> &'static str {
     match index {
-        0 => "运动方向",
-        1 => "运动速率",
-        _ => "白色",
+        0 => "Moving angle",
+        1 => "Verlocity",
+        _ => "White",
     }
 }
