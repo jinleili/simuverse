@@ -1,7 +1,7 @@
 # Simuverse
 
-![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.64-green.svg)
-[![Build Status](https://github.com/gfx-rs/jinleili/simuverse/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
+![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.65-green.svg)
+[![Build Status](https://github.com/jinleili/simuverse/workflows/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jinleili/simuverse#license)
 
 Simulate particle fields, fluid dynamics, and natural textures based on [wgpu](https://github.com/gfx-rs/wgpu) + [egui](https://github.com/emilk/egui).
@@ -14,8 +14,8 @@ Due to the use of [compute pipelines](https://jinleili.github.io/learn-wgpu-zh/i
 ## Screenshot
 | | |
 |---|---|
-|![Julia Set](assets/julia_set.png) | ![Spirl](assets/spirl.png)|
-|![Wood](assets/wood.png) | ![Marble](assets/marble.png)|
+|![Julia Set](screenshots/julia_set.png) | ![Spirl](screenshots/spirl.png)|
+|![Wood](screenshots/wood.png) | ![Marble](screenshots/marble.png)|
 
 ## License
-Licensed under the [MIT License](https://github.com/grovesNL/glyphon/blob/main/LICENSE-MIT).
+Licensed under the [MIT License](https://github.com/jinleili/simuverse/blob/main/LICENSE.MIT).
