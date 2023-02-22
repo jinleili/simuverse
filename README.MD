@@ -12,7 +12,10 @@ It is not only a complete example but also an extension of the [学习 wgpu](htt
 Due to the use of [compute pipelines](https://jinleili.github.io/learn-wgpu-zh/intermediate/compute-pipeline/), it's not possible to build a WebAssembly binary using the `--features=webgl` feature. However, once the web platform bug in wgpu 0.15 is fixed, web support will be added. The bug is discussed in this [issue](https://github.com/gfx-rs/wgpu/issues/3430).
 
 ## Screenshot
-
+| | |
+|---|---|
+|![Julia Set](assets/julia_set.png) | ![Spirl](assets/spirl.png)|
+|![Wood](assets/wood.png) | ![Marble](assets/marble.png)|
 
 ## License
 Licensed under the [MIT License](https://github.com/grovesNL/glyphon/blob/main/LICENSE-MIT).

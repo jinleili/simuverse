@@ -29,7 +29,6 @@ fn vs_main(
 
 @group(0) @binding(2) var<storage, read> permutation: array<vec4<i32>>;
 @group(0) @binding(3) var<storage, read> gradient: array<vec4<f32>>;
-@group(0) @binding(4) var tex: texture_storage_2d<rgba8unorm, write>;
 
 #include "noise/fn_perlin_noise.wgsl"
 

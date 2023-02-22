@@ -22,7 +22,23 @@ pub(crate) struct TexGeneratorParams {
     pub lacunarity: f32,
     pub gain: f32,
     pub ty: i32,
-    pub _padding: [i32; 3]
+    pub _padding: [i32; 3],
+}
+
+pub(crate) fn is_the_same_color(lh: [f32; 4], rh: [f32; 4]) -> bool {
+    for i in 0..4 {
+        if !is_the_same_f32(lh[i], rh[i]) {
+            return false;
+        }
+    }
+    true
+}
+
+pub(crate) fn is_the_same_f32(l: f32, r: f32) -> bool {
+    if (l - r).abs() > 0.00001 {
+        return false;
+    }
+    true
 }
 
 static PERMULATION: [i32; 512] = [

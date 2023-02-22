@@ -2,10 +2,7 @@ use crate::{
     create_shader_module,
     geometries::Sphere,
     node::{ViewNode, ViewNodeBuilder},
-    util::{
-        load_texture::{self},
-        BufferObj,
-    },
+    util::BufferObj,
 };
 use app_surface::AppSurface;
 use wgpu::ShaderStages;
@@ -35,22 +32,6 @@ impl SphereDisplay {
         let transelate = glam::Mat4::from_translation(glam::Vec3::new(0., 0., -1.));
         mv_matrix *= transelate;
 
-        let height = 948;
-        let width = (height as f32 * std::f32::consts::PI).ceil() as u32;
-        let format = wgpu::TextureFormat::Rgba8Unorm;
-        let texture = load_texture::empty(
-            &app.device,
-            format,
-            wgpu::Extent3d {
-                width,
-                height,
-                depth_or_array_layers: 1,
-            },
-            None,
-            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
-            None,
-        );
-
         let normal: [[f32; 4]; 4] = mv_matrix.inverse().transpose().to_cols_array_2d();
         let mvp_uniform = crate::MVPMatUniform {
             mv: mv_matrix.to_cols_array_2d(),
@@ -66,22 +47,19 @@ impl SphereDisplay {
         let (vertices, indices) = Sphere::new(1.0, 50, 34).generate_vertices();
 
         // generate sphere textue
-        let builder = ViewNodeBuilder::<crate::util::vertex::PosNormalUv>::new(
-            vec![(&texture, Some(wgpu::StorageTextureAccess::WriteOnly))],
-            &sphere_tex_shader,
-        )
-        .with_uniform_buffers(vec![&mvp_buf, uniform_buf])
-        .with_vertices_and_indices((vertices, indices))
-        .with_storage_buffers(vec![permulation_buf, gradient_buf])
-        .with_shader_stages(vec![
-            ShaderStages::VERTEX,
-            ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-            ShaderStages::FRAGMENT,
-            ShaderStages::FRAGMENT,
-            ShaderStages::FRAGMENT,
-            ShaderStages::FRAGMENT,
-        ])
-        .with_color_format(app.config.format);
+        let builder =
+            ViewNodeBuilder::<crate::util::vertex::PosNormalUv>::new(vec![], &sphere_tex_shader)
+                .with_uniform_buffers(vec![&mvp_buf, uniform_buf])
+                .with_vertices_and_indices((vertices, indices))
+                .with_storage_buffers(vec![permulation_buf, gradient_buf])
+                .with_shader_stages(vec![
+                    ShaderStages::VERTEX,
+                    ShaderStages::VERTEX | ShaderStages::FRAGMENT,
+                    ShaderStages::FRAGMENT,
+                    ShaderStages::FRAGMENT,
+                    ShaderStages::FRAGMENT,
+                ])
+                .with_color_format(app.config.format);
         let gen_tex_node = builder.build(&app.device);
 
         Self {

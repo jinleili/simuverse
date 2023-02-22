@@ -6,9 +6,10 @@ env:
   CARGO_INCREMENTAL: false
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: full
-  MSRV: 1.64
+  MSRV: 1.65
 
-check-msrv:
+jobs:
+  check-msrv:
     strategy:
       fail-fast: false
       matrix:
@@ -46,26 +47,26 @@ check-msrv:
           set -e
           cargo clippy --target ${{ matrix.target }}
 
-  check_wasm:
-    name: Check wasm32 + clippy + wasm-bindgen-cli
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.MSRV }}
-          target: wasm32-unknown-unknown
-          override: true
+  # check_wasm:
+  #   name: Check wasm32 + clippy + wasm-bindgen-cli
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: ${{ env.MSRV }}
+  #         target: wasm32-unknown-unknown
+  #         override: true
 
-      - name: Install wasm target
-        run: rustup target add wasm32-unknown-unknown
+  #     - name: Install wasm target
+  #       run: rustup target add wasm32-unknown-unknown
 
-      - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli --version=0.2.84
+  #     - name: Install wasm-bindgen-cli
+  #       run: cargo install wasm-bindgen-cli --version=0.2.84
 
-      - name: Clippy
-        run: RUSTFLAGS=--cfg=web_sys_unstable_apis cargo clippy --target wasm32-unknown-unknown
+  #     - name: Clippy
+  #       run: RUSTFLAGS=--cfg=web_sys_unstable_apis cargo clippy --target wasm32-unknown-unknown
 
-      - name: Build WASM
-        run: RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --target wasm32-unknown-unknown
+  #     - name: Build WASM
+  #       run: RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build --target wasm32-unknown-unknown

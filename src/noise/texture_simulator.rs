@@ -37,12 +37,40 @@ impl Simulator for TextureSimulator {
         app: &app_surface::AppSurface,
         control_panel: &mut crate::ControlPanel,
     ) {
+        use super::{is_the_same_color, is_the_same_f32};
+
         let setting = &control_panel.noise_setting;
+        let bg_color = [
+            setting.back_color[0],
+            setting.back_color[1],
+            setting.back_color[2],
+            1.0,
+        ];
+        let front_color = [
+            setting.front_color[0],
+            setting.front_color[1],
+            setting.front_color[2],
+            1.0,
+        ];
+        let mut is_changed = false;
+        if !is_the_same_color(self.uniform_data.bg_color, bg_color)
+            || !is_the_same_color(self.uniform_data.front_color, front_color)
+            || !is_the_same_f32(self.uniform_data.noise_scale, setting.noise_scale)
+            || !is_the_same_f32(self.uniform_data.lacunarity, setting.lacunarity)
+            || !is_the_same_f32(self.uniform_data.gain, setting.gain)
+            || self.uniform_data.octave != setting.octave
+            || self.uniform_data.ty != setting.simu_ty.unwrap()
+        {
+            is_changed = true;
+        }
+
+        if !is_changed {
+            return;
+        }
+
         self.uniform_data.ty = setting.simu_ty.unwrap();
-        let bg_color = setting.back_color;
-        let front_color = setting.front_color;
-        self.uniform_data.bg_color = [bg_color[0], bg_color[1], bg_color[2], 1.0];
-        self.uniform_data.front_color = [front_color[0], front_color[1], front_color[2], 1.0];
+        self.uniform_data.bg_color = bg_color;
+        self.uniform_data.front_color = front_color;
         self.uniform_data.noise_scale = setting.noise_scale;
         self.uniform_data.octave = setting.octave;
         self.uniform_data.lacunarity = setting.lacunarity;

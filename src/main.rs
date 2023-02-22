@@ -45,21 +45,7 @@ impl Action for SimuverseApp {
         );
         let simulator = Self::create_simulator(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
 
-        let depth_texture = app.device.create_texture(&wgpu::TextureDescriptor {
-            size: wgpu::Extent3d {
-                width: app.config.width,
-                height: app.config.height,
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: DEPTH_FORMAT,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
-            label: None,
-            view_formats: &[],
-        });
-        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let depth_view = Self::create_depth_tex(&app);
 
         Self {
             app,
@@ -84,6 +70,8 @@ impl Action for SimuverseApp {
 
     fn resize(&mut self) {
         self.app.resize_surface();
+
+        self.depth_view = Self::create_depth_tex(&self.app);
 
         let canvas_size: Size<u32> = (&self.app.config).into();
         self.ctrl_panel
@@ -251,6 +239,24 @@ impl SimuverseApp {
             }
             self.simulator.update_by(&self.app, &mut self.ctrl_panel);
         }
+    }
+
+    fn create_depth_tex(app: &AppSurface) -> wgpu::TextureView {
+        let depth_texture = app.device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width: app.config.width,
+                height: app.config.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEPTH_FORMAT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            label: None,
+            view_formats: &[],
+        });
+        depth_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 }
 
