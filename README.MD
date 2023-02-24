@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/jinleili/simuverse/workflows/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jinleili/simuverse#license)
 
-Simulate particle fields, fluid dynamics, and natural textures based on [wgpu](https://github.com/gfx-rs/wgpu) + [egui](https://github.com/emilk/egui).
+Simulate particle vector fields, fluid dynamics, and procedural textures based on [wgpu](https://github.com/gfx-rs/wgpu) + [egui](https://github.com/emilk/egui).
 
 It is not only a complete example but also an extension of the [学习 wgpu](https://github.com/jinleili/learn-wgpu-zh).
 
