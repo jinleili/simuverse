@@ -1,8 +1,9 @@
 use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use simuverse::framework::{run, Action};
 use simuverse::util::BufferObj;
+use simuverse::EguiLayer;
 use simuverse::{
-    noise::TextureSimulator, setup_custom_fonts, ControlPanel, FieldSimulator, FluidSimulator,
+    noise::TextureSimulator, ControlPanel, FieldSimulator, FluidSimulator,
     SettingObj, SimuType, Simulator, DEPTH_FORMAT,
 };
 use std::iter;
@@ -11,9 +12,7 @@ use winit::{event_loop::EventLoop, window::WindowId};
 
 struct SimuverseApp {
     app: AppSurface,
-    egui_ctx: egui::Context,
-    egui_state: egui_winit::State,
-    egui_renderer: egui_wgpu::Renderer,
+    egui_layer: EguiLayer,
     ctrl_panel: ControlPanel,
     canvas_size: Size<u32>,
     canvas_buf: BufferObj,
@@ -28,15 +27,10 @@ impl Action for SimuverseApp {
         app.sdq.update_config_format(format);
 
         // egui
-        let egui_ctx = egui::Context::default();
-        setup_custom_fonts(&egui_ctx);
-        let mut egui_state = egui_winit::State::new(event_loop);
-        egui_state.set_pixels_per_point(app.scale_factor);
-        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, Some(DEPTH_FORMAT), 1);
-        let ctrl_panel = ControlPanel::new(&app, &egui_ctx);
+        let egui_layer = EguiLayer::new(&app, event_loop, format);
+        let ctrl_panel = ControlPanel::new(&app, &egui_layer.ctx);
 
         let canvas_size: Size<u32> = (&app.config).into();
-
         let canvas_buf = simuverse::util::BufferObj::create_empty_storage_buffer(
             &app.device,
             (canvas_size.width * canvas_size.height * 12) as u64,
@@ -49,9 +43,7 @@ impl Action for SimuverseApp {
 
         Self {
             app,
-            egui_ctx,
-            egui_state,
-            egui_renderer,
+            egui_layer,
             ctrl_panel,
             canvas_buf,
             canvas_size,
@@ -70,8 +62,8 @@ impl Action for SimuverseApp {
 
     fn resize(&mut self) {
         self.app.resize_surface();
-
         self.depth_view = Self::create_depth_tex(&self.app);
+        self.egui_layer.resize(&self.app);
 
         let canvas_size: Size<u32> = (&self.app.config).into();
         self.ctrl_panel
@@ -93,7 +85,7 @@ impl Action for SimuverseApp {
     }
 
     fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        let _ = self.egui_state.on_event(&self.egui_ctx, event);
+        self.egui_layer.on_ui_event(event);
     }
 
     fn on_click(&mut self, pos: app_surface::math::Position) {
@@ -117,34 +109,10 @@ impl Action for SimuverseApp {
             });
 
         // egui ui 更新
-        let raw_input = self.egui_state.take_egui_input(&self.app.view);
         let egui_app = &mut self.ctrl_panel;
-        let full_output = self.egui_ctx.run(raw_input, |ctx| {
-            egui_app.ui_contents(ctx);
-        });
-        let clipped_primitives = self.egui_ctx.tessellate(full_output.shapes);
-        let textures_delta = full_output.textures_delta;
-        let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
-            size_in_pixels: [self.app.config.width, self.app.config.height],
-            pixels_per_point: self.app.scale_factor,
-        };
-        let egui_cmd_bufs = {
-            for (id, image_delta) in &textures_delta.set {
-                self.egui_renderer.update_texture(
-                    &self.app.device,
-                    &self.app.queue,
-                    *id,
-                    image_delta,
-                );
-            }
-            self.egui_renderer.update_buffers(
-                &self.app.device,
-                &self.app.queue,
-                &mut encoder,
-                &clipped_primitives,
-                &screen_descriptor,
-            )
-        };
+        let egui_cmd_buffers = self
+            .egui_layer
+            .refresh_ui(&self.app, egui_app, &mut encoder);
 
         self.simulator.compute(&mut encoder);
 
@@ -177,21 +145,19 @@ impl Action for SimuverseApp {
             self.simulator
                 .draw_by_rpass(&self.app, &mut rpass, &mut self.ctrl_panel.setting);
 
-            // egui ui 渲染
-            self.egui_renderer
-                .render(&mut rpass, &clipped_primitives, &screen_descriptor);
+            self.egui_layer.compose_by_pass(&mut rpass);
         }
 
-        self.app.queue.submit(
-            egui_cmd_bufs
-                .into_iter()
-                .chain(iter::once(encoder.finish())),
-        );
+        if let Some(egui_cmd_bufs) = egui_cmd_buffers {
+            self.app.queue.submit(
+                egui_cmd_bufs
+                    .into_iter()
+                    .chain(iter::once(encoder.finish())),
+            );
+        } else {
+            self.app.queue.submit(iter::once(encoder.finish()));
+        }
         output.present();
-
-        for id in &textures_delta.free {
-            self.egui_renderer.free_texture(id);
-        }
 
         self.update_setting();
 

@@ -5,6 +5,9 @@ pub mod framework;
 mod egui_lib;
 pub(crate) use egui_lib::*;
 
+mod egui_layer;
+pub use egui_layer::EguiLayer;
+
 pub(crate) mod geometries;
 
 pub(crate) mod node;

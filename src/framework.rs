@@ -14,9 +14,6 @@ pub trait Action {
     fn update(&mut self) {}
     fn render(&mut self) -> Result<(), wgpu::SurfaceError>;
 
-    fn input(&mut self, _event: &WindowEvent) -> bool {
-        false
-    }
     fn on_ui_event(&mut self, _event: &winit::event::WindowEvent<'_>) {}
     fn on_click(&mut self, _pos: Position) {}
     fn touch_begin(&mut self) {}
@@ -153,47 +150,45 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                 window_id,
             } if window_id == app.current_window_id() => {
                 app.on_ui_event(event);
-                if !app.input(event) {
-                    match event {
-                        WindowEvent::CloseRequested
-                        | WindowEvent::KeyboardInput {
-                            input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
-                                    ..
-                                },
-                            ..
-                        } => *control_flow = ControlFlow::Exit,
-                        WindowEvent::Resized(_physical_size) => {
-                            app.resize();
-                        }
-                        WindowEvent::ScaleFactorChanged { .. } => {
-                            app.resize();
-                        }
-                        WindowEvent::MouseInput {
-                            device_id: _,
-                            state,
-                            button,
-                            ..
-                        } => {
-                            if button == &MouseButton::Left {
-                                if *state == ElementState::Pressed {
-                                    app.on_click(last_touch_point);
-                                } else {
-                                    app.touch_end();
-                                }
+                match event {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => *control_flow = ControlFlow::Exit,
+                    WindowEvent::Resized(_physical_size) => {
+                        app.resize();
+                    }
+                    WindowEvent::ScaleFactorChanged { .. } => {
+                        app.resize();
+                    }
+                    WindowEvent::MouseInput {
+                        device_id: _,
+                        state,
+                        button,
+                        ..
+                    } => {
+                        if button == &MouseButton::Left {
+                            if *state == ElementState::Pressed {
+                                app.on_click(last_touch_point);
+                            } else {
+                                app.touch_end();
                             }
                         }
-                        WindowEvent::CursorMoved { position, .. } => {
-                            // if left_bt_pressed {
-
-                            // }
-                            last_touch_point = Position::new(position.x as f32, position.y as f32);
-                            app.touch_move(last_touch_point);
-                        }
-                        _ => {}
                     }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        // if left_bt_pressed {
+
+                        // }
+                        last_touch_point = Position::new(position.x as f32, position.y as f32);
+                        app.touch_move(last_touch_point);
+                    }
+                    _ => {}
                 }
             }
             Event::RedrawRequested(window_id) if window_id == app.current_window_id() => {
