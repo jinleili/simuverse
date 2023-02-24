@@ -33,12 +33,20 @@ impl NoiseSetting {
                 self.hide_gain = true;
             }
             Some(2) => {
-                self.back_color = [0.222, 0.261, 0.687];
-                self.front_color = [0.89, 0.798, 0.661];
-                self.noise_scale = 4.0;
+                self.back_color = [1.0; 3];
+                self.front_color = [0.353, 0.120, 0.106];
+                self.noise_scale = 1.0;
                 self.octave = 3;
-                self.lacunarity = 1.7;
-                self.gain = 0.95;
+                self.lacunarity = 2.7;
+                self.gain = 0.49;
+            }
+            Some(3) => {
+                self.back_color = [0.222, 0.261, 0.687];
+                self.front_color = [0.2, 0.698, 0.261];
+                self.noise_scale = 1.5;
+                self.octave = 3;
+                self.lacunarity = 1.8;
+                self.gain = 0.91;
             }
             _ => {
                 self.back_color = [0.98; 3];
@@ -67,7 +75,13 @@ impl NoiseSetting {
                 self.ty_changed();
             };
             if ui
-                .selectable_value(&mut self.simu_ty, Some(2), "Earth")
+                .selectable_value(&mut self.simu_ty, Some(2), "Grim world")
+                .clicked()
+            {
+                self.ty_changed();
+            };
+            if ui
+                .selectable_value(&mut self.simu_ty, Some(3), "Mercury")
                 .clicked()
             {
                 self.ty_changed();
@@ -89,12 +103,14 @@ impl NoiseSetting {
                 ui.end_row();
 
                 ui.label("Noise scale:");
-                ui.add(egui::Slider::new(&mut self.noise_scale, 1.0..=20.0));
+                ui.add(egui::Slider::new(&mut self.noise_scale, 0.2..=14.0));
                 ui.end_row();
 
-                ui.label("Octave:");
-                ui.add(egui::Slider::new(&mut self.octave, 1..=40));
-                ui.end_row();
+                if self.simu_ty == Some(0) || self.simu_ty == Some(1) {
+                    ui.label("Octave:");
+                    ui.add(egui::Slider::new(&mut self.octave, 1..=40));
+                    ui.end_row();
+                }
 
                 ui.label("Lacunarity:");
                 ui.add(egui::Slider::new(&mut self.lacunarity, 0.2..=8.4));
@@ -102,7 +118,7 @@ impl NoiseSetting {
 
                 if self.simu_ty != Some(1) {
                     ui.label("Gain:");
-                    ui.add(egui::Slider::new(&mut self.gain, 0.15..=0.95));
+                    ui.add(egui::Slider::new(&mut self.gain, 0.15..=1.0));
                     ui.end_row();
                 }
             });

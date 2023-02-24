@@ -38,6 +38,8 @@ pub struct MVPMatUniform {
     mvp: [[f32; 4]; 4],
     mv_no_rotation: [[f32; 4]; 4],
     normal: [[f32; 4]; 4],
+    u_time: f32,
+    _padding: [f32; 3],
 }
 
 pub trait Simulator {

@@ -23,7 +23,7 @@ impl ControlPanel {
         let lifetime = 90;
         let particles_count = 10000;
         let particle_size = if app.scale_factor.ceil() > 1.0 { 3 } else { 2 };
-        let selected_simu_type = SimuType::Field;
+        let selected_simu_type = SimuType::Noise;
 
         let mut setting = SettingObj::new(
             selected_simu_type,

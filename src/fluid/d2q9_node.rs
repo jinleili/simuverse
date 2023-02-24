@@ -61,6 +61,7 @@ impl D2Q9Node {
 
         let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
             (canvas_size.width as f32, canvas_size.height as f32).into(),
+            75.0 / 180.0 * std::f32::consts::PI,
         );
         let field_uniform_data = FieldUniform {
             lattice_size: [lattice.width as i32, lattice.height as i32],

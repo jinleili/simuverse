@@ -39,6 +39,8 @@ impl SphereDisplay {
             mvp: (p_matrix * mv_matrix).to_cols_array_2d(),
             mv_no_rotation: mv_matrix.to_cols_array_2d(),
             normal,
+            u_time: 0.0,
+            _padding: [0.0; 3],
         };
         let mvp_buf = BufferObj::create_uniform_buffer(&app.device, &mvp_uniform, Some("mvp_buf"));
 
@@ -53,9 +55,8 @@ impl SphereDisplay {
                 .with_vertices_and_indices((vertices, indices))
                 .with_storage_buffers(vec![permulation_buf, gradient_buf])
                 .with_shader_stages(vec![
-                    ShaderStages::VERTEX,
                     ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-                    ShaderStages::FRAGMENT,
+                    ShaderStages::VERTEX | ShaderStages::FRAGMENT,
                     ShaderStages::FRAGMENT,
                     ShaderStages::FRAGMENT,
                 ])
@@ -99,7 +100,8 @@ impl SphereDisplay {
             0,
             bytemuck::bytes_of(&self.mvp_uniform),
         );
-
         self.gen_tex_node.draw_by_pass(rpass);
+
+        self.mvp_uniform.u_time += 0.016;
     }
 }
