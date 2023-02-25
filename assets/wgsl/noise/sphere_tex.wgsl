@@ -112,9 +112,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         simu_color = mix(vec3<f32>(0.101961,0.619608,0.666667),
                     vec3<f32>(0.666667,0.666667,0.498039), min(f*3.2, 1.0));
         simu_color = mix(simu_color,
-                    vec3<f32>(0., 0., 0.164706), min(length(q), 1.0));
+                    params.bg_color.rgb, min(length(q), 1.0));
         simu_color = mix(simu_color, 
-                    vec3<f32>(0.666667,1., 1.), min(length(r.x), 1.0));
+                    params.front_color.rgb, min(length(r.x), 1.0));
     }
 
     // Light
