@@ -49,11 +49,8 @@ impl EguiLayer {
     }
 
     pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        if let egui_winit::EventResponse {
-            consumed: _,
-            repaint: true,
-        } = self.egui_state.on_event(&self.ctx, event)
-        {
+        let response = self.egui_state.on_event(&self.ctx, event);
+        if response.repaint || response.consumed  {
             self.egui_repaint = true;
         }
     }

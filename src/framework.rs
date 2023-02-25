@@ -1,5 +1,6 @@
 use app_surface::math::Position;
 use winit::{
+    dpi::PhysicalSize,
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::{WindowBuilder, WindowId},
@@ -9,7 +10,7 @@ pub trait Action {
     fn new(app: app_surface::AppSurface, event_loop: &EventLoop<()>) -> Self;
     fn get_adapter_info(&self) -> wgpu::AdapterInfo;
     fn current_window_id(&self) -> WindowId;
-    fn resize(&mut self);
+    fn resize(&mut self, size: &PhysicalSize<u32>);
     fn request_redraw(&mut self);
     fn update(&mut self) {}
     fn render(&mut self) -> Result<(), wgpu::SurfaceError>;
@@ -62,8 +63,6 @@ pub fn run<A: Action + 'static>(wh_ratio: Option<f32>) {
 }
 
 async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (EventLoop<()>, A) {
-    use winit::dpi::PhysicalSize;
-
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("Wgpu Simuverse")
@@ -161,11 +160,19 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                             },
                         ..
                     } => *control_flow = ControlFlow::Exit,
-                    WindowEvent::Resized(_physical_size) => {
-                        app.resize();
+                    WindowEvent::Resized(physical_size) => {
+                        if physical_size.width == 0 || physical_size.height == 0 {
+                            // 处理最小化窗口的事件
+                            println!("Window minimized!");
+                        } else {
+                            app.resize(physical_size);
+                        }
                     }
-                    WindowEvent::ScaleFactorChanged { .. } => {
-                        app.resize();
+                    WindowEvent::ScaleFactorChanged {
+                        scale_factor: _,
+                        new_inner_size,
+                    } => {
+                        app.resize(new_inner_size);
                     }
                     WindowEvent::MouseInput {
                         device_id: _,
@@ -182,9 +189,6 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                         }
                     }
                     WindowEvent::CursorMoved { position, .. } => {
-                        // if left_bt_pressed {
-
-                        // }
                         last_touch_point = Position::new(position.x as f32, position.y as f32);
                         app.touch_move(last_touch_point);
                     }
@@ -196,7 +200,7 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                 match app.render() {
                     Ok(_) => {}
                     // 当展示平面的上下文丢失，就需重新配置
-                    Err(wgpu::SurfaceError::Lost) => app.resize(),
+                    Err(wgpu::SurfaceError::Lost) => eprintln!("Surface is lost"),
                     // 系统内存不足时，程序应该退出。
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // 所有其他错误（过期、超时等）应在下一帧解决

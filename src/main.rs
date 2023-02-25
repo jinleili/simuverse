@@ -6,6 +6,7 @@ use simuverse::{
     noise::TextureSimulator, ControlPanel, FieldSimulator, FluidSimulator,
     SettingObj, SimuType, Simulator, DEPTH_FORMAT,
 };
+use winit::dpi::PhysicalSize;
 use std::iter;
 use wgpu::TextureView;
 use winit::{event_loop::EventLoop, window::WindowId};
@@ -60,7 +61,10 @@ impl Action for SimuverseApp {
         self.app.view.id()
     }
 
-    fn resize(&mut self) {
+    fn resize(&mut self , size: &PhysicalSize<u32>) {
+        if self.app.config.width == size.width && self.app.config.height == size.height {
+            return;
+        }
         self.app.resize_surface();
         self.depth_view = Self::create_depth_tex(&self.app);
         self.egui_layer.resize(&self.app);
