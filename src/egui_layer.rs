@@ -14,7 +14,7 @@ pub struct EguiLayer {
     pub ctx: egui::Context,
     egui_state: egui_winit::State,
     egui_renderer: egui_wgpu::Renderer,
-    egui_repaint: bool,
+    egui_repaint: i32,
     // compose egui ui layer to frame buffer
     composer: BufferlessFullscreenNode,
 }
@@ -28,8 +28,8 @@ impl EguiLayer {
 
         let (canvas, composer) = Self::create_canvas_and_composer(app, format, &sampler, &shader);
 
-        let egui_ctx = egui::Context::default();
-        crate::setup_custom_fonts(&egui_ctx);
+        let ctx = egui::Context::default();
+        crate::setup_custom_fonts(&ctx);
 
         let mut egui_state = egui_winit::State::new(event_loop);
         egui_state.set_pixels_per_point(app.scale_factor);
@@ -40,19 +40,21 @@ impl EguiLayer {
             canvas,
             shader,
             sampler,
-            ctx: egui_ctx,
+            ctx,
             egui_state,
             egui_renderer,
-            egui_repaint: true,
+            egui_repaint: 2,
             composer,
         }
     }
 
     pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
         let response = self.egui_state.on_event(&self.ctx, event);
-        if response.repaint || response.consumed  {
-            self.egui_repaint = true;
-        }
+        self.egui_repaint = if response.consumed {
+            20
+        } else {
+            self.egui_repaint.max(1)
+        };
     }
 
     pub fn resize(&mut self, app: &AppSurface) {
@@ -68,10 +70,10 @@ impl EguiLayer {
         egui_app: &mut ControlPanel,
         encoder: &mut wgpu::CommandEncoder,
     ) -> Option<Vec<wgpu::CommandBuffer>> {
-        if !self.egui_repaint {
+        if self.egui_repaint <= 0 {
             return None;
         }
-        self.egui_repaint = false;
+        self.egui_repaint -= 1;
 
         let raw_input = self.egui_state.take_egui_input(&app.view);
         let full_output = self.ctx.run(raw_input, |ctx| {

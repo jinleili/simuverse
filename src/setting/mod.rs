@@ -5,4 +5,7 @@ mod setting_obj;
 pub use setting_obj::SettingObj;
 
 mod noise_setting;
-pub use noise_setting::NoiseSetting;
+pub(crate) use noise_setting::NoiseSetting;
+
+mod pbd_setting;
+pub(crate) use pbd_setting::PBDSetting;

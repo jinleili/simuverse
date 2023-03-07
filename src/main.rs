@@ -1,14 +1,12 @@
 use app_surface::{math::Size, AppSurface, SurfaceFrame};
-use simuverse::framework::{run, Action};
-use simuverse::util::BufferObj;
-use simuverse::EguiLayer;
 use simuverse::{
-    noise::TextureSimulator, ControlPanel, FieldSimulator, FluidSimulator,
-    SettingObj, SimuType, Simulator, DEPTH_FORMAT,
+    EguiLayer, util::BufferObj,framework::{run, Action},
+    noise::TextureSimulator, ControlPanel, FieldSimulator, FluidSimulator, SettingObj, SimuType,
+    Simulator, DEPTH_FORMAT,
 };
-use winit::dpi::PhysicalSize;
 use std::iter;
 use wgpu::TextureView;
+use winit::dpi::PhysicalSize;
 use winit::{event_loop::EventLoop, window::WindowId};
 
 struct SimuverseApp {
@@ -61,7 +59,7 @@ impl Action for SimuverseApp {
         self.app.view.id()
     }
 
-    fn resize(&mut self , size: &PhysicalSize<u32>) {
+    fn resize(&mut self, size: &PhysicalSize<u32>) {
         if self.app.config.width == size.width && self.app.config.height == size.height {
             return;
         }
@@ -80,12 +78,15 @@ impl Action for SimuverseApp {
             false,
             Some("canvas_buf"),
         );
-        self.simulator = Self::create_simulator(
-            &self.app,
-            canvas_size,
-            &self.canvas_buf,
-            &self.ctrl_panel.setting,
-        );
+
+        if !self.simulator.resize(&self.app) {
+            self.simulator = Self::create_simulator(
+                &self.app,
+                canvas_size,
+                &self.canvas_buf,
+                &self.ctrl_panel.setting,
+            );
+        }
     }
 
     fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
@@ -179,6 +180,7 @@ impl SimuverseApp {
         match setting.simu_type {
             SimuType::Fluid => Box::new(FluidSimulator::new(app, canvas_size, canvas_buf, setting)),
             SimuType::Noise => Box::new(TextureSimulator::new(app)),
+            SimuType::PBDynamic => Box::new(simuverse::pbd::PBDSimulator::new(app)),
             _ => Box::new(FieldSimulator::new(
                 app,
                 app.config.format,

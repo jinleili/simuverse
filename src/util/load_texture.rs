@@ -20,7 +20,7 @@ pub fn from_path(
         // is already a full path
         PathBuf::from(image_path)
     } else {
-        app_surface::fs::get_texture_file_path(image_path)
+        super::get_texture_file_path(image_path)
     };
     let (texels, texture_extent, format) = load_from_path(path, set_to_grayscale);
     let pixel_bytes = single_pixel_bytes(format);

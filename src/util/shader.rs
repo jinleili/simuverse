@@ -4,36 +4,6 @@ use wgpu::{ShaderModule, ShaderModuleDescriptor, ShaderSource};
 const SHADER_IMPORT: &str = "#include ";
 const SHADER_SEGMENT: &str = "#insert_code_snippet";
 
-#[cfg(target_arch = "wasm32")]
-pub fn application_root_dir() -> String {
-    let host = web_sys::window().unwrap().location().host().unwrap();
-    "http://".to_string() + &host
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn application_root_dir() -> String {
-    use std::env;
-    use std::fs;
-
-    match env::var("PROFILE") {
-        Ok(_) => String::from(env!("CARGO_MANIFEST_DIR")),
-        Err(_) => {
-            let mut path = env::current_exe().expect("Failed to find executable path.");
-            while let Ok(target) = fs::read_link(path.clone()) {
-                path = target;
-            }
-            if cfg!(any(
-                target_os = "macos",
-                target_os = "windows",
-                target_os = "linux"
-            )) {
-                path = path.join("../../../assets/").canonicalize().unwrap();
-            }
-
-            String::from(path.to_str().unwrap())
-        }
-    }
-}
 
 #[allow(dead_code)]
 pub fn create_shader_module(
@@ -54,7 +24,7 @@ pub fn insert_code_then_create(
     // env!("CARGO_MANIFEST_DIR") 是编译时执行的，得到的是当前所编辑的库的所在路径，而不是项目的路径
     // std::env::var("CARGO_MANIFEST_DIR") 在 xcode debug 时不存在
     // std::env::current_dir() 在 xcode debug 时只能获得相对路径： “/”
-    let base_dir = application_root_dir();
+    let base_dir = super::application_root_dir();
     let (fold, shader_name) = if cfg!(any(target_os = "ios", target_arch = "wasm32")) {
         ("preprocessed-wgsl", shader_name.replace('/', "_"))
     } else {

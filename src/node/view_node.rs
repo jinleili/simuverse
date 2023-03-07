@@ -24,6 +24,7 @@ pub struct NodeAttributes<'a, T: Vertex + Pod> {
     pub corlor_format: Option<wgpu::TextureFormat>,
     pub color_blend_state: Option<wgpu::BlendState>,
     pub primitive_topology: wgpu::PrimitiveTopology,
+    pub polygon_mode: wgpu::PolygonMode,
     pub cull_mode: Option<wgpu::Face>,
     pub use_depth_stencil: bool,
     pub shader_module: &'a wgpu::ShaderModule,
@@ -67,6 +68,7 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
                 corlor_format: None,
                 color_blend_state: Some(wgpu::BlendState::ALPHA_BLENDING),
                 primitive_topology: wgpu::PrimitiveTopology::TriangleList,
+                polygon_mode: wgpu::PolygonMode::Fill,
                 cull_mode: Some(wgpu::Face::Back),
                 use_depth_stencil: true,
                 shader_module,
@@ -77,6 +79,11 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
 
     pub fn with_primitive_topology(mut self, primitive_topology: wgpu::PrimitiveTopology) -> Self {
         self.primitive_topology = primitive_topology;
+        self
+    }
+
+    pub fn with_polygon_mode(mut self, polygon_mode: wgpu::PolygonMode) -> Self {
+        self.polygon_mode = polygon_mode;
         self
     }
 
@@ -178,7 +185,7 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
 
 #[allow(dead_code)]
 pub struct ViewNode {
-    pub vertex_buf: BufferObj,
+    pub vertex_buf: Option<BufferObj>,
     pub index_buf: wgpu::Buffer,
     pub index_count: usize,
     pub bg_setting: BindingGroupSetting,
@@ -254,13 +261,17 @@ impl ViewNode {
 
         // Create the vertex and index buffers
         let vi = attributes.vertices_and_indices.unwrap();
-        let vertex_buf = BufferObj::create_buffer(
-            device,
-            Some(&vi.0),
-            None,
-            wgpu::BufferUsages::VERTEX,
-            Some("Vertex buffer"),
-        );
+        let vertex_buf = if std::mem::size_of_val(&vi.0[0]) > 0 {
+            Some(BufferObj::create_buffer(
+                device,
+                Some(&vi.0),
+                None,
+                wgpu::BufferUsages::VERTEX,
+                Some("Vertex buffer"),
+            ))
+        } else {
+            None
+        };
         let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("index buffer"),
             contents: bytemuck::cast_slice(&vi.1),
@@ -270,12 +281,14 @@ impl ViewNode {
         let default_layout_attributes = T::vertex_attributes(0);
         let vertex_buffer_layouts = if let Some(layouts) = attributes.vertex_buffer_layouts {
             layouts
-        } else {
+        } else if std::mem::size_of::<T>() > 0 {
             vec![wgpu::VertexBufferLayout {
                 array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &default_layout_attributes,
             }]
+        } else {
+            vec![]
         };
         let (dy_uniform_bg, pipeline_layout) = if !attributes.dynamic_uniforms.is_empty() {
             let dy_bg = super::DynamicUniformBindingGroup::new(device, attributes.dynamic_uniforms);
@@ -316,7 +329,7 @@ impl ViewNode {
                 topology: attributes.primitive_topology,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: attributes.cull_mode,
-                polygon_mode: wgpu::PolygonMode::Fill,
+                polygon_mode: attributes.polygon_mode,
                 ..Default::default()
             },
             depth_stencil: if attributes.use_depth_stencil {
@@ -412,6 +425,8 @@ impl ViewNode {
         rpass.set_pipeline(&self.pipeline);
         rpass.set_bind_group(0, &self.bg_setting.bind_group, &[]);
         rpass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint32);
-        rpass.set_vertex_buffer(0, self.vertex_buf.buffer.slice(..));
+        if let Some(vertex_buf) = self.vertex_buf.as_ref() {
+            rpass.set_vertex_buffer(0, vertex_buf.buffer.slice(..));
+        }
     }
 }

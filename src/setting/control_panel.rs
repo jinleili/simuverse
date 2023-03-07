@@ -1,4 +1,6 @@
-use crate::{FieldAnimationType, NoiseSetting, ParticleColorType, SettingObj, SimuType};
+use crate::{
+    FieldAnimationType, NoiseSetting, PBDSetting, ParticleColorType, SettingObj, SimuType,
+};
 use app_surface::AppSurface;
 use egui::{Color32, Context, Ui};
 
@@ -16,6 +18,7 @@ pub struct ControlPanel {
     is_code_snippet_changed: bool,
     pub selected_simu_type: SimuType,
     pub noise_setting: NoiseSetting,
+    pub pbd_setting: PBDSetting,
 }
 
 impl ControlPanel {
@@ -23,7 +26,7 @@ impl ControlPanel {
         let lifetime = 90;
         let particles_count = 10000;
         let particle_size = if app.scale_factor.ceil() > 1.0 { 3 } else { 2 };
-        let selected_simu_type = SimuType::Field;
+        let selected_simu_type = SimuType::PBDynamic;
 
         let mut setting = SettingObj::new(
             selected_simu_type,
@@ -70,6 +73,7 @@ impl ControlPanel {
             is_code_snippet_changed: false,
             selected_simu_type,
             noise_setting: NoiseSetting::new(),
+            pbd_setting: PBDSetting::default(),
         }
     }
 
@@ -147,6 +151,7 @@ impl ControlPanel {
             match self.selected_simu_type {
                 SimuType::Field | SimuType::Fluid => self.particles_ctrl_ui(ui),
                 SimuType::Noise => self.noise_setting.ui_contents(ui),
+                SimuType::PBDynamic => self.pbd_setting.ui_contents(ui),
                 _ => {}
             }
 
@@ -177,6 +182,7 @@ impl ControlPanel {
             ("🌾 Vector Field", SimuType::Field),
             ("💦 LBM Fluid", SimuType::Fluid),
             ("💥 Perlin Noise", SimuType::Noise),
+            ("👗 Position-based Dynamics", SimuType::PBDynamic),
         ];
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {

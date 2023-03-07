@@ -1,3 +1,4 @@
+use app_surface::math::{Position, Size};
 use std::usize;
 
 pub mod framework;
@@ -25,7 +26,7 @@ pub use fluid::FluidSimulator;
 mod field_velocity_code;
 pub use field_velocity_code::get_velocity_code_snippet;
 
-use app_surface::math::{Position, Size};
+pub mod pbd;
 
 pub mod util;
 use util::shader::{create_shader_module, insert_code_then_create};
@@ -58,6 +59,10 @@ pub trait Simulator {
 
     fn reset(&mut self, _app: &app_surface::AppSurface) {}
 
+    fn resize(&mut self, _app: &app_surface::AppSurface) -> bool {
+        false
+    }
+
     fn update_by(&mut self, app: &app_surface::AppSurface, control_panel: &mut crate::ControlPanel);
     fn update_workgroup_count(
         &mut self,
@@ -80,6 +85,7 @@ pub enum SimuType {
     Field = 0,
     Fluid,
     Noise,
+    PBDynamic,
     D3Fluid,
 }
 

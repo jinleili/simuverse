@@ -160,3 +160,26 @@ impl Vertex for PosNormalUv {
         ]
     }
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct PosParticleIndex {
+    pos: [u32; 3],
+}
+
+#[allow(dead_code)]
+impl PosParticleIndex {
+    pub fn new(pos: [u32; 3]) -> Self {
+        PosParticleIndex { pos }
+    }
+}
+
+impl Vertex for PosParticleIndex {
+    fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute> {
+        vec![wgpu::VertexAttribute {
+            shader_location: offset,
+            format: wgpu::VertexFormat::Uint32x3,
+            offset: 0,
+        }]
+    }
+}
