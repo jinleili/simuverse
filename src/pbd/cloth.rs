@@ -189,7 +189,7 @@ impl Cloth {
         );
 
         let (texture, _) = crate::util::load_texture::from_path(
-            "cloth_500*500.png",
+            "cloth_500x500.png",
             app_view,
             wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
             false,
