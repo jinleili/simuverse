@@ -1,7 +1,7 @@
 use crate::{
     create_shader_module,
     geometries::Sphere,
-    node::{ViewNode, ViewNodeBuilder},
+    node::{BindGroupData, ViewNode, ViewNodeBuilder},
     util::BufferObj,
 };
 use app_surface::AppSurface;
@@ -49,17 +49,20 @@ impl SphereDisplay {
         let (vertices, indices) = Sphere::new(1.0, 50, 34).generate_vertices();
 
         // generate sphere textue
+        let bg_data = BindGroupData {
+            uniforms: vec![&mvp_buf, uniform_buf],
+            storage_buffers: vec![permulation_buf, gradient_buf],
+            visibilitys: vec![
+                ShaderStages::VERTEX | ShaderStages::FRAGMENT,
+                ShaderStages::VERTEX | ShaderStages::FRAGMENT,
+                ShaderStages::FRAGMENT,
+                ShaderStages::FRAGMENT,
+            ],
+            ..Default::default()
+        };
         let builder =
-            ViewNodeBuilder::<crate::util::vertex::PosNormalUv>::new(vec![], &sphere_tex_shader)
-                .with_uniform_buffers(vec![&mvp_buf, uniform_buf])
+            ViewNodeBuilder::<crate::util::vertex::PosNormalUv>::new(bg_data, &sphere_tex_shader)
                 .with_vertices_and_indices((vertices, indices))
-                .with_storage_buffers(vec![permulation_buf, gradient_buf])
-                .with_shader_stages(vec![
-                    ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-                    ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-                    ShaderStages::FRAGMENT,
-                    ShaderStages::FRAGMENT,
-                ])
                 .with_color_format(app.config.format);
         let gen_tex_node = builder.build(&app.device);
 

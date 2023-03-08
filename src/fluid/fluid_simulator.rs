@@ -1,7 +1,7 @@
 use super::{d2q9_node::D2Q9Node, OBSTACLE_RADIUS};
 use crate::{
     fluid::LbmUniform,
-    node::{BufferlessFullscreenNode, ComputeNode},
+    node::{BindGroupData, BufferlessFullscreenNode, ComputeNode},
     util::BufferObj,
     FieldAnimationType, SettingObj, Simulator,
 };
@@ -51,33 +51,36 @@ impl FluidSimulator {
             wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
             Some("curl_tex"),
         );
-        let curl_cal_node = ComputeNode::new(
-            device,
-            fluid_compute_node.workgroup_count,
-            vec![
+        let bind_group_data = BindGroupData {
+            workgroup_count: fluid_compute_node.workgroup_count,
+            uniforms: vec![
                 &fluid_compute_node.lbm_uniform_buf,
                 &fluid_compute_node.fluid_uniform_buf,
             ],
-            vec![&fluid_compute_node.info_buf],
-            vec![
+            storage_buffers: vec![&fluid_compute_node.info_buf],
+            inout_tv: vec![
                 (&fluid_compute_node.macro_tex, None),
                 (&curl_tex, Some(wgpu::StorageTextureAccess::WriteOnly)),
             ],
-            &curl_shader,
-        );
+            ..Default::default()
+        };
+        let curl_cal_node = ComputeNode::new(device, &bind_group_data, &curl_shader);
 
         let render_shader = create_shader_module(device, "lbm/present", Some("lbm present shader"));
         let sampler = crate::util::load_texture::bilinear_sampler(device);
         let render_node = BufferlessFullscreenNode::new(
             device,
             app.config.format,
-            vec![
-                &fluid_compute_node.fluid_uniform_buf,
-                setting.particles_uniform.as_ref().unwrap(),
-            ],
-            vec![canvas_buf],
-            vec![&fluid_compute_node.macro_tex, &curl_tex],
-            vec![&sampler],
+            &BindGroupData {
+                uniforms: vec![
+                    &fluid_compute_node.fluid_uniform_buf,
+                    setting.particles_uniform.as_ref().unwrap(),
+                ],
+                storage_buffers: vec![canvas_buf],
+                inout_tv: vec![(&fluid_compute_node.macro_tex, None), (&curl_tex, None)],
+                samplers: vec![&sampler],
+                ..Default::default()
+            },
             &render_shader,
             None,
         );
@@ -87,30 +90,31 @@ impl FluidSimulator {
             "lbm/particle_update",
             Some("particle_update_shader"),
         );
-        let particle_update_node = ComputeNode::new(
-            device,
-            setting.particles_workgroup_count,
-            vec![
+        let bind_group_data = BindGroupData {
+            workgroup_count: setting.particles_workgroup_count,
+            uniforms: vec![
                 &fluid_compute_node.lbm_uniform_buf,
                 &fluid_compute_node.fluid_uniform_buf,
                 setting.particles_uniform.as_ref().unwrap(),
             ],
-            vec![setting.particles_buf.as_ref().unwrap(), canvas_buf],
-            vec![(&fluid_compute_node.macro_tex, None)],
-            &update_shader,
-        );
+            storage_buffers: vec![setting.particles_buf.as_ref().unwrap(), canvas_buf],
+            inout_tv: vec![(&fluid_compute_node.macro_tex, None)],
+            ..Default::default()
+        };
+        let particle_update_node = ComputeNode::new(device, &bind_group_data, &update_shader);
 
         let particle_shader = create_shader_module(device, "present", None);
         let particle_render = BufferlessFullscreenNode::new(
             device,
             app.config.format,
-            vec![
-                &fluid_compute_node.fluid_uniform_buf,
-                setting.particles_uniform.as_ref().unwrap(),
-            ],
-            vec![canvas_buf],
-            vec![],
-            vec![],
+            &BindGroupData {
+                uniforms: vec![
+                    &fluid_compute_node.fluid_uniform_buf,
+                    setting.particles_uniform.as_ref().unwrap(),
+                ],
+                storage_buffers: vec![canvas_buf],
+                ..Default::default()
+            },
             &particle_shader,
             None,
         );
@@ -194,13 +198,12 @@ impl Simulator for FluidSimulator {
     ) {
     }
 
-    
     fn update_workgroup_count(
         &mut self,
         _app: &app_surface::AppSurface,
         workgroup_count: (u32, u32, u32),
     ) {
-        self.particle_update_node.group_count = workgroup_count;
+        self.particle_update_node.workgroup_count = workgroup_count;
     }
 
     fn reset(&mut self, app: &app_surface::AppSurface) {

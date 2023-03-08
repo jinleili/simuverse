@@ -1,5 +1,5 @@
 use crate::{
-    node::BufferlessFullscreenNode,
+    node::{BindGroupData, BufferlessFullscreenNode},
     util::{load_texture, shader::create_shader_module, AnyTexture},
     ControlPanel,
 };
@@ -148,10 +148,11 @@ impl EguiLayer {
         let composer = BufferlessFullscreenNode::new(
             &app.device,
             format,
-            vec![],
-            vec![],
-            vec![&canvas],
-            vec![sampler],
+            &BindGroupData {
+                inout_tv: vec![(&canvas, None)],
+                samplers: vec![sampler],
+                ..Default::default()
+            },
             shader,
             Some(wgpu::BlendState::ALPHA_BLENDING),
         );

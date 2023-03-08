@@ -4,7 +4,7 @@ use super::{init_lattice_material, is_sd_sphere, LatticeInfo, LatticeType, OBSTA
 use crate::{
     create_shader_module,
     fluid::LbmUniform,
-    node::{BindingGroupSetting, ComputeNode},
+    node::{BindGroupData, BindGroupSetting, ComputeNode},
     util::{AnyTexture, BufferObj},
     FieldAnimationType, FieldUniform, SettingObj,
 };
@@ -20,7 +20,7 @@ pub struct D2Q9Node {
     pub macro_tex: AnyTexture,
     pub lattice_info_data: Vec<LatticeInfo>,
     pub info_buf: BufferObj,
-    setting_nodes: Vec<BindingGroupSetting>,
+    setting_nodes: Vec<BindGroupSetting>,
     collide_stream_pipelines: Vec<wgpu::ComputePipeline>,
     boundary_pipelines: Vec<wgpu::ComputePipeline>,
     pub workgroup_count: (u32, u32, u32),
@@ -122,7 +122,7 @@ impl D2Q9Node {
         let boundary_shader = create_shader_module(device, "lbm/boundary", Some("boundary_shader"));
 
         let visibilitys: Vec<wgpu::ShaderStages> = [wgpu::ShaderStages::COMPUTE; 10].to_vec();
-        let mut setting_nodes = Vec::<BindingGroupSetting>::with_capacity(2);
+        let mut setting_nodes = Vec::<BindGroupSetting>::with_capacity(2);
         let mut collide_stream_pipelines = Vec::<wgpu::ComputePipeline>::with_capacity(2);
         let mut boundary_pipelines = Vec::<wgpu::ComputePipeline>::with_capacity(2);
 
@@ -134,13 +134,15 @@ impl D2Q9Node {
                 &collide_stream_buffers[(i + 1) % 2],
                 &info_buf,
             ];
-            let setting_node = BindingGroupSetting::new(
+            let setting_node = BindGroupSetting::new(
                 device,
-                vec![&lbm_uniform_buf, &fluid_uniform_buf],
-                buffers.clone(),
-                vec![(&macro_tex, Some(macro_tex_access))],
-                vec![],
-                visibilitys.clone(),
+                &BindGroupData {
+                    uniforms: vec![&lbm_uniform_buf, &fluid_uniform_buf],
+                    storage_buffers: buffers.clone(),
+                    inout_tv: vec![(&macro_tex, Some(macro_tex_access))],
+                    visibilitys: visibilitys.clone(),
+                    ..Default::default()
+                },
             );
             let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
@@ -169,18 +171,18 @@ impl D2Q9Node {
         let init_shader = create_shader_module(device, "lbm/init", Some("init_shader"));
         collide_stream_buffers[0].borrow_mut().read_only = false;
         collide_stream_buffers[1].borrow_mut().read_only = false;
-        let reset_node = ComputeNode::new(
-            device,
+        let bind_group_data = BindGroupData {
             workgroup_count,
-            vec![&lbm_uniform_buf, &fluid_uniform_buf],
-            vec![
+            uniforms: vec![&lbm_uniform_buf, &fluid_uniform_buf],
+            storage_buffers: vec![
                 &collide_stream_buffers[0],
                 &collide_stream_buffers[1],
                 &info_buf,
             ],
-            vec![(&macro_tex, Some(macro_tex_access))],
-            &init_shader,
-        );
+            inout_tv: vec![(&macro_tex, Some(macro_tex_access))],
+            ..Default::default()
+        };
+        let reset_node = ComputeNode::new(device, &bind_group_data, &init_shader);
 
         let mut instance = D2Q9Node {
             lattice,

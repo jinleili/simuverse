@@ -1,4 +1,4 @@
-use crate::node::{ComputeNode, ViewNode, ViewNodeBuilder};
+use crate::node::{BindGroupData, ComputeNode, ViewNode, ViewNodeBuilder};
 use crate::util::{vertex::PosParticleIndex, BufferObj};
 
 use super::{ClothFabric, ClothUniform, MeshColoringObj};
@@ -115,14 +115,14 @@ impl Cloth {
             "pbd/cloth_external_force",
             None,
         );
-        let external_force_node = ComputeNode::new(
-            &app_view.device,
-            (1, 1, 1),
-            vec![&cloth_uniform_buf],
-            vec![&velocity_buf, &particle_buf],
-            vec![],
-            &external_force_shader,
-        );
+        let bind_group_data = BindGroupData {
+            workgroup_count: (1, 1, 1),
+            uniforms: vec![&cloth_uniform_buf],
+            storage_buffers: vec![&velocity_buf, &particle_buf],
+            ..Default::default()
+        };
+        let external_force_node =
+            ComputeNode::new(&app_view.device, &bind_group_data, &external_force_shader);
 
         let constraint_buf = BufferObj::create_storage_buffer(
             &app_view.device,
@@ -140,16 +140,20 @@ impl Cloth {
             "pbd/xxpbd/cloth_predict",
             None,
         );
-        let predict_and_reset = ComputeNode::new(
-            &app_view.device,
-            (
+        let mut bind_group_data = BindGroupData {
+            workgroup_count: (
                 ((fabric.horizontal_num * fabric.vertical_num + 31) as f32 / 32.0).floor() as u32,
                 1,
                 1,
             ),
-            vec![&cloth_uniform_buf],
-            vec![&particle_buf, &constraint_buf],
-            vec![],
+            uniforms: vec![&cloth_uniform_buf],
+            storage_buffers: vec![&particle_buf, &constraint_buf],
+            ..Default::default()
+        };
+
+        let predict_and_reset = ComputeNode::new(
+            &app_view.device,
+            &bind_group_data,
             &predict_and_reset_shader,
         );
 
@@ -158,13 +162,12 @@ impl Cloth {
             "pbd/xxpbd/cloth_stretch_solver",
             None,
         );
+
+        bind_group_data.dynamic_uniforms = vec![(&stretch_coloring_buf)];
+        bind_group_data.workgroup_count = (0, 0, 0);
         let stretch_solver = ComputeNode::new_with_dynamic_uniforms(
             &app_view.device,
-            (0, 0, 0),
-            vec![&cloth_uniform_buf],
-            vec![(&stretch_coloring_buf)],
-            vec![&particle_buf, &constraint_buf],
-            vec![],
+            &bind_group_data,
             &constraint_solver_shader,
         );
 
@@ -173,13 +176,15 @@ impl Cloth {
             "pbd/xxpbd/cloth_bending_solver",
             None,
         );
+        let bind_group_data = BindGroupData {
+            uniforms: vec![&cloth_uniform_buf],
+            dynamic_uniforms: vec![&bend_coloring_buf],
+            storage_buffers: vec![&particle_buf, &bend_constraints_buf],
+            ..Default::default()
+        };
         let bend_solver = ComputeNode::new_with_dynamic_uniforms(
             &app_view.device,
-            (0, 0, 0),
-            vec![&cloth_uniform_buf],
-            vec![&bend_coloring_buf],
-            vec![&particle_buf, &bend_constraints_buf],
-            vec![],
+            &bind_group_data,
             &bend_solver_shader,
         );
 
@@ -189,22 +194,28 @@ impl Cloth {
             wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
             false,
         );
+        let sampler = app_view.device.create_sampler(&wgpu::SamplerDescriptor::default());
         let display_shader =
             crate::util::shader::create_shader_module(&app_view.device, "pbd/cloth_display", None);
+        let bind_group_data = BindGroupData {
+            uniforms: vec![&mvp_buf, &cloth_uniform_buf],
+            storage_buffers: vec![&particle_buf],
+            inout_tv: vec![(&texture, None)],
+            samplers: vec![&sampler],
+            visibilitys: vec![
+                wgpu::ShaderStages::VERTEX,
+                wgpu::ShaderStages::VERTEX,
+                wgpu::ShaderStages::VERTEX,
+                wgpu::ShaderStages::FRAGMENT,
+                wgpu::ShaderStages::FRAGMENT,
+            ],
+            ..Default::default()
+        };
         let display_node_builder =
-            ViewNodeBuilder::<PosParticleIndex>::new(vec![(&texture, None)], &display_shader)
-                .with_uniform_buffers(vec![&mvp_buf, &cloth_uniform_buf])
-                .with_storage_buffers(vec![&particle_buf])
+            ViewNodeBuilder::<PosParticleIndex>::new(bind_group_data, &display_shader)
                 .with_use_depth_stencil(true)
                 .with_polygon_mode(wgpu::PolygonMode::Fill)
                 .with_cull_mode(None)
-                .with_shader_stages(vec![
-                    wgpu::ShaderStages::VERTEX,
-                    wgpu::ShaderStages::VERTEX,
-                    wgpu::ShaderStages::VERTEX,
-                    wgpu::ShaderStages::FRAGMENT,
-                    wgpu::ShaderStages::FRAGMENT,
-                ])
                 .with_vertices_and_indices((fabric.vertices.0, fabric.vertices.1));
 
         let display_node = display_node_builder.build(&app_view.device);

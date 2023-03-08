@@ -1,6 +1,6 @@
 use crate::{
     create_shader_module,
-    node::ComputeNode,
+    node::{BindGroupData, ComputeNode},
     noise::{create_gradient_buf, create_permulation_buf},
 };
 
@@ -30,10 +30,12 @@ impl D3NoiseTexture {
         let shader = create_shader_module(&app.device, "noise/3d_noise_tex", None);
         let noise_node = ComputeNode::new(
             &app.device,
-            dispatch_group_count,
-            vec![],
-            vec![&permulation_buf, &gradient_buf],
-            vec![(&tex, Some(wgpu::StorageTextureAccess::WriteOnly))],
+            &BindGroupData {
+                workgroup_count: dispatch_group_count,
+                storage_buffers: vec![&permulation_buf, &gradient_buf],
+                inout_tv: vec![(&tex, Some(wgpu::StorageTextureAccess::WriteOnly))],
+                ..Default::default()
+            },
             &shader,
         );
 

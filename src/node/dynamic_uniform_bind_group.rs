@@ -2,12 +2,12 @@ use crate::util::BufferObj;
 use std::vec::Vec;
 
 #[allow(dead_code)]
-pub struct DynamicUniformBindingGroup {
+pub struct DynamicUniformBindGroup {
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
 
-impl DynamicUniformBindingGroup {
+impl DynamicUniformBindGroup {
     pub fn new(device: &wgpu::Device, uniforms: Vec<(&BufferObj, wgpu::ShaderStages)>) -> Self {
         let mut layouts: Vec<wgpu::BindGroupLayoutEntry> = vec![];
         let mut entries: Vec<wgpu::BindGroupEntry> = vec![];
@@ -51,7 +51,7 @@ impl DynamicUniformBindingGroup {
             label: None,
         });
 
-        DynamicUniformBindingGroup {
+        DynamicUniformBindGroup {
             bind_group_layout,
             bind_group,
         }

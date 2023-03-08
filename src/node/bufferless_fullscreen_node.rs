@@ -1,5 +1,7 @@
-use crate::{util::{AnyTexture, BufferObj}, DEPTH_FORMAT};
+use crate::DEPTH_FORMAT;
 use wgpu::{PrimitiveTopology, ShaderModule, TextureFormat};
+
+use super::BindGroupData;
 
 pub struct BufferlessFullscreenNode {
     bind_group: wgpu::BindGroup,
@@ -12,10 +14,7 @@ impl BufferlessFullscreenNode {
     pub fn new(
         device: &wgpu::Device,
         format: TextureFormat,
-        uniforms: Vec<&BufferObj>,
-        storage_buffers: Vec<&BufferObj>,
-        textures: Vec<&crate::util::AnyTexture>,
-        samplers: Vec<&wgpu::Sampler>,
+        bg_data: &BindGroupData,
         shader_module: &ShaderModule,
         color_blend_state: Option<wgpu::BlendState>,
     ) -> Self {
@@ -66,14 +65,7 @@ impl BufferlessFullscreenNode {
             multiview: None,
         });
 
-        let bind_group = create_bind_group(
-            device,
-            uniforms,
-            storage_buffers,
-            textures,
-            samplers,
-            &pipeline.get_bind_group_layout(0),
-        );
+        let bind_group = create_bind_group(device, bg_data, &pipeline.get_bind_group_layout(0));
 
         Self {
             bind_group,
@@ -111,15 +103,12 @@ impl BufferlessFullscreenNode {
 
 pub fn create_bind_group(
     device: &wgpu::Device,
-    uniforms: Vec<&BufferObj>,
-    storage_buffers: Vec<&BufferObj>,
-    textures: Vec<&AnyTexture>,
-    samplers: Vec<&wgpu::Sampler>,
+    bg_data: &BindGroupData,
     bind_group_layout: &wgpu::BindGroupLayout,
 ) -> wgpu::BindGroup {
     let mut entries: Vec<wgpu::BindGroupEntry> = vec![];
     let mut b_index = 0_u32;
-    for uniform in &uniforms {
+    for uniform in bg_data.uniforms.iter() {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
             resource: uniform.buffer.as_entire_binding(),
@@ -127,7 +116,7 @@ pub fn create_bind_group(
         b_index += 1;
     }
 
-    for storage_buf in &storage_buffers {
+    for storage_buf in bg_data.storage_buffers.iter() {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
             resource: storage_buf.buffer.as_entire_binding(),
@@ -135,15 +124,15 @@ pub fn create_bind_group(
         b_index += 1;
     }
 
-    for a_tex in &textures {
+    for a_tex in bg_data.inout_tv.iter() {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
-            resource: wgpu::BindingResource::TextureView(&a_tex.tex_view),
+            resource: wgpu::BindingResource::TextureView(&a_tex.0.tex_view),
         });
         b_index += 1;
     }
 
-    for sampler in &samplers {
+    for sampler in &bg_data.samplers {
         entries.push(wgpu::BindGroupEntry {
             binding: b_index,
             resource: wgpu::BindingResource::Sampler(sampler),

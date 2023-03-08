@@ -1,24 +1,18 @@
-use super::BindingGroupSetting;
+use super::{BindGroupData, BindGroupSetting};
 use crate::util::vertex::Vertex;
-use crate::util::{AnyTexture, BufferObj, MVPUniform};
+use crate::util::BufferObj;
 use crate::DEPTH_FORMAT;
 use app_surface::math::{Rect, Size};
 use bytemuck::Pod;
 use std::ops::{Deref, DerefMut};
 use wgpu::util::DeviceExt;
-use wgpu::StorageTextureAccess;
 
 #[allow(dead_code)]
 pub struct NodeAttributes<'a, T: Vertex + Pod> {
     pub view_size: Size<f32>,
     pub vertices_and_indices: Option<(Vec<T>, Vec<u32>)>,
     pub vertex_buffer_layouts: Option<Vec<wgpu::VertexBufferLayout<'a>>>,
-    pub uniform_buffers: Vec<&'a BufferObj>,
-    pub storage_buffers: Vec<&'a BufferObj>,
-    pub tex_views: Vec<(&'a AnyTexture, Option<StorageTextureAccess>)>,
-    pub samplers: Vec<&'a wgpu::Sampler>,
-    // 动态 uniform
-    pub dynamic_uniforms: Vec<(&'a BufferObj, wgpu::ShaderStages)>,
+    pub bg_data: BindGroupData<'a>,
 
     pub tex_rect: Option<Rect>,
     pub corlor_format: Option<wgpu::TextureFormat>,
@@ -28,7 +22,6 @@ pub struct NodeAttributes<'a, T: Vertex + Pod> {
     pub cull_mode: Option<wgpu::Face>,
     pub use_depth_stencil: bool,
     pub shader_module: &'a wgpu::ShaderModule,
-    pub shader_stages: Vec<wgpu::ShaderStages>,
 }
 
 pub struct ViewNodeBuilder<'a, T: Vertex + Pod> {
@@ -50,20 +43,13 @@ impl<'a, T: Vertex + Pod> DerefMut for ViewNodeBuilder<'a, T> {
 
 #[allow(dead_code)]
 impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
-    pub fn new(
-        tex_views: Vec<(&'a AnyTexture, Option<StorageTextureAccess>)>,
-        shader_module: &'a wgpu::ShaderModule,
-    ) -> Self {
+    pub fn new(bg_data: BindGroupData<'a>, shader_module: &'a wgpu::ShaderModule) -> Self {
         ViewNodeBuilder {
             attributes: NodeAttributes {
                 view_size: (1.0, 1.0).into(),
                 vertices_and_indices: None,
                 vertex_buffer_layouts: None,
-                uniform_buffers: vec![],
-                storage_buffers: vec![],
-                tex_views,
-                samplers: vec![],
-                dynamic_uniforms: vec![],
+                bg_data,
                 tex_rect: None,
                 corlor_format: None,
                 color_blend_state: Some(wgpu::BlendState::ALPHA_BLENDING),
@@ -72,7 +58,6 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
                 cull_mode: Some(wgpu::Face::Back),
                 use_depth_stencil: true,
                 shader_module,
-                shader_stages: vec![],
             },
         }
     }
@@ -110,37 +95,6 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
         self
     }
 
-    pub fn with_uniform_buffers(mut self, buffers: Vec<&'a BufferObj>) -> Self {
-        self.uniform_buffers = buffers;
-        self
-    }
-
-    pub fn with_dynamic_uniforms(
-        mut self,
-        uniforms: Vec<(&'a BufferObj, wgpu::ShaderStages)>,
-    ) -> Self {
-        self.dynamic_uniforms = uniforms;
-        self
-    }
-
-    pub fn with_storage_buffers(mut self, buffers: Vec<&'a BufferObj>) -> Self {
-        self.storage_buffers = buffers;
-        self
-    }
-
-    pub fn with_tex_views(
-        mut self,
-        views: Vec<(&'a AnyTexture, Option<StorageTextureAccess>)>,
-    ) -> Self {
-        self.tex_views = views;
-        self
-    }
-
-    pub fn with_samplers(mut self, samplers: Vec<&'a wgpu::Sampler>) -> Self {
-        self.samplers = samplers;
-        self
-    }
-
     pub fn with_tex_rect(mut self, rect: Rect) -> Self {
         self.tex_rect = Some(rect);
         self
@@ -161,23 +115,18 @@ impl<'a, T: Vertex + Pod> ViewNodeBuilder<'a, T> {
         self
     }
 
-    pub fn with_shader_stages(mut self, states: Vec<wgpu::ShaderStages>) -> Self {
-        self.shader_stages = states;
-        self
-    }
-
     pub fn build(self, device: &wgpu::Device) -> ViewNode {
         debug_assert!(
             self.vertices_and_indices.is_some(),
             "Vertices and indices must be provided"
         );
         debug_assert!(
-            self.shader_stages.len()
-                >= self.uniform_buffers.len()
-                    + self.samplers.len()
-                    + self.storage_buffers.len()
-                    + self.tex_views.len(),
-            "shader_stages count less than binding resource count"
+            self.bg_data.visibilitys.len()
+                >= self.bg_data.uniforms.len()
+                    + self.bg_data.samplers.len()
+                    + self.bg_data.storage_buffers.len()
+                    + self.bg_data.inout_tv.len(),
+            "visibilitys count less than binding resource count"
         );
         ViewNode::frome_attributes::<T>(self.attributes, device)
     }
@@ -188,8 +137,8 @@ pub struct ViewNode {
     pub vertex_buf: Option<BufferObj>,
     pub index_buf: wgpu::Buffer,
     pub index_count: usize,
-    pub bg_setting: BindingGroupSetting,
-    pub dy_uniform_bg: Option<super::DynamicUniformBindingGroup>,
+    pub bg_setting: BindGroupSetting,
+    pub dy_uniform_bg: Option<super::DynamicUniformBindGroup>,
     pub pipeline: wgpu::RenderPipeline,
     view_width: f32,
     view_height: f32,
@@ -208,56 +157,7 @@ impl ViewNode {
             wgpu::TextureFormat::Bgra8Unorm
         };
 
-        let stages: Vec<wgpu::ShaderStages> = if !attributes.shader_stages.is_empty() {
-            attributes.shader_stages
-        } else {
-            let mut stages: Vec<wgpu::ShaderStages> = vec![wgpu::ShaderStages::VERTEX];
-            let uniform_buffers_len = if !attributes.uniform_buffers.is_empty() {
-                attributes.uniform_buffers.len()
-            } else {
-                1
-            };
-            for _ in 0..(uniform_buffers_len
-                + attributes.storage_buffers.len()
-                + attributes.tex_views.len()
-                + attributes.samplers.len())
-            {
-                stages.push(wgpu::ShaderStages::FRAGMENT);
-            }
-            stages
-        };
-
-        let sampler = crate::util::load_texture::default_sampler(device);
-        let new_samplers: Vec<&wgpu::Sampler> = if !attributes.tex_views.is_empty() {
-            if !attributes.samplers.is_empty() {
-                attributes.samplers
-            } else {
-                vec![&sampler]
-            }
-        } else {
-            vec![]
-        };
-        // 如果没有设置 mvp, 且设置了 view_size, 则设置一个全屏的 mvp
-        let (p_matrix, vm_matrix, _factor) =
-            crate::util::matrix_helper::perspective_mvp(attributes.view_size);
-        let mvp = MVPUniform {
-            mvp_matrix: (p_matrix * vm_matrix).to_cols_array_2d(),
-        };
-        let mvp_buf = BufferObj::create_uniform_buffer(device, &mvp, Some("mvp uniform"));
-        let uniform_buffers =
-            if attributes.uniform_buffers.is_empty() && attributes.view_size.width > 0.0 {
-                vec![&mvp_buf]
-            } else {
-                attributes.uniform_buffers
-            };
-        let bg_setting = BindingGroupSetting::new(
-            device,
-            uniform_buffers,
-            attributes.storage_buffers,
-            attributes.tex_views,
-            new_samplers,
-            stages,
-        );
+        let bg_setting = BindGroupSetting::new(device, &attributes.bg_data);
 
         // Create the vertex and index buffers
         let vi = attributes.vertices_and_indices.unwrap();
@@ -290,8 +190,15 @@ impl ViewNode {
         } else {
             vec![]
         };
-        let (dy_uniform_bg, pipeline_layout) = if !attributes.dynamic_uniforms.is_empty() {
-            let dy_bg = super::DynamicUniformBindingGroup::new(device, attributes.dynamic_uniforms);
+        let (dy_uniform_bg, pipeline_layout) = if !attributes.bg_data.dynamic_uniforms.is_empty() {
+            let uniforms = attributes
+                .bg_data
+                .dynamic_uniforms
+                .iter()
+                .zip(attributes.bg_data.dynamic_uniform_visibilitys)
+                .map(|(uniform, visi)| (*uniform, visi))
+                .collect();
+            let dy_bg = super::DynamicUniformBindGroup::new(device, uniforms);
             let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
                 bind_group_layouts: &[&bg_setting.bind_group_layout, &dy_bg.bind_group_layout],

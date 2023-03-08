@@ -1,33 +1,27 @@
-use crate::util::{AnyTexture, BufferObj};
 use std::vec::Vec;
-use wgpu::{StorageTextureAccess, TextureFormat};
+use wgpu::TextureFormat;
+
+use super::BindGroupData;
 
 #[allow(dead_code)]
-pub struct BindingGroupSetting {
+pub struct BindGroupSetting {
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
 
 #[allow(dead_code)]
-impl BindingGroupSetting {
-    pub fn new(
-        device: &wgpu::Device,
-        uniforms: Vec<&BufferObj>,
-        storage_buffers: Vec<&BufferObj>,
-        textures: Vec<(&AnyTexture, Option<StorageTextureAccess>)>,
-        samplers: Vec<&wgpu::Sampler>,
-        visibilitys: Vec<wgpu::ShaderStages>,
-    ) -> Self {
+impl BindGroupSetting {
+    pub fn new(device: &wgpu::Device, bg_data: &BindGroupData) -> Self {
         let mut layouts: Vec<wgpu::BindGroupLayoutEntry> = vec![];
         let mut entries: Vec<wgpu::BindGroupEntry> = vec![];
 
         // 关于 min_binding_size
         // https://gpuweb.github.io/gpuweb/#dom-gpubindgrouplayoutentry-minbufferbindingsize
         let mut b_index = 0_u32;
-        for buffer_obj in &uniforms {
+        for buffer_obj in bg_data.uniforms.iter() {
             layouts.push(wgpu::BindGroupLayoutEntry {
                 binding: b_index,
-                visibility: visibilitys[b_index as usize],
+                visibility: bg_data.visibilitys[b_index as usize],
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
@@ -42,10 +36,10 @@ impl BindingGroupSetting {
             b_index += 1;
         }
 
-        for buffer_obj in &storage_buffers {
+        for buffer_obj in bg_data.storage_buffers.iter() {
             layouts.push(wgpu::BindGroupLayoutEntry {
                 binding: b_index,
-                visibility: visibilitys[b_index as usize],
+                visibility: bg_data.visibilitys[b_index as usize],
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Storage {
                         read_only: buffer_obj.read_only,
@@ -62,11 +56,11 @@ impl BindingGroupSetting {
             b_index += 1;
         }
 
-        for (any_tex, storage_access) in &textures {
+        for (any_tex, storage_access) in bg_data.inout_tv.iter() {
             let view_dimension = any_tex.view_dimension;
             layouts.push(wgpu::BindGroupLayoutEntry {
                 binding: b_index,
-                visibility: visibilitys[b_index as usize],
+                visibility: bg_data.visibilitys[b_index as usize],
                 ty: if let Some(access) = storage_access.as_ref() {
                     wgpu::BindingType::StorageTexture {
                         view_dimension,
@@ -91,10 +85,10 @@ impl BindingGroupSetting {
             b_index += 1;
         }
 
-        for sampler in &samplers {
+        for sampler in bg_data.samplers.iter() {
             layouts.push(wgpu::BindGroupLayoutEntry {
                 binding: b_index,
-                visibility: visibilitys[b_index as usize],
+                visibility: bg_data.visibilitys[b_index as usize],
                 ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                 count: None,
             });
@@ -116,7 +110,7 @@ impl BindingGroupSetting {
             label: None,
         });
 
-        BindingGroupSetting {
+        Self {
             bind_group_layout,
             bind_group,
         }

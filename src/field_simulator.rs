@@ -1,4 +1,4 @@
-use crate::node::{BufferlessFullscreenNode, ComputeNode};
+use crate::node::{BindGroupData, BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
 use crate::{FieldUniform, SettingObj, Simulator};
 use app_surface::{math::Size, AppSurface};
@@ -72,24 +72,28 @@ impl FieldSimulator {
 
         let field_setting_node = ComputeNode::new(
             &app.device,
-            field_workgroup_count,
-            vec![&field_uniform],
-            vec![&field_buf],
-            vec![],
+            &BindGroupData {
+                workgroup_count: field_workgroup_count,
+                uniforms: vec![&field_uniform],
+                storage_buffers: vec![&field_buf],
+                ..Default::default()
+            },
             &setting_shader,
         );
 
         let trajectory_update_shader = create_shader_module(&app.device, "trajectory_update", None);
         let particles_update_node = ComputeNode::new(
             &app.device,
-            setting.particles_workgroup_count,
-            vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
-            vec![
-                &field_buf,
-                setting.particles_buf.as_ref().unwrap(),
-                canvas_buf,
-            ],
-            vec![],
+            &BindGroupData {
+                workgroup_count: setting.particles_workgroup_count,
+                uniforms: vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
+                storage_buffers: vec![
+                    &field_buf,
+                    setting.particles_buf.as_ref().unwrap(),
+                    canvas_buf,
+                ],
+                ..Default::default()
+            },
             &trajectory_update_shader,
         );
 
@@ -97,10 +101,11 @@ impl FieldSimulator {
         let render_node = BufferlessFullscreenNode::new(
             &app.device,
             canvas_format,
-            vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
-            vec![canvas_buf],
-            vec![],
-            vec![],
+            &BindGroupData {
+                uniforms: vec![&field_uniform, setting.particles_uniform.as_ref().unwrap()],
+                storage_buffers: vec![canvas_buf],
+                ..Default::default()
+            },
             &render_shader,
             None,
         );
@@ -149,10 +154,12 @@ impl Simulator for FieldSimulator {
 
         self.field_setting_node = ComputeNode::new(
             &app.device,
-            self.field_workgroup_count,
-            vec![&self.field_uniform],
-            vec![&self.field_buf],
-            vec![],
+            &BindGroupData {
+                workgroup_count: self.field_workgroup_count,
+                uniforms: vec![&self.field_uniform],
+                storage_buffers: vec![&self.field_buf],
+                ..Default::default()
+            },
             &setting_shader,
         );
         self.reset(app);
@@ -163,7 +170,7 @@ impl Simulator for FieldSimulator {
         _app: &app_surface::AppSurface,
         workgroup_count: (u32, u32, u32),
     ) {
-        self.particles_update_node.group_count = workgroup_count;
+        self.particles_update_node.workgroup_count = workgroup_count;
     }
 
     fn compute(&mut self, encoder: &mut wgpu::CommandEncoder) {
