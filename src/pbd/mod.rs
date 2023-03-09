@@ -37,6 +37,7 @@ pub struct ClothUniform {
     gravity: f32,
     damping: f32,
     compliance: f32,
+    stiffness: f32,
     dt: f32,
 }
 

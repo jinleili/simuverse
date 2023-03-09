@@ -25,6 +25,7 @@ pub struct Cloth {
     frame_count: usize,
     // 迭代次数
     pbd_iter_count: usize,
+    delta_time: f32,
 }
 
 impl Cloth {
@@ -51,6 +52,7 @@ impl Cloth {
             gravity: -70.0 * 0.7,
             damping: 0.01,
             compliance: 0.0000000016 / (delta_time * delta_time),
+            stiffness: 0.05,
             dt: delta_time,
         };
         let cloth_uniform_buf = BufferObj::create_uniform_buffer(
@@ -194,7 +196,9 @@ impl Cloth {
             wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
             false,
         );
-        let sampler = app_view.device.create_sampler(&wgpu::SamplerDescriptor::default());
+        let sampler = app_view
+            .device
+            .create_sampler(&wgpu::SamplerDescriptor::default());
         let display_shader =
             crate::util::shader::create_shader_module(&app_view.device, "pbd/cloth_display", None);
         let bind_group_data = BindGroupData {
@@ -236,17 +240,25 @@ impl Cloth {
             display_node,
             frame_count: 0,
             pbd_iter_count: pbd_iter_count as usize,
+            delta_time,
         }
     }
 
     pub fn update_by(&mut self, app: &AppSurface, control_panel: &mut crate::ControlPanel) {
         let new_damping = control_panel.pbd_setting.damping * 0.015;
         let new_gravity = control_panel.pbd_setting.gravity * -35.0 - 35.0;
-        if (new_damping - self.cloth_uniform_data.damping).abs() < 0.001
-            || (new_gravity - self.cloth_uniform_data.gravity) < 0.001
+        let compliance =
+            control_panel.pbd_setting.compliance * 0.00000016 / (self.delta_time * self.delta_time);
+        let stiffness = control_panel.pbd_setting.stiffness;
+        if (new_damping - self.cloth_uniform_data.damping).abs() > 0.00001
+            || (new_gravity - self.cloth_uniform_data.gravity).abs() > 0.00001
+            || (compliance - self.cloth_uniform_data.compliance).abs() > 0.00000000001
+            || (stiffness - self.cloth_uniform_data.stiffness).abs() > 0.00001
         {
             self.cloth_uniform_data.damping = new_damping;
             self.cloth_uniform_data.gravity = new_gravity;
+            self.cloth_uniform_data.compliance = compliance;
+            self.cloth_uniform_data.stiffness = stiffness;
             app.queue.write_buffer(
                 &self.cloth_uniform_buf.buffer,
                 0,

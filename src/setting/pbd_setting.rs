@@ -2,6 +2,9 @@ pub struct PBDSetting {
     pub simu_ty: Option<i32>,
     pub damping: f32,
     pub gravity: f32,
+    pub compliance: f32,
+    pub stiffness: f32,
+    pub show_mesh: bool,
 }
 
 impl Default for PBDSetting {
@@ -16,6 +19,9 @@ impl PBDSetting {
             simu_ty: Some(0),
             damping: 0.6,
             gravity: 0.7,
+            compliance: 0.001,
+            stiffness: 0.05,
+            show_mesh: false,
         }
     }
 
@@ -44,6 +50,14 @@ impl PBDSetting {
 
                 ui.label("Gravity:");
                 ui.add(egui::Slider::new(&mut self.gravity, 0.1..=1.0));
+                ui.end_row();
+
+                ui.label("Compliance:");
+                ui.add(egui::Slider::new(&mut self.compliance, 0.00001..=0.2));
+                ui.end_row();
+
+                ui.label("Stiffness:");
+                ui.add(egui::Slider::new(&mut self.stiffness, 0.01..=0.99));
                 ui.end_row();
             });
     }

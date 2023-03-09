@@ -52,7 +52,7 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let v_minus_c = v.pos.xyz - c;
     let v_minus_c_len = length(v_minus_c);
     // eq. 6
-    let k = 1.0 - pow(1.0 - 0.05, dy_uniform.invert_iter);
+    let k = 1.0 - pow(1.0 - cloth.stiffness, dy_uniform.invert_iter);
     // float k = 0.0;
     // eq. 5
     // 弯曲度大于静态值才执行位置修正（论文里的表述反了）
