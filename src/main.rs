@@ -1,7 +1,9 @@
 use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use simuverse::{
-    EguiLayer, util::BufferObj,framework::{run, Action},
-    noise::TextureSimulator, ControlPanel, FieldSimulator, FluidSimulator, SettingObj, SimuType,
+    framework::{run, Action},
+    noise::TextureSimulator,
+    util::BufferObj,
+    CADObjViewer, ControlPanel, EguiLayer, FieldSimulator, FluidSimulator, SimuType,
     Simulator, DEPTH_FORMAT,
 };
 use std::iter;
@@ -36,7 +38,7 @@ impl Action for SimuverseApp {
             false,
             Some("canvas_buf"),
         );
-        let simulator = Self::create_simulator(&app, canvas_size, &canvas_buf, &ctrl_panel.setting);
+        let simulator = Self::create_simulator(&app, canvas_size, &canvas_buf, &ctrl_panel);
 
         let depth_view = Self::create_depth_tex(&app);
 
@@ -80,12 +82,8 @@ impl Action for SimuverseApp {
         );
 
         if !self.simulator.resize(&self.app) {
-            self.simulator = Self::create_simulator(
-                &self.app,
-                canvas_size,
-                &self.canvas_buf,
-                &self.ctrl_panel.setting,
-            );
+            self.simulator =
+                Self::create_simulator(&self.app, canvas_size, &self.canvas_buf, &self.ctrl_panel);
         }
     }
 
@@ -99,6 +97,24 @@ impl Action for SimuverseApp {
 
     fn touch_move(&mut self, pos: app_surface::math::Position) {
         self.simulator.touch_move(&self.app, pos);
+    }
+
+    fn cursor_moved(&mut self, position: winit::dpi::PhysicalPosition<f64>) {
+        self.simulator.cursor_moved(&self.app, position);
+    }
+    fn mouse_input(
+        &mut self,
+        state: &winit::event::ElementState,
+        button: &winit::event::MouseButton,
+    ) {
+        self.simulator.mouse_input(&self.app, state, button);
+    }
+    fn mouse_wheel(
+        &mut self,
+        delta: &winit::event::MouseScrollDelta,
+        touch_phase: &winit::event::TouchPhase,
+    ) {
+        self.simulator.mouse_wheel(&self.app, delta, touch_phase);
     }
 
     fn request_redraw(&mut self) {
@@ -175,18 +191,24 @@ impl SimuverseApp {
         app: &AppSurface,
         canvas_size: Size<u32>,
         canvas_buf: &BufferObj,
-        setting: &SettingObj,
+        ctrl_panel: &ControlPanel,
     ) -> Box<dyn Simulator> {
-        match setting.simu_type {
-            SimuType::Fluid => Box::new(FluidSimulator::new(app, canvas_size, canvas_buf, setting)),
+        match ctrl_panel.setting.simu_type {
+            SimuType::Fluid => Box::new(FluidSimulator::new(
+                app,
+                canvas_size,
+                canvas_buf,
+                &ctrl_panel.setting,
+            )),
             SimuType::Noise => Box::new(TextureSimulator::new(app)),
             SimuType::PBDynamic => Box::new(simuverse::pbd::PBDSimulator::new(app)),
+            SimuType::CAD => Box::new(CADObjViewer::new(app, ctrl_panel)),
             _ => Box::new(FieldSimulator::new(
                 app,
                 app.config.format,
                 canvas_size,
                 canvas_buf,
-                setting,
+                &ctrl_panel.setting,
             )),
         }
     }
@@ -199,7 +221,7 @@ impl SimuverseApp {
                 &self.app,
                 (&self.app.config).into(),
                 &self.canvas_buf,
-                &self.ctrl_panel.setting,
+                &self.ctrl_panel,
             );
         } else if self.ctrl_panel.selected_simu_type == SimuType::Noise {
             self.simulator.update_by(&self.app, &mut self.ctrl_panel);

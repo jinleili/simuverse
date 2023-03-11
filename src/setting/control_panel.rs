@@ -1,5 +1,6 @@
 use crate::{
-    FieldAnimationType, NoiseSetting, PBDSetting, ParticleColorType, SettingObj, SimuType,
+    CADSetting, FieldAnimationType, NoiseSetting, PBDSetting, ParticleColorType, SettingObj,
+    SimuType,
 };
 use app_surface::AppSurface;
 use egui::{Color32, Context, Ui};
@@ -19,6 +20,7 @@ pub struct ControlPanel {
     pub selected_simu_type: SimuType,
     pub noise_setting: NoiseSetting,
     pub pbd_setting: PBDSetting,
+    pub cad_setting: CADSetting,
 }
 
 impl ControlPanel {
@@ -74,6 +76,7 @@ impl ControlPanel {
             selected_simu_type,
             noise_setting: NoiseSetting::new(),
             pbd_setting: PBDSetting::default(),
+            cad_setting: CADSetting::default(),
         }
     }
 
@@ -152,6 +155,7 @@ impl ControlPanel {
                 SimuType::Field | SimuType::Fluid => self.particles_ctrl_ui(ui),
                 SimuType::Noise => self.noise_setting.ui_contents(ui),
                 SimuType::PBDynamic => self.pbd_setting.ui_contents(ui),
+                SimuType::CAD => self.cad_setting.ui_contents(ui),
                 _ => {}
             }
 
@@ -162,7 +166,7 @@ impl ControlPanel {
                 }
                 SimuType::Fluid => {
                     ui.separator();
-                    ui.heading("LBM fluid field interaction");
+                    ui.heading("LBM-Fluid Field Operations");
                     ui.horizontal_wrapped(|ui| {
                         ui.label("0. Click the screen to");
                         ui.colored_label(Color32::from_rgb(110, 235, 110), "add obstacles");
@@ -183,6 +187,7 @@ impl ControlPanel {
             ("💦 LBM Fluid", SimuType::Fluid),
             ("💥 Perlin Noise", SimuType::Noise),
             ("👗 Position-based Dynamics", SimuType::PBDynamic),
+            ("🚚 CAD Kenel", SimuType::CAD),
         ];
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {

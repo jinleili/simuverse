@@ -1,4 +1,5 @@
 use app_surface::math::{Position, Size};
+use app_surface::AppSurface;
 use std::usize;
 
 pub mod framework;
@@ -28,6 +29,11 @@ pub use field_velocity_code::get_velocity_code_snippet;
 
 pub mod pbd;
 
+mod truck;
+#[allow(unused)]
+pub(crate) use truck::platform::rendered_macros;
+pub use truck::CADObjViewer;
+
 pub mod util;
 use util::shader::{create_shader_module, insert_code_then_create};
 use util::vertex::{PosColor as PosTangent, PosOnly};
@@ -46,35 +52,41 @@ pub struct MVPMatUniform {
     _padding: [f32; 3],
 }
 
+use winit::{
+    dpi::PhysicalPosition,
+    event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase},
+};
 pub trait Simulator {
-    fn update_uniforms(&mut self, _app: &app_surface::AppSurface, _setting: &crate::SettingObj) {}
+    fn update_uniforms(&mut self, _app: &AppSurface, _setting: &crate::SettingObj) {}
 
-    fn on_click(&mut self, _app: &app_surface::AppSurface, _pos: Position) {}
+    fn on_click(&mut self, _app: &AppSurface, _pos: Position) {}
 
-    fn touch_begin(&mut self, _app: &app_surface::AppSurface) {}
+    fn touch_begin(&mut self, _app: &AppSurface) {}
+    fn touch_move(&mut self, _app: &AppSurface, _pos: Position) {}
+    fn touch_end(&mut self, _app: &AppSurface) {}
 
-    fn touch_move(&mut self, _app: &app_surface::AppSurface, _pos: Position) {}
+    fn mouse_input(&mut self, _app: &AppSurface, _state: &ElementState, _button: &MouseButton) {}
+    fn mouse_wheel(
+        &mut self,
+        _app: &AppSurface,
+        _delta: &MouseScrollDelta,
+        _touch_phase: &TouchPhase,
+    ) {
+    }
+    fn cursor_moved(&mut self, _app: &AppSurface, _position: PhysicalPosition<f64>) {}
 
-    fn touch_end(&mut self, _app: &app_surface::AppSurface) {}
-
-    fn reset(&mut self, _app: &app_surface::AppSurface) {}
-
-    fn resize(&mut self, _app: &app_surface::AppSurface) -> bool {
+    fn reset(&mut self, _app: &AppSurface) {}
+    fn resize(&mut self, _app: &AppSurface) -> bool {
         false
     }
 
-    fn update_by(&mut self, app: &app_surface::AppSurface, control_panel: &mut crate::ControlPanel);
-    fn update_workgroup_count(
-        &mut self,
-        app: &app_surface::AppSurface,
-        workgroup_count: (u32, u32, u32),
-    );
+    fn update_by(&mut self, app: &AppSurface, control_panel: &mut crate::ControlPanel);
+    fn update_workgroup_count(&mut self, app: &AppSurface, workgroup_count: (u32, u32, u32));
 
     fn compute(&mut self, _encoder: &mut wgpu::CommandEncoder) {}
-
     fn draw_by_rpass<'b, 'a: 'b>(
         &'a mut self,
-        app: &app_surface::AppSurface,
+        app: &AppSurface,
         rpass: &mut wgpu::RenderPass<'b>,
         setting: &mut crate::SettingObj,
     );
@@ -87,6 +99,7 @@ pub enum SimuType {
     Noise,
     PBDynamic,
     D3Fluid,
+    CAD,
 }
 
 #[derive(Clone, Copy, PartialEq)]

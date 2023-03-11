@@ -22,11 +22,23 @@ env_logger = "0.9"
 log = "0.4"
 rand = "0.8"
 image = { version = "*" }
+# truck dependencies
+async-trait = "0.1.64"
+rayon = "1.6.1"
+rustc-hash = "1.1.0"
+serde_json = "1.0.93"
+truck-base = { version = "0.4.0" }
+truck-meshalgo = { version = "0.3.0" }
+truck-modeling = { version = "0.5.0"}
+truck-polymesh = { version = "0.5.0"}
 
 [target.'cfg(any(not(target_arch = "wasm32")))'.dependencies]
 pollster = "0.2"
+# truck dependencies
+instant = { version = "0.1.12", features = [ "now" ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+instant = { version = "0.1.12", features = [ "now", "wasm-bindgen" ] }
 console_error_panic_hook = "0.1.7"
 console_log = "0.2.0"
 js-sys = "0.3.61"

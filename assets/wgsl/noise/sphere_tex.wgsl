@@ -33,18 +33,6 @@ fn vs_main(
 #include "noise/fn_perlin_noise.wgsl"
 #include "func/color_space_convert.wgsl"
 
-fn turbulence(pos: vec3<f32>, octaves: i32, lacunarity: f32, gain: f32) -> f32 {	
-  var sum: f32 = 0.0;
-  var scale: f32 = 1.0;
-  var totalgain: f32 = 1.0;
-  for(var i = 0; i < octaves; i = i + 1){
-    sum += totalgain * noise(pos * scale);
-    scale *= lacunarity;
-    totalgain *= gain;
-  }
-  return abs(sum);
-}
-
 // Fractal brownian motion
 fn fbm(pos: vec3<f32>) -> f32 {
 	var freq = 1.0;

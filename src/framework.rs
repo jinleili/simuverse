@@ -1,6 +1,6 @@
 use app_surface::math::Position;
 use winit::{
-    dpi::PhysicalSize,
+    dpi::{PhysicalPosition, PhysicalSize},
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::{WindowBuilder, WindowId},
@@ -20,6 +20,10 @@ pub trait Action {
     fn touch_begin(&mut self) {}
     fn touch_move(&mut self, _pos: Position) {}
     fn touch_end(&mut self) {}
+
+    fn mouse_input(&mut self, state: &ElementState, button: &MouseButton);
+    fn mouse_wheel(&mut self, delta: &MouseScrollDelta, touch_phase: &TouchPhase);
+    fn cursor_moved(&mut self, position: PhysicalPosition<f64>);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -180,6 +184,7 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                         button,
                         ..
                     } => {
+                        app.mouse_input(state, button);
                         if button == &MouseButton::Left {
                             if *state == ElementState::Pressed {
                                 app.on_click(last_touch_point);
@@ -189,9 +194,12 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                         }
                     }
                     WindowEvent::CursorMoved { position, .. } => {
+                        app.cursor_moved(*position);
+
                         last_touch_point = Position::new(position.x as f32, position.y as f32);
                         app.touch_move(last_touch_point);
                     }
+                    WindowEvent::MouseWheel { delta, phase, .. } => app.mouse_wheel(delta, phase),
                     _ => {}
                 }
             }
