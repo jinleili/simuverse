@@ -14,6 +14,7 @@ It is not only a complete example but also an extension of the [学习 wgpu](htt
 |![Julia Set](screenshots/julia_set.png) | ![Spirl](screenshots/spirl.png)|
 |![Wood](screenshots/wood.png) | ![Marble](screenshots/marble.png)|
 |![PBD Cloth](screenshots/cloth.png) | ![LBM Fluid](screenshots/lbm.png)|
+|![Load .obj](screenshots/obj.png) | ![B-Spline animation](screenshots/bsp.png)|
 
 
 ## Web Support
