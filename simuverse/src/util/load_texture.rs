@@ -1,5 +1,5 @@
 use image::GenericImageView;
-use std::{num::NonZeroU32, path::PathBuf};
+use std::path::PathBuf;
 use wgpu::{Extent3d, Sampler, Texture, TextureFormat, TextureView};
 
 pub struct AnyTexture {
@@ -48,8 +48,8 @@ pub fn from_path(
         &texels,
         wgpu::ImageDataLayout {
             offset: 0,
-            bytes_per_row: Some(NonZeroU32::new(pixel_bytes * texture_extent.width).unwrap()),
-            rows_per_image: Some(NonZeroU32::new(texture_extent.height).unwrap()),
+            bytes_per_row: Some(pixel_bytes * texture_extent.width),
+            rows_per_image: Some(texture_extent.height),
         },
         texture_extent,
     );
@@ -86,8 +86,8 @@ pub fn update_by_path(
         &texels,
         wgpu::ImageDataLayout {
             offset: 0,
-            bytes_per_row: Some(NonZeroU32::new(pixel_bytes * texture_extent.width).unwrap()),
-            rows_per_image: Some(NonZeroU32::new(texture_extent.height).unwrap()),
+            bytes_per_row: Some(pixel_bytes * texture_extent.width),
+            rows_per_image: Some(texture_extent.height),
         },
         texture_extent,
     );
@@ -148,7 +148,7 @@ pub fn empty(
         format,
         usage,
         label,
-        view_formats: &[],
+        view_formats: &[format.add_srgb_suffix(), format.remove_srgb_suffix()],
     });
     let mut view_label: String = String::from("view");
     if let Some(lb) = label {

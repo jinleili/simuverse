@@ -182,17 +182,24 @@ impl ControlPanel {
     }
 
     fn top_bar_ui(&mut self, ctx: &Context) {
-        let menu_items = vec![
+        let mut menu_items = vec![
             ("🌾 Vector Field", SimuType::Field),
             ("💦 LBM Fluid", SimuType::Fluid),
             ("💥 Perlin Noise", SimuType::Noise),
-            ("👗 Position-based Dynamics", SimuType::PBDynamic),
-            ("🚚 CAD Kenel", SimuType::CAD),
         ];
+        if cfg!(not(target_arch = "wasm32")) {
+            menu_items.push(("👗 Position-based Dynamics", SimuType::PBDynamic));
+            menu_items.push(("🚚 CAD Kenel", SimuType::CAD));
+        }
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.visuals_mut().button_frame = false;
-                ui.label("🌌 Wgpu Simuverse");
+                if ui
+                    .hyperlink_to("🌌 Wgpu Simuverse", "https://github.com/jinleili/simuverse")
+                    .clicked()
+                {
+                    webbrowser::open("https://github.com/jinleili/simuverse").unwrap();
+                }
                 ui.separator();
                 for (name, anchor) in menu_items.into_iter() {
                     if ui
@@ -202,6 +209,16 @@ impl ControlPanel {
                         self.selected_simu_type = anchor;
                     }
                 }
+
+                // 将布局设置为靠右对齐
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui
+                        .hyperlink_to("GitHub", "https://github.com/jinleili/simuverse")
+                        .clicked()
+                    {
+                        webbrowser::open("https://github.com/jinleili/simuverse").unwrap();
+                    }
+                });
             });
         });
     }
@@ -334,26 +351,30 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
     fonts.font_data.insert(
         ZH_TINY.to_owned(),
-        egui::FontData::from_static(include_bytes!("../../assets/fonts/PingFangTiny.ttf")),
+        egui::FontData::from_static(include_bytes!("../../../assets/fonts/PingFangTiny.ttf")),
     );
     // Some good looking emojis.
     fonts.font_data.insert(
         "NotoEmoji-Regular".to_owned(),
-        egui::FontData::from_static(include_bytes!("../../assets/fonts/NotoEmoji-Regular.ttf"))
-            .tweak(egui::FontTweak {
-                scale: 0.91,            // make it smaller
-                y_offset_factor: -0.15, // move it up
-                y_offset: 0.0,
-            }),
+        egui::FontData::from_static(include_bytes!(
+            "../../../assets/fonts/NotoEmoji-Regular.ttf"
+        ))
+        .tweak(egui::FontTweak {
+            scale: 0.91,            // make it smaller
+            y_offset_factor: -0.15, // move it up
+            y_offset: 0.0,
+            ..Default::default()
+        }),
     );
     // Bigger emojis, and more. <http://jslegers.github.io/emoji-icon-font/>:
     fonts.font_data.insert(
         "emoji-icon-font".to_owned(),
-        egui::FontData::from_static(include_bytes!("../../assets/fonts/emoji-icon-font.ttf"))
+        egui::FontData::from_static(include_bytes!("../../../assets/fonts/emoji-icon-font.ttf"))
             .tweak(egui::FontTweak {
                 scale: 0.88,           // make it smaller
                 y_offset_factor: 0.07, // move it down slightly
                 y_offset: 0.0,
+                ..Default::default()
             }),
     );
     fonts.families.insert(

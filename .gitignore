@@ -1,4 +1,6 @@
 target/
+assets/preprocessed-wgsl/
+wasm/
 
 # Include the root lockfile but not the others
 */Cargo.lock

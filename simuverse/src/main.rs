@@ -3,8 +3,8 @@ use simuverse::{
     framework::{run, Action},
     noise::TextureSimulator,
     util::BufferObj,
-    CADObjViewer, ControlPanel, EguiLayer, FieldSimulator, FluidSimulator, SimuType,
-    Simulator, DEPTH_FORMAT,
+    CADObjViewer, ControlPanel, EguiLayer, FieldSimulator, FluidSimulator, SimuType, Simulator,
+    DEPTH_FORMAT,
 };
 use std::iter;
 use wgpu::TextureView;
@@ -137,7 +137,9 @@ impl Action for SimuverseApp {
 
         self.simulator.compute(&mut encoder);
 
-        let (output, frame_view) = self.app.get_current_frame_view();
+        let (output, frame_view) = self
+            .app
+            .get_current_frame_view(Some(self.app.config.format.remove_srgb_suffix()));
         {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -205,7 +207,7 @@ impl SimuverseApp {
             SimuType::CAD => Box::new(CADObjViewer::new(app, ctrl_panel)),
             _ => Box::new(FieldSimulator::new(
                 app,
-                app.config.format,
+                app.config.format.remove_srgb_suffix(),
                 canvas_size,
                 canvas_buf,
                 &ctrl_panel.setting,

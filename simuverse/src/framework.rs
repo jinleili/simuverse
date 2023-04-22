@@ -75,7 +75,7 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
 
     // 计算一个默认显示高度
     let height = (if cfg!(target_arch = "wasm32") {
-        550.0
+        700.0
     } else {
         750.0
     } * window.scale_factor()) as u32;

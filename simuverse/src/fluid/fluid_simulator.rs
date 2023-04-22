@@ -68,6 +68,7 @@ impl FluidSimulator {
 
         let render_shader = create_shader_module(device, "lbm/present", Some("lbm present shader"));
         let sampler = crate::util::load_texture::bilinear_sampler(device);
+
         let render_node = BufferlessFullscreenNode::new(
             device,
             app.config.format,

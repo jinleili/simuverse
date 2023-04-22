@@ -11,7 +11,7 @@ use winit::{
 
 const TEAPOT_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/assets/obj/skull-with-texcoord.obj",
+    "/../assets/obj/skull-with-texcoord.obj",
 ));
 // const TEAPOT_BYTES: &[u8] = include_bytes!(concat!(
 //     env!("CARGO_MANIFEST_DIR"),

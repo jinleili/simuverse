@@ -145,6 +145,7 @@ impl EguiLayer {
             wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             Some("egui canvas"),
         );
+
         let composer = BufferlessFullscreenNode::new(
             &app.device,
             format,
@@ -156,6 +157,7 @@ impl EguiLayer {
             shader,
             Some(wgpu::BlendState::ALPHA_BLENDING),
         );
+
         (canvas, composer)
     }
 }

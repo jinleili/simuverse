@@ -47,7 +47,7 @@ impl ParticleRenderNode {
                         base_mip_level: 0,
                         mip_level_count: None,
                         base_array_layer: i,
-                        array_layer_count: std::num::NonZeroU32::new(1),
+                        array_layer_count: Some(1),
                     }),
             );
         }

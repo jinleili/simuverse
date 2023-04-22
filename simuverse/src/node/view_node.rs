@@ -154,7 +154,7 @@ impl ViewNode {
         let corlor_format = if let Some(format) = attributes.corlor_format {
             format
         } else {
-            wgpu::TextureFormat::Bgra8Unorm
+            wgpu::TextureFormat::Bgra8UnormSrgb
         };
 
         let bg_setting = BindGroupSetting::new(device, &attributes.bg_data);

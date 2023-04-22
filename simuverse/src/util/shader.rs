@@ -4,7 +4,6 @@ use wgpu::{ShaderModule, ShaderModuleDescriptor, ShaderSource};
 const SHADER_IMPORT: &str = "#include ";
 const SHADER_SEGMENT: &str = "#insert_code_snippet";
 
-
 #[allow(dead_code)]
 pub fn create_shader_module(
     device: &wgpu::Device,
@@ -62,15 +61,12 @@ pub fn insert_code_then_create(
 }
 
 #[cfg(target_arch = "wasm32")]
-fn request_shader_code(_base_dir: &str, _fold: &str, _shader_name: &str) -> String {
-    // 主线程中同步的 XMLHttpRequest 已不赞成使用(2021/05/07)
-    // let mut request = web_sys::XmlHttpRequest::new().unwrap();
-    // request.set_response_type(web_sys::XmlHttpRequestResponseType::None);
-    // let url = base_dir.to_string() + "/" + &shader_name + ".wgsl";
-    // request.open_with_async("get", &url, false);
-    // request.send();
-    // request.response_text().unwrap().unwrap()
-    "".into()
+fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String {
+    let request = web_sys::XmlHttpRequest::new().unwrap();
+    let url = base_dir.to_string() + "/" + fold + "/" + shader_name + ".wgsl";
+    request.open_with_async("GET", &url, false).unwrap();
+    request.send().unwrap();
+    request.response_text().unwrap().unwrap()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -78,13 +74,12 @@ fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String 
     let path = PathBuf::from(base_dir)
         .join(fold)
         .join(format!("{shader_name}.wgsl"));
-    let code = match read_to_string(&path) {
+    match read_to_string(&path) {
         Ok(code) => code,
         Err(e) => {
             panic!("Unable to read {path:?}: {e:?}")
         }
-    };
-    code
+    }
 }
 
 fn parse_shader_source(source: &str, output: &mut String, base_path: &str) {

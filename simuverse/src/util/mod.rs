@@ -22,7 +22,11 @@ pub struct MVPUniform {
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn application_root_dir() -> String {
     let host = web_sys::window().unwrap().location().host().unwrap();
-    "http://".to_string() + &host
+    if host.contains("localhost") {
+        String::from("http://localhost:8000/")
+    } else {
+        String::from("https://") + &host + "/simuverse/"
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
