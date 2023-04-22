@@ -13,11 +13,14 @@ app-surface = { git = "https://github.com/jinleili/wgpu-in-app", package = "app-
 # egui = { git = "https://github.com/emilk/egui", rev = "f962378", default-features = false }
 # egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "f962378" }
 # egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "f962378", default-features = false }
-egui-wgpu = { path = "../../forks/egui/crates/egui-wgpu" }
-egui = { path = "../../forks/egui/crates/egui", default-features = false }
-egui-winit = { path = "../../forks/egui/crates/egui-winit", default-features = false, features = [
-    "links",
-] }
+egui-winit = { git = "https://github.com/jinleili/egui", package = "egui-winit", default-features = false }
+egui = { git = "https://github.com/jinleili/egui", default-features = false }
+egui-wgpu = { git = "https://github.com/jinleili/egui", package = "egui-wgpu" }
+# egui-wgpu = { path = "../../forks/egui/crates/egui-wgpu" }
+# egui = { path = "../../forks/egui/crates/egui", default-features = false }
+# egui-winit = { path = "../../forks/egui/crates/egui-winit", default-features = false, features = [
+#     "links",
+# ] }
 webbrowser = { version = "0.8.3" }
 
 winit = { version = "0.28" }

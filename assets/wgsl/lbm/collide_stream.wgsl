@@ -76,7 +76,7 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let usqr = 1.5 * dot(velocity, velocity);
     for (var i : i32 = 0; i < 9; i = i + 1) {
       var temp_val: f32 = f_i[i] - fluid.omega * (f_i[i] - equilibrium(velocity, rho, i, usqr)) + F[i];
-      if (temp_val > max_value(i) || (temp_val == f32(1 / 0))) {
+      if (temp_val > max_value(i)) {
         temp_val = max_value(i);
       } else if (temp_val < 0.0) {
         temp_val = 0.0;
