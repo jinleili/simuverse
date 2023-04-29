@@ -1,5 +1,5 @@
 [alias]
-run-wasm = "run --release --package run-wasm --"
+run-wasm = "run --release --package run-wasm -- --bin simuverse"
 
 [build]
 rustflags = [

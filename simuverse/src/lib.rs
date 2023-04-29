@@ -56,6 +56,7 @@ use winit::{
     dpi::PhysicalPosition,
     event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase},
 };
+
 pub trait Simulator {
     fn update_uniforms(&mut self, _app: &AppSurface, _setting: &crate::SettingObj) {}
 

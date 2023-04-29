@@ -41,8 +41,8 @@ impl NoiseSetting {
                 self.gain = 0.49;
             }
             Some(3) => {
-                self.back_color  = [0.000,0.000,0.165];
-                self.front_color = [0.667,1.000,1.000];
+                self.back_color = [0.000, 0.000, 0.165];
+                self.front_color = [0.667, 1.000, 1.000];
                 self.noise_scale = 1.5;
                 self.octave = 3;
                 self.lacunarity = 1.8;

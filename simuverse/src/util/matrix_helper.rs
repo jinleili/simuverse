@@ -10,8 +10,7 @@ pub fn perspective_fullscreen_mvp(viewport: Size<f32>) -> (glam::Mat4, glam::Mat
 
 pub fn perspective_mvp(viewport: Size<f32>) -> (glam::Mat4, glam::Mat4, (f32, f32, f32)) {
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
-    let p_matrix =
-        glam::Mat4::perspective_rh(fovy, viewport.width / viewport.height, 0.1, 100.0);
+    let p_matrix = glam::Mat4::perspective_rh(fovy, viewport.width / viewport.height, 0.1, 100.0);
 
     let factor = fullscreen_factor(viewport, fovy);
     let vm_matrix = glam::Mat4::from_translation(glam::vec3(0.0, 0.0, factor.0));
@@ -28,19 +27,19 @@ pub fn fullscreen_factor(viewport: Size<f32>, fovy: f32) -> (f32, f32, f32) {
     // 满屏效果: 默认 camera 在原点，利用 fovy 计算 tan (近裁剪平面 x | y 与 camera 原点的距离之比) 得出 z 轴平移距离
     // 屏幕 h > w 时，才需要计算 ratio, w > h 时， ration = 1
     let mut sx = 1.0;
-	let mut sy = 1.0;
-	
-	let ratio = if viewport.height > viewport.width {
-		let ratio = viewport.height / viewport.width;
-		sy = ratio;
-		ratio
-	} else {
-		sx = viewport.width / viewport.height;
-		1.0
-	};
-	let translate_z = -(ratio / (fovy / 2.0).tan());
-	
-	(translate_z, sx, sy)
+    let mut sy = 1.0;
+
+    let ratio = if viewport.height > viewport.width {
+        let ratio = viewport.height / viewport.width;
+        sy = ratio;
+        ratio
+    } else {
+        sx = viewport.width / viewport.height;
+        1.0
+    };
+    let translate_z = -(ratio / (fovy / 2.0).tan());
+
+    (translate_z, sx, sy)
 }
 
 #[allow(dead_code)]

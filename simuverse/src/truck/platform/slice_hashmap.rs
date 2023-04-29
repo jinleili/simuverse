@@ -20,13 +20,19 @@ impl<K, V> Default for SliceHashMap<K, V> {
 }
 
 impl<K: Copy + Eq + Hash, V> SliceHashMap<K, V> {
-    pub fn new() -> Self { Self::default() }
-    pub fn get(&self, key: &K) -> Option<&V> { self.map.get(key).map(|idx| &self.vec[*idx].1) }
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn get(&self, key: &K) -> Option<&V> {
+        self.map.get(key).map(|idx| &self.vec[*idx].1)
+    }
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let idx = *self.map.get(key)?;
         Some(&mut self.vec[idx].1)
     }
-    pub fn len(&self) -> usize { self.vec.len() }
+    pub fn len(&self) -> usize {
+        self.vec.len()
+    }
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         match self.map.get(&key) {
             Some(idx) => {
@@ -54,19 +60,25 @@ impl<K: Copy + Eq + Hash, V> SliceHashMap<K, V> {
         self.vec.clear();
         self.map.clear();
     }
-    pub fn as_slice(&self) -> &[(K, V)] { &self.vec }
+    pub fn as_slice(&self) -> &[(K, V)] {
+        &self.vec
+    }
 }
 
 impl<K, V> IntoIterator for SliceHashMap<K, V> {
     type Item = (K, V);
     type IntoIter = <Vec<(K, V)> as IntoIterator>::IntoIter;
-    fn into_iter(self) -> Self::IntoIter { self.vec.into_iter() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.vec.into_iter()
+    }
 }
 
 impl<'a, K, V> IntoIterator for &'a SliceHashMap<K, V> {
     type Item = &'a (K, V);
     type IntoIter = <&'a Vec<(K, V)> as IntoIterator>::IntoIter;
-    fn into_iter(self) -> Self::IntoIter { self.vec.iter() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.vec.iter()
+    }
 }
 
 impl<K: Copy + Eq + Hash, V> FromIterator<(K, V)> for SliceHashMap<K, V> {

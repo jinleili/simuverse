@@ -153,9 +153,18 @@ impl ToInstance<WireFrameInstance> for Vec<(Point3, Point3)> {
             .map(|p| p.cast().unwrap().into())
             .collect();
         let strips: Vec<u32> = (0..2 * self.len()).map(|i| i as u32).collect();
-        let vb =
-            BufferHandler::from_slice(&positions, device, BufferUsages::VERTEX, Some("wireframe positions"));
-        let ib = BufferHandler::from_slice(&strips, device, BufferUsages::INDEX, Some("wireframe strips"));
+        let vb = BufferHandler::from_slice(
+            &positions,
+            device,
+            BufferUsages::VERTEX,
+            Some("wireframe positions"),
+        );
+        let ib = BufferHandler::from_slice(
+            &strips,
+            device,
+            BufferUsages::INDEX,
+            Some("wireframe strips"),
+        );
         WireFrameInstance {
             vertices: Arc::new(vb),
             strips: Arc::new(ib),

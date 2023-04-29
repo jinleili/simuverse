@@ -8,6 +8,8 @@ Simulate particle vector fields, fluid dynamics, procedural textures, and positi
 
 It is not only a complete example but also an extension of the [学习 wgpu](https://github.com/jinleili/learn-wgpu-zh).
 
+**[Online Demo](https://jinleili.github.io/learn-wgpu-zh/simuverse)**
+
 ## Screenshot
 | | |
 |---|---|
@@ -16,9 +18,16 @@ It is not only a complete example but also an extension of the [学习 wgpu](htt
 |![PBD Cloth](screenshots/cloth.png) | ![LBM Fluid](screenshots/lbm.png)|
 |![Load .obj](screenshots/obj.png) | ![B-Spline animation](screenshots/bsp.png)|
 
-
-## Web Support
-Due to the use of [compute pipelines](https://jinleili.github.io/learn-wgpu-zh/intermediate/compute-pipeline/), it's not possible to build a WebAssembly binary using the `--features=webgl` feature. However, once the web platform bug in wgpu 0.15 is fixed, web support will be added. The bug was discussed in this [issue](https://github.com/gfx-rs/wgpu/issues/3430).
+## Running
+**On native**:
+```sh
+cargo run
+```
+**On web browser**:
+*Need Chrome 113+ or [Chrome Canary](https://jinleili.github.io/learn-wgpu-zh/#如何开启浏览器-webgpu-试验功能)*
+```sh
+cargo run-wasm
+```
 
 ## License
 Licensed under the [MIT License](https://github.com/jinleili/simuverse/blob/main/LICENSE.MIT).

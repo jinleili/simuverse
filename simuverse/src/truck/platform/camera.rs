@@ -213,7 +213,12 @@ impl Camera {
     /// };
     /// ```
     pub fn buffer(&self, as_rat: f64, device: &Device) -> BufferHandler {
-        BufferHandler::from_slice(&[self.camera_info(as_rat)], device, BufferUsages::UNIFORM, Some("Camera uniform"))
+        BufferHandler::from_slice(
+            &[self.camera_info(as_rat)],
+            device,
+            BufferUsages::UNIFORM,
+            Some("Camera uniform"),
+        )
     }
 
     /// Returns the ray from camera with aspect-ratio = 1.0.

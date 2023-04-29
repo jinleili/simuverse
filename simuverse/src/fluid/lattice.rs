@@ -24,11 +24,15 @@ pub enum LatticeType {
 }
 
 pub fn init_lattice_material(
-    lattice_size: wgpu::Extent3d, ty: FieldAnimationType,
+    lattice_size: wgpu::Extent3d,
+    ty: FieldAnimationType,
 ) -> Vec<LatticeInfo> {
     let mut info: Vec<LatticeInfo> = vec![];
-    let (nx, ny, nz) =
-        (lattice_size.width, lattice_size.height, lattice_size.depth_or_array_layers);
+    let (nx, ny, nz) = (
+        lattice_size.width,
+        lattice_size.height,
+        lattice_size.depth_or_array_layers,
+    );
     let s0 = Position::new(nx as f32 / 7.0 - OBSTACLE_RADIUS, ny as f32 / 2.0);
     let s1 = Position::new(nx as f32 / 5.0, ny as f32 / 4.0);
     let s2 = Position::new(nx as f32 / 5.0, ny as f32 * 0.75);
@@ -80,7 +84,12 @@ pub fn init_lattice_material(
                     _ => {}
                 }
 
-                info.push(LatticeInfo { material, block_iter: -1, vx, vy: 0.0 });
+                info.push(LatticeInfo {
+                    material,
+                    block_iter: -1,
+                    vx,
+                    vy: 0.0,
+                });
             }
         }
     }

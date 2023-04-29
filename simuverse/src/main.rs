@@ -1,4 +1,5 @@
 use app_surface::{math::Size, AppSurface, SurfaceFrame};
+use raw_window_handle::HasRawDisplayHandle;
 use simuverse::{
     framework::{run, Action},
     noise::TextureSimulator,
@@ -9,7 +10,7 @@ use simuverse::{
 use std::iter;
 use wgpu::TextureView;
 use winit::dpi::PhysicalSize;
-use winit::{event_loop::EventLoop, window::WindowId};
+use winit::window::WindowId;
 
 struct SimuverseApp {
     app: AppSurface,
@@ -22,7 +23,7 @@ struct SimuverseApp {
 }
 
 impl Action for SimuverseApp {
-    fn new(app: AppSurface, event_loop: &EventLoop<()>) -> Self {
+    fn new(app: AppSurface, event_loop: &dyn HasRawDisplayHandle) -> Self {
         let mut app = app;
         let format = app.config.format.remove_srgb_suffix();
         app.sdq.update_config_format(format);
@@ -55,6 +56,10 @@ impl Action for SimuverseApp {
 
     fn get_adapter_info(&self) -> wgpu::AdapterInfo {
         self.app.adapter.get_info()
+    }
+
+    fn get_view_mut(&mut self) -> &mut winit::window::Window {
+        &mut self.app.view
     }
 
     fn current_window_id(&self) -> WindowId {
@@ -121,7 +126,7 @@ impl Action for SimuverseApp {
         self.app.view.request_redraw();
     }
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    fn render(&mut self) {
         let mut encoder = self
             .app
             .device
@@ -183,8 +188,6 @@ impl Action for SimuverseApp {
         output.present();
 
         self.update_setting();
-
-        Ok(())
     }
 }
 

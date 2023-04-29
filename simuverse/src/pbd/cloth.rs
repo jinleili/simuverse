@@ -220,7 +220,8 @@ impl Cloth {
                 .with_use_depth_stencil(true)
                 .with_polygon_mode(wgpu::PolygonMode::Fill)
                 .with_cull_mode(None)
-                .with_vertices_and_indices((fabric.vertices.0, fabric.vertices.1));
+                .with_vertices_and_indices((fabric.vertices.0, fabric.vertices.1))
+                .with_color_format(app_view.config.format);
 
         let display_node = display_node_builder.build(&app_view.device);
 

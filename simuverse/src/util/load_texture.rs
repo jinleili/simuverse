@@ -1,5 +1,9 @@
-use image::GenericImageView;
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::{JsCast, JsValue};
+
+use image::{DynamicImage, GenericImageView};
 use wgpu::{Extent3d, Sampler, Texture, TextureFormat, TextureView};
 
 pub struct AnyTexture {
@@ -9,6 +13,27 @@ pub struct AnyTexture {
     pub format: TextureFormat,
     pub view_dimension: wgpu::TextureViewDimension,
 }
+
+#[cfg(target_arch = "wasm32")]
+pub fn load_web_image(url: &str) -> Result<Vec<u8>, JsValue> {
+    let xhr = web_sys::XmlHttpRequest::new()?;
+    // Error: Failed to execute 'open' on 'XMLHttpRequest': Synchronous requests from a document must not set a response type.
+    // xhr.set_response_type(web_sys::XmlHttpRequestResponseType::Arraybuffer);
+    xhr.open_with_async("GET", url, false)?;
+    xhr.send()?;
+    log::error!("xxx--- 1");
+    let array_buffer = xhr
+        .response()
+        .unwrap()
+        .dyn_into::<js_sys::ArrayBuffer>()
+        .unwrap();
+    log::error!("xxx---");
+    let u8_array = js_sys::Uint8Array::new(&array_buffer).to_vec();
+    log::error!("xxx--- 1");
+
+    Ok(u8_array)
+}
+
 #[allow(dead_code)]
 pub fn from_path(
     image_path: &str,
@@ -16,13 +41,25 @@ pub fn from_path(
     usage: wgpu::TextureUsages,
     set_to_grayscale: bool,
 ) -> (AnyTexture, Sampler) {
-    let path = if image_path.split('/').count() > 5 {
-        // is already a full path
-        PathBuf::from(image_path)
-    } else {
-        super::get_texture_file_path(image_path)
+    #[cfg(target_arch = "wasm32")]
+    let img = {
+        let url = format!("{}{}", super::application_root_dir(), image_path);
+        let bytes = load_web_image(&url);
+        // panic!("{:?}", bytes)
+        image::load_from_memory_with_format(&bytes.unwrap(), image::ImageFormat::Png).unwrap()
     };
-    let (texels, texture_extent, format) = load_from_path(path, set_to_grayscale);
+    #[cfg(not(target_arch = "wasm32"))]
+    let img = {
+        let path = if image_path.split('/').count() > 5 {
+            // is already a full path
+            PathBuf::from(image_path)
+        } else {
+            super::get_texture_file_path(image_path)
+        };
+        image::open(path.as_path()).unwrap()
+    };
+
+    let (texels, texture_extent, format) = load_from_img(img, set_to_grayscale);
     let pixel_bytes = single_pixel_bytes(format);
     let texture = app.device.create_texture(&wgpu::TextureDescriptor {
         size: texture_extent,
@@ -64,40 +101,10 @@ pub fn from_path(
     (any_tex, default_sampler(&app.device))
 }
 
-#[allow(dead_code)]
-pub fn update_by_path(
-    image_path: &str,
-    app: &app_surface::AppSurface,
-    texture: &Texture,
-    set_to_grayscale: bool,
-) {
-    let path = app_surface::fs::get_texture_file_path(image_path);
-
-    let (texels, texture_extent, format) = load_from_path(path, set_to_grayscale);
-    let pixel_bytes = single_pixel_bytes(format);
-
-    app.queue.write_texture(
-        wgpu::ImageCopyTexture {
-            texture,
-            mip_level: 0,
-            origin: wgpu::Origin3d::ZERO,
-            aspect: wgpu::TextureAspect::All,
-        },
-        &texels,
-        wgpu::ImageDataLayout {
-            offset: 0,
-            bytes_per_row: Some(pixel_bytes * texture_extent.width),
-            rows_per_image: Some(texture_extent.height),
-        },
-        texture_extent,
-    );
-}
-
-fn load_from_path(
-    path: PathBuf,
+fn load_from_img(
+    img: DynamicImage,
     set_to_grayscale: bool,
 ) -> (Vec<u8>, wgpu::Extent3d, TextureFormat) {
-    let img = image::open(path.as_path()).unwrap();
     let (width, height) = img.dimensions();
     let texture_extent = wgpu::Extent3d {
         width,

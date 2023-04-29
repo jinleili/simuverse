@@ -2,40 +2,37 @@ use super::{Cloth, ClothFabric};
 use crate::Simulator;
 use app_surface::math::Size;
 use app_surface::AppSurface;
-use std::sync::mpsc;
-use std::thread;
+#[cfg(not(target_arch = "wasm32"))]
+use std::{thread, sync::mpsc};
 
 pub struct PBDSimulator {
     pbd_obj: Option<Cloth>,
+    #[cfg(not(target_arch = "wasm32"))]
     rx: mpsc::Receiver<ClothFabric>,
 }
 
 impl PBDSimulator {
     pub fn new(app: &AppSurface) -> Self {
         let viewport_size: Size<f32> = (&app.config).into();
-        let horizontal_pixel = app.config.width as f32;
-        let vertical_pixel = horizontal_pixel;
 
-        let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
-        let factor = crate::util::matrix_helper::fullscreen_factor(viewport_size, fovy);
-        let a_pixel_on_ndc = factor.1 / viewport_size.width;
+        #[cfg(target_arch = "wasm32")]
+        {
+            let cloth_fabric = create_cloth_fabric(viewport_size);
+            return Self {
+                pbd_obj: Some(Cloth::new(app, cloth_fabric)),
+            };
+        }
 
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
-            let particle_x_num = 50;
-            let particle_y_num = 50;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (tx, rx) = mpsc::channel();
+            thread::spawn(move || {
+                let cloth_fabric = create_cloth_fabric(viewport_size);
+                let _ = tx.send(cloth_fabric);
+            });
 
-            let cloth_fabric = ClothFabric::gen_fabric(
-                particle_x_num,
-                particle_y_num,
-                horizontal_pixel,
-                vertical_pixel,
-                a_pixel_on_ndc,
-            );
-            let _ = tx.send(cloth_fabric);
-        });
-
-        Self { rx, pbd_obj: None }
+            Self { rx, pbd_obj: None }
+        }
     }
 }
 
@@ -46,10 +43,13 @@ impl Simulator for PBDSimulator {
         control_panel: &mut crate::ControlPanel,
     ) {
         if self.pbd_obj.is_none() {
-            if let Ok(data) = self.rx.try_recv() {
-                self.pbd_obj = Some(Cloth::new(app, data));
-            } else {
-                // Waiting for cloth data
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                if let Ok(data) = self.rx.try_recv() {
+                    self.pbd_obj = Some(Cloth::new(app, data));
+                } else {
+                    // Waiting for cloth data
+                }
             }
         }
 
@@ -88,4 +88,24 @@ impl Simulator for PBDSimulator {
             pbd.draw_by_rpass(app, rpass, setting);
         }
     }
+}
+
+fn create_cloth_fabric(viewport_size: Size<f32>) -> ClothFabric {
+    let horizontal_pixel = viewport_size.width as f32;
+    let vertical_pixel = horizontal_pixel;
+
+    let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
+    let factor = crate::util::matrix_helper::fullscreen_factor(viewport_size, fovy);
+    let a_pixel_on_ndc = factor.1 / viewport_size.width;
+
+    let particle_x_num = 50;
+    let particle_y_num = 50;
+
+    ClothFabric::gen_fabric(
+        particle_x_num,
+        particle_y_num,
+        horizontal_pixel,
+        vertical_pixel,
+        a_pixel_on_ndc,
+    )
 }

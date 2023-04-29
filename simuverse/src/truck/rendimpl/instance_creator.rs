@@ -11,15 +11,15 @@ impl PolygonShaders {
             source: ShaderSource::Wgsl(source.into()),
             label: None,
         }));
-        Self{
-            vertex_module:Arc::clone(&shader_module),
-            vertex_entry:"vs_main",
-            fragment_module:Arc::clone(&shader_module),
-            fragment_entry:"nontex_main",
+        Self {
+            vertex_module: Arc::clone(&shader_module),
+            vertex_entry: "vs_main",
+            fragment_module: Arc::clone(&shader_module),
+            fragment_entry: "nontex_main",
             tex_fragment_module: Arc::clone(&shader_module),
-            tex_fragment_entry:"tex_main",
+            tex_fragment_entry: "tex_main",
             procedural_fragment_module: Arc::clone(&shader_module),
-            procedural_fragment_entry:"procedural_main",
+            procedural_fragment_entry: "procedural_main",
         }
     }
 }

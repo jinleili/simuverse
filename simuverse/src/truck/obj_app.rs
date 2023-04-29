@@ -22,7 +22,6 @@ const TEAPOT_BYTES: &[u8] = include_bytes!(concat!(
 //     "/assets/obj/teapot.obj",
 // ));
 
-
 pub struct ObjApp {
     _creator: InstanceCreator,
     rotate_flag: bool,

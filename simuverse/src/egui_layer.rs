@@ -4,7 +4,7 @@ use crate::{
     ControlPanel,
 };
 use app_surface::AppSurface;
-use winit::event_loop::EventLoop;
+use raw_window_handle::HasRawDisplayHandle;
 
 pub struct EguiLayer {
     format: wgpu::TextureFormat,
@@ -20,7 +20,11 @@ pub struct EguiLayer {
 }
 
 impl EguiLayer {
-    pub fn new(app: &AppSurface, event_loop: &EventLoop<()>, format: wgpu::TextureFormat) -> Self {
+    pub fn new(
+        app: &AppSurface,
+        event_loop: &dyn HasRawDisplayHandle,
+        format: wgpu::TextureFormat,
+    ) -> Self {
         let shader = create_shader_module(&app.device, "egui_layer_compose", None);
         let sampler = app
             .device

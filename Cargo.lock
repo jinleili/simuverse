@@ -138,7 +138,7 @@ dependencies = [
  "ndk-sys",
  "objc",
  "objc-foundation",
- "pollster",
+ "pollster 0.2.5",
  "raw-window-handle",
  "wasm-bindgen",
  "web-sys",
@@ -663,7 +663,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 [[package]]
 name = "ecolor"
 version = "0.21.0"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "bytemuck",
 ]
@@ -671,7 +671,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.21.0"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "ahash 0.8.3",
  "epaint",
@@ -682,7 +682,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.21.0"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "bytemuck",
  "epaint",
@@ -694,7 +694,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.21.1"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "egui",
  "instant",
@@ -712,7 +712,7 @@ checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
 [[package]]
 name = "emath"
 version = "0.21.0"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "bytemuck",
 ]
@@ -764,7 +764,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.21.0"
-source = "git+https://github.com/jinleili/egui#cf7617875142181066f5f5327e1177a40642b668"
+source = "git+https://github.com/emilk/egui?rev=09e1569#09e1569bf3c0cfa25d2d8f39e024ffe7784c974a"
 dependencies = [
  "ab_glyph",
  "ahash 0.8.3",
@@ -1839,6 +1839,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5da3b0203fd7ee5720aa0b5e790b591aa5d3f41c3ed2c34a3a393382198af2f7"
 
 [[package]]
+name = "pollster"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22686f4785f02a4fcc856d3b3bb19bf6c8160d103f7a99cc258bddd0251dc7f2"
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2184,8 +2190,9 @@ dependencies = [
  "instant",
  "js-sys",
  "log",
- "pollster",
+ "pollster 0.3.0",
  "rand",
+ "raw-window-handle",
  "rayon",
  "rustc-hash",
  "serde_json",

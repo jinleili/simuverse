@@ -186,9 +186,9 @@ impl ControlPanel {
             ("🌾 Vector Field", SimuType::Field),
             ("💦 LBM Fluid", SimuType::Fluid),
             ("💥 Perlin Noise", SimuType::Noise),
+            ("👗 Position-based Dynamics", SimuType::PBDynamic),
         ];
         if cfg!(not(target_arch = "wasm32")) {
-            menu_items.push(("👗 Position-based Dynamics", SimuType::PBDynamic));
             menu_items.push(("🚚 CAD Kenel", SimuType::CAD));
         }
         egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {

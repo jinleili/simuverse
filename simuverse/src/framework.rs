@@ -1,19 +1,50 @@
 use app_surface::math::Position;
+use raw_window_handle::HasRawDisplayHandle;
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::{WindowBuilder, WindowId},
+    event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
+    window::{Window, WindowBuilder, WindowId},
 };
 
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::{prelude::*, JsCast};
+
+const CANVAS_SIZE_NEED_CHANGE: &str = "canvas_size_need_change";
+#[allow(unused)]
+const ALL_CUSTOM_EVENTS: [&str; 1] = [CANVAS_SIZE_NEED_CHANGE];
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(catch, js_namespace = Function, js_name = "prototype.call.call")]
+    fn call_catch(this: &JsValue) -> Result<(), JsValue>;
+    fn canvas_resize_completed();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn try_call_canvas_resize_completed() {
+    let run_closure = Closure::once_into_js(move || canvas_resize_completed());
+    if let Err(_) = call_catch(&run_closure) {
+        log::error!("js 端没有定义 canvas_resize_completed 函数");
+    }
+}
+
+#[allow(unused)]
+#[derive(Debug)]
+struct CustomJsTriggerEvent {
+    ty: &'static str,
+    value: String,
+}
+
 pub trait Action {
-    fn new(app: app_surface::AppSurface, event_loop: &EventLoop<()>) -> Self;
+    fn new(app: app_surface::AppSurface, event_loop: &dyn HasRawDisplayHandle) -> Self;
     fn get_adapter_info(&self) -> wgpu::AdapterInfo;
+    fn get_view_mut(&mut self) -> &mut Window;
     fn current_window_id(&self) -> WindowId;
     fn resize(&mut self, size: &PhysicalSize<u32>);
     fn request_redraw(&mut self);
-    fn update(&mut self) {}
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError>;
+    fn render(&mut self);
 
     fn on_ui_event(&mut self, _event: &winit::event::WindowEvent<'_>) {}
     fn on_click(&mut self, _pos: Position) {}
@@ -36,11 +67,8 @@ pub fn run<A: Action + 'static>(wh_ratio: Option<f32>) {
 
 #[cfg(target_arch = "wasm32")]
 pub fn run<A: Action + 'static>(wh_ratio: Option<f32>) {
-    use wasm_bindgen::{prelude::*, JsCast};
-
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     console_log::init_with_level(log::Level::Warn).expect("无法初始化日志库");
-
     wasm_bindgen_futures::spawn_local(async move {
         let (event_loop, instance) = create_action_instance::<A>(wh_ratio).await;
         let run_closure =
@@ -57,17 +85,16 @@ pub fn run<A: Action + 'static>(wh_ratio: Option<f32>) {
                 web_sys::console::error_1(&error);
             }
         }
-
-        #[wasm_bindgen]
-        extern "C" {
-            #[wasm_bindgen(catch, js_namespace = Function, js_name = "prototype.call.call")]
-            fn call_catch(this: &JsValue) -> Result<(), JsValue>;
-        }
     });
 }
 
-async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (EventLoop<()>, A) {
-    let event_loop = EventLoop::new();
+async fn create_action_instance<A: Action + 'static>(
+    wh_ratio: Option<f32>,
+) -> (EventLoop<CustomJsTriggerEvent>, A) {
+    let event_loop = EventLoopBuilder::<CustomJsTriggerEvent>::with_user_event().build();
+    #[cfg(target_arch = "wasm32")]
+    let proxy = event_loop.create_proxy();
+
     let window = WindowBuilder::new()
         .with_title("Wgpu Simuverse")
         .build(&event_loop)
@@ -97,29 +124,47 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
         web_sys::window()
             .and_then(|win| win.document())
             .map(|doc| {
-                match doc.get_element_by_id("wasm-example") {
-                    Some(dst) => {
-                        let height = 500;
-                        let width = (height as f32
-                            * if let Some(ratio) = wh_ratio {
-                                ratio
-                            } else {
-                                1.1
-                            }) as u32;
-                        window.set_inner_size(PhysicalSize::new(width, height));
-                        let _ = dst.append_child(&web_sys::Element::from(window.canvas()));
+                let canvas = window.canvas();
+
+                if let Some(container) = doc.get_element_by_id("simuverse_container") {
+                    let rect = container.get_bounding_client_rect();
+                    let scale_factor = window.scale_factor();
+                    let w = rect.width() * scale_factor;
+                    let h = rect.height() * scale_factor;
+                    window.set_inner_size(PhysicalSize::new(w, h));
+                    canvas.style().set_css_text(
+                        &(canvas.style().css_text()
+                            + "background-color: black; display: block; margin: 0px;"),
+                    );
+                    let _ = container.append_child(&web_sys::Element::from(canvas));
+
+                    let target: web_sys::EventTarget = container.into();
+                    let call_back = Closure::wrap(Box::new(move |event: web_sys::Event| {
+                        // let event_name: &'static str = event.type_().as_str();
+                        let event_name: &'static str = Box::leak(event.type_().into_boxed_str());
+                        let _ = proxy.send_event(CustomJsTriggerEvent {
+                            ty: event_name,
+                            value: String::new(),
+                        });
+                    }) as Box<dyn FnMut(_)>);
+
+                    // Add html element's event listener
+                    for e in ALL_CUSTOM_EVENTS.iter() {
+                        target
+                            .add_event_listener_with_callback(e, call_back.as_ref().unchecked_ref())
+                            .unwrap();
                     }
-                    None => {
-                        window.set_inner_size(PhysicalSize::new(width, height));
-                        let canvas = window.canvas();
-                        canvas.style().set_css_text(
-                            &(canvas.style().css_text()
-                                + "background-color: black; display: block; margin: 20px auto;"),
-                        );
-                        doc.body()
-                            .map(|body| body.append_child(&web_sys::Element::from(canvas)));
-                    }
-                };
+                    call_back.forget();
+                } else {
+                    window.set_inner_size(PhysicalSize::new(width, height));
+                    let canvas = window.canvas();
+                    canvas.style().set_css_text(
+                        &(canvas.style().css_text()
+                            + "background-color: black; display: block; margin: 20px auto;"),
+                    );
+                    doc.body()
+                        .map(|body| body.append_child(&web_sys::Element::from(canvas)));
+                }
             })
             .expect("Couldn't append canvas to document body.");
     };
@@ -132,18 +177,12 @@ async fn create_action_instance<A: Action + 'static>(wh_ratio: Option<f32>) -> (
         "正在使用 {}, 后端图形接口为 {:?}。",
         adapter_info.name, adapter_info.backend
     );
-    #[cfg(not(target_arch = "wasm32"))]
     println!("{gpu_info}");
-    #[cfg(target_arch = "wasm32")]
-    log::warn!(
-        "{}\n这不是一条警告，仅仅是为了在控制台能默认打印出来而不需要开启烦人的 info 日志等级。",
-        gpu_info
-    );
 
     (event_loop, instance)
 }
 
-fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A) {
+fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<CustomJsTriggerEvent>, instance: A) {
     let mut app = instance;
     let mut last_touch_point = Position::zero();
     event_loop.run(move |event, _, control_flow| {
@@ -170,6 +209,8 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                             println!("Window minimized!");
                         } else {
                             app.resize(physical_size);
+                            #[cfg(target_arch = "wasm32")]
+                            try_call_canvas_resize_completed();
                         }
                     }
                     WindowEvent::ScaleFactorChanged {
@@ -177,6 +218,8 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                         new_inner_size,
                     } => {
                         app.resize(new_inner_size);
+                        #[cfg(target_arch = "wasm32")]
+                        try_call_canvas_resize_completed();
                     }
                     WindowEvent::MouseInput {
                         device_id: _,
@@ -203,17 +246,23 @@ fn start_event_loop<A: Action + 'static>(event_loop: EventLoop<()>, instance: A)
                     _ => {}
                 }
             }
-            Event::RedrawRequested(window_id) if window_id == app.current_window_id() => {
-                app.update();
-                match app.render() {
-                    Ok(_) => {}
-                    // 当展示平面的上下文丢失，就需重新配置
-                    Err(wgpu::SurfaceError::Lost) => eprintln!("Surface is lost"),
-                    // 系统内存不足时，程序应该退出。
-                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    // 所有其他错误（过期、超时等）应在下一帧解决
-                    Err(e) => eprintln!("{e:?}"),
+            #[cfg(target_arch = "wasm32")]
+            Event::UserEvent(event) => {
+                if event.ty == CANVAS_SIZE_NEED_CHANGE {
+                    if let Some(doc) = web_sys::window().and_then(|win| win.document()) {
+                        if let Some(container) = doc.get_element_by_id("simuverse_container") {
+                            let window = app.get_view_mut();
+                            let rect = container.get_bounding_client_rect();
+                            let scale_factor = window.scale_factor();
+                            let w = rect.width() * scale_factor;
+                            let h = rect.height() * scale_factor;
+                            window.set_inner_size(PhysicalSize::new(w, h));
+                        }
+                    }
                 }
+            }
+            Event::RedrawRequested(window_id) if window_id == app.current_window_id() => {
+                app.render();
             }
             Event::RedrawEventsCleared => {
                 // 除非我们手动请求，RedrawRequested 将只会触发一次。

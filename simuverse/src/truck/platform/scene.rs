@@ -81,7 +81,12 @@ impl SceneDescriptor {
     pub fn lights_buffer(&self, device: &Device) -> BufferHandler {
         let mut light_vec: Vec<_> = self.studio.lights.iter().map(Light::light_info).collect();
         light_vec.resize(LIGHT_MAX, LightInfo::zeroed());
-        BufferHandler::from_slice(&light_vec, device, BufferUsages::UNIFORM, Some("lights_buffer"))
+        BufferHandler::from_slice(
+            &light_vec,
+            device,
+            BufferUsages::UNIFORM,
+            Some("lights_buffer"),
+        )
     }
 
     #[inline(always)]
@@ -344,7 +349,12 @@ impl Scene {
             time: self.elapsed().as_secs_f32(),
             num_of_lights: self.scene_desc.studio.lights.len() as u32,
         };
-        BufferHandler::from_slice(&[scene_info], self.device(), BufferUsages::UNIFORM, Some("scene_info"))
+        BufferHandler::from_slice(
+            &[scene_info],
+            self.device(),
+            BufferUsages::UNIFORM,
+            Some("scene_info"),
+        )
     }
 
     /// Creates bind group.
