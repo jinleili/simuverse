@@ -1,9 +1,9 @@
 use super::{Cloth, ClothFabric};
-use crate::Simulator;
+use crate::{util::AnyTexture, Simulator};
 use app_surface::math::Size;
 use app_surface::AppSurface;
 #[cfg(not(target_arch = "wasm32"))]
-use std::{thread, sync::mpsc};
+use std::{sync::mpsc, thread};
 
 pub struct PBDSimulator {
     pbd_obj: Option<Cloth>,
@@ -12,15 +12,15 @@ pub struct PBDSimulator {
 }
 
 impl PBDSimulator {
-    pub fn new(app: &AppSurface) -> Self {
+    pub fn new(app: &AppSurface, _texture: Option<&AnyTexture>) -> Self {
         let viewport_size: Size<f32> = (&app.config).into();
 
         #[cfg(target_arch = "wasm32")]
         {
             let cloth_fabric = create_cloth_fabric(viewport_size);
-            return Self {
-                pbd_obj: Some(Cloth::new(app, cloth_fabric)),
-            };
+            Self {
+                pbd_obj: Some(Cloth::new(app, cloth_fabric, _texture)),
+            }
         }
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -46,7 +46,7 @@ impl Simulator for PBDSimulator {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 if let Ok(data) = self.rx.try_recv() {
-                    self.pbd_obj = Some(Cloth::new(app, data));
+                    self.pbd_obj = Some(Cloth::new(app, data, None));
                 } else {
                     // Waiting for cloth data
                 }
@@ -91,7 +91,7 @@ impl Simulator for PBDSimulator {
 }
 
 fn create_cloth_fabric(viewport_size: Size<f32>) -> ClothFabric {
-    let horizontal_pixel = viewport_size.width as f32;
+    let horizontal_pixel = viewport_size.width;
     let vertical_pixel = horizontal_pixel;
 
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;

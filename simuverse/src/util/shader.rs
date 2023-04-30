@@ -24,14 +24,14 @@ pub fn insert_code_then_create(
     // std::env::var("CARGO_MANIFEST_DIR") 在 xcode debug 时不存在
     // std::env::current_dir() 在 xcode debug 时只能获得相对路径： “/”
     let base_dir = super::application_root_dir();
-    let (fold, shader_name) = if cfg!(any(target_os = "ios", target_arch = "wasm32")) {
-        ("preprocessed-wgsl", shader_name.replace('/', "_"))
+    let (fold, shader_name) = if cfg!(target_arch = "wasm32") {
+        ("assets/preprocessed-wgsl", shader_name.replace('/', "_"))
     } else {
         ("wgsl", shader_name.to_string())
     };
     let code = request_shader_code(&base_dir, fold, &shader_name);
 
-    let shader_source = if cfg!(any(target_os = "ios", target_arch = "wasm32")) {
+    let shader_source = if cfg!(target_arch = "wasm32") {
         code
     } else {
         let mut shader_source = String::new();
@@ -63,7 +63,7 @@ pub fn insert_code_then_create(
 #[cfg(target_arch = "wasm32")]
 fn request_shader_code(base_dir: &str, fold: &str, shader_name: &str) -> String {
     let request = web_sys::XmlHttpRequest::new().unwrap();
-    let url = base_dir.to_string() + "/" + fold + "/" + shader_name + ".wgsl";
+    let url = base_dir.to_string() + fold + "/" + shader_name + ".wgsl";
     request.open_with_async("GET", &url, false).unwrap();
     request.send().unwrap();
     request.response_text().unwrap().unwrap()

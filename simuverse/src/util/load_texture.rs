@@ -1,7 +1,5 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::{JsCast, JsValue};
 
 use image::{DynamicImage, GenericImageView};
 use wgpu::{Extent3d, Sampler, Texture, TextureFormat, TextureView};
@@ -15,27 +13,20 @@ pub struct AnyTexture {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn load_web_image(url: &str) -> Result<Vec<u8>, JsValue> {
-    let xhr = web_sys::XmlHttpRequest::new()?;
-    // Error: Failed to execute 'open' on 'XMLHttpRequest': Synchronous requests from a document must not set a response type.
-    // xhr.set_response_type(web_sys::XmlHttpRequestResponseType::Arraybuffer);
-    xhr.open_with_async("GET", url, false)?;
-    xhr.send()?;
-    log::error!("xxx--- 1");
-    let array_buffer = xhr
-        .response()
-        .unwrap()
-        .dyn_into::<js_sys::ArrayBuffer>()
-        .unwrap();
-    log::error!("xxx---");
-    let u8_array = js_sys::Uint8Array::new(&array_buffer).to_vec();
-    log::error!("xxx--- 1");
+pub async fn get_web_img(img_name: &str) -> Result<Vec<u8>, reqwest::Error> {
+    let url = reqwest::Url::parse(&format!(
+        "{}assets/{}",
+        super::application_root_dir(),
+        img_name,
+    ))
+    .unwrap();
+    let data = reqwest::get(url).await?.bytes().await?.to_vec();
 
-    Ok(u8_array)
+    Ok(data)
 }
 
 #[allow(dead_code)]
-pub fn from_path(
+pub async fn from_path(
     image_path: &str,
     app: &app_surface::AppSurface,
     usage: wgpu::TextureUsages,
@@ -43,9 +34,7 @@ pub fn from_path(
 ) -> (AnyTexture, Sampler) {
     #[cfg(target_arch = "wasm32")]
     let img = {
-        let url = format!("{}{}", super::application_root_dir(), image_path);
-        let bytes = load_web_image(&url);
-        // panic!("{:?}", bytes)
+        let bytes = get_web_img(image_path).await;
         image::load_from_memory_with_format(&bytes.unwrap(), image::ImageFormat::Png).unwrap()
     };
     #[cfg(not(target_arch = "wasm32"))]

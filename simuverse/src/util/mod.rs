@@ -54,6 +54,7 @@ pub(crate) fn application_root_dir() -> String {
     }
 }
 
+#[allow(unused)]
 pub(crate) fn get_texture_file_path(name: &str) -> PathBuf {
     PathBuf::from(application_root_dir()).join(name)
 }

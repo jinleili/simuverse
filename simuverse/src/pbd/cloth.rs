@@ -1,4 +1,5 @@
 use crate::node::{BindGroupData, ComputeNode, ViewNode, ViewNodeBuilder};
+use crate::util::AnyTexture;
 use crate::util::{vertex::PosParticleIndex, BufferObj};
 
 use super::{ClothFabric, ClothUniform, MeshColoringObj};
@@ -29,7 +30,7 @@ pub struct Cloth {
 }
 
 impl Cloth {
-    pub fn new(app_view: &AppSurface, fabric: ClothFabric) -> Self {
+    pub fn new(app_view: &AppSurface, fabric: ClothFabric, _texture: Option<&AnyTexture>) -> Self {
         let viewport_size: Size<f32> = (&app_view.config).into();
         let mvp_uniform_data = Self::get_mvp_uniform_data(viewport_size);
         let mvp_buf = BufferObj::create_uniform_buffer(&app_view.device, &mvp_uniform_data, None);
@@ -99,7 +100,7 @@ impl Cloth {
             }
         }
 
-        let particle_buf = BufferObj::create_storage_buffer(
+        let mut particle_buf = BufferObj::create_storage_buffer(
             &app_view.device,
             &fabric.particles,
             Some("particle buf"),
@@ -189,22 +190,28 @@ impl Cloth {
             &bind_group_data,
             &bend_solver_shader,
         );
-
-        let (texture, _) = crate::util::load_texture::from_path(
+        #[cfg(target_arch = "wasm32")]
+        let texture = _texture.unwrap();
+        #[cfg(not(target_arch = "wasm32"))]
+        let (cloth_texture, _) = pollster::block_on(crate::util::load_texture::from_path(
             "cloth_500x500.png",
             app_view,
             wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
             false,
-        );
+        ));
+        #[cfg(not(target_arch = "wasm32"))]
+        let texture = &cloth_texture;
+
         let sampler = app_view
             .device
             .create_sampler(&wgpu::SamplerDescriptor::default());
         let display_shader =
             crate::util::shader::create_shader_module(&app_view.device, "pbd/cloth_display", None);
+        particle_buf.read_only = true;
         let bind_group_data = BindGroupData {
             uniforms: vec![&mvp_buf, &cloth_uniform_buf],
             storage_buffers: vec![&particle_buf],
-            inout_tv: vec![(&texture, None)],
+            inout_tv: vec![(texture, None)],
             samplers: vec![&sampler],
             visibilitys: vec![
                 wgpu::ShaderStages::VERTEX,

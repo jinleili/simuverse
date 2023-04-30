@@ -2,6 +2,9 @@ use app_surface::math::{Position, Size};
 use app_surface::AppSurface;
 use std::usize;
 
+mod simuverse_app;
+pub use simuverse_app::SimuverseApp;
+
 pub mod framework;
 
 mod egui_lib;
