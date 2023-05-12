@@ -32,9 +32,12 @@ pub use field_velocity_code::get_velocity_code_snippet;
 
 pub mod pbd;
 
+#[cfg(not(target_arch = "wasm32"))]
 mod truck;
+#[cfg(not(target_arch = "wasm32"))]
 #[allow(unused)]
 pub(crate) use truck::platform::rendered_macros;
+#[cfg(not(target_arch = "wasm32"))]
 pub use truck::CADObjViewer;
 
 pub mod util;

@@ -38,19 +38,18 @@ struct CustomJsTriggerEvent {
 
 impl crate::SimuverseApp {
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn run(wh_ratio: Option<f32>) {
+    pub fn run() {
         env_logger::init();
-
-        let (event_loop, instance) = pollster::block_on(Self::create_action_instance(wh_ratio));
+        let (event_loop, instance) = pollster::block_on(Self::create_action_instance());
         Self::start_event_loop(event_loop, instance);
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub fn run(wh_ratio: Option<f32>) {
+    pub fn run() {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         console_log::init_with_level(log::Level::Warn).expect("无法初始化日志库");
         wasm_bindgen_futures::spawn_local(async move {
-            let (event_loop, instance) = Self::create_action_instance(wh_ratio).await;
+            let (event_loop, instance) = Self::create_action_instance().await;
             let run_closure =
                 Closure::once_into_js(move || Self::start_event_loop(event_loop, instance));
 
@@ -69,9 +68,7 @@ impl crate::SimuverseApp {
         });
     }
 
-    async fn create_action_instance(
-        wh_ratio: Option<f32>,
-    ) -> (EventLoop<CustomJsTriggerEvent>, Self) {
+    async fn create_action_instance() -> (EventLoop<CustomJsTriggerEvent>, Self) {
         let event_loop = EventLoopBuilder::<CustomJsTriggerEvent>::with_user_event().build();
         #[cfg(target_arch = "wasm32")]
         let proxy = event_loop.create_proxy();
@@ -87,12 +84,8 @@ impl crate::SimuverseApp {
         } else {
             750.0
         } * window.scale_factor()) as u32;
+        let width = (height as f32 * 1.6) as u32;
 
-        let width = if let Some(ratio) = wh_ratio {
-            (height as f32 * ratio) as u32
-        } else {
-            height
-        };
         if cfg!(not(target_arch = "wasm32")) {
             window.set_inner_size(PhysicalSize::new(width, height));
         }

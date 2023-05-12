@@ -13,13 +13,11 @@ app-surface = { git = "https://github.com/jinleili/wgpu-in-app", package = "app-
 egui = { git = "https://github.com/emilk/egui", rev = "09e1569", default-features = false }
 egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "09e1569" }
 egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "09e1569", default-features = false }
-# egui-winit = { git = "https://github.com/jinleili/egui", package = "egui-winit", default-features = false }
-# egui = { git = "https://github.com/jinleili/egui", default-features = false }
-# egui-wgpu = { git = "https://github.com/jinleili/egui", package = "egui-wgpu" }
 # egui-wgpu = { path = "../../forks/egui/crates/egui-wgpu" }
 # egui = { path = "../../forks/egui/crates/egui", default-features = false }
 # egui-winit = { path = "../../forks/egui/crates/egui-winit", default-features = false, features = [
 #     "links",
+#     # "clipboard",
 # ] }
 
 webbrowser = { version = "0.8.3" }
@@ -27,6 +25,7 @@ winit = { version = "0.28" }
 raw-window-handle = "0.5"
 wgpu = "0.16"
 # wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "7c25c00f" }
+# wgpu = { path = "../../forks/wgpu/wgpu" }
 
 glam = "0.22"
 # syntax_highlighting 需要 enum-map
@@ -36,8 +35,11 @@ env_logger = "0.9"
 log = "0.4"
 rand = "0.8"
 image = { version = "*" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster = "0.3"
 # truck dependencies
-async-trait = "0.1.64"
+instant = { version = "0.1.12", features = ["now"] }
 rayon = "1.6.1"
 rustc-hash = "1.1.0"
 serde_json = "1.0.93"
@@ -45,11 +47,6 @@ truck-base = { version = "0.4.0" }
 truck-meshalgo = { version = "0.3.0" }
 truck-modeling = { version = "0.5.1" }
 truck-polymesh = { version = "0.5.0" }
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pollster = "0.3"
-# truck dependencies
-instant = { version = "0.1.12", features = ["now"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 instant = { version = "0.1.12", features = ["now", "wasm-bindgen"] }

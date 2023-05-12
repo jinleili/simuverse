@@ -1,6 +1,6 @@
 use crate::{
-    noise::TextureSimulator, util::AnyTexture, util::BufferObj, CADObjViewer, ControlPanel,
-    EguiLayer, FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
+    noise::TextureSimulator, util::AnyTexture, util::BufferObj, ControlPanel, EguiLayer,
+    FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
 };
 use app_surface::{math::Size, AppSurface, SurfaceFrame};
 use raw_window_handle::HasRawDisplayHandle;
@@ -226,7 +226,8 @@ impl SimuverseApp {
                 app,
                 self.cloth_texture.as_ref(),
             )),
-            SimuType::CAD => Box::new(CADObjViewer::new(app, ctrl_panel)),
+            #[cfg(not(target_arch = "wasm32"))]
+            SimuType::CAD => Box::new(crate::CADObjViewer::new(app, ctrl_panel)),
             _ => Box::new(FieldSimulator::new(
                 app,
                 app.config.format.remove_srgb_suffix(),
