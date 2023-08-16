@@ -2,7 +2,7 @@ use crate::{
     noise::TextureSimulator, util::AnyTexture, util::BufferObj, ControlPanel, EguiLayer,
     FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
 };
-use app_surface::{math::Size, AppSurface, SurfaceFrame};
+use app_surface::{AppSurface, SurfaceFrame};
 use raw_window_handle::HasRawDisplayHandle;
 use std::iter;
 use wgpu::TextureView;
@@ -13,7 +13,7 @@ pub struct SimuverseApp {
     app: AppSurface,
     egui_layer: EguiLayer,
     ctrl_panel: ControlPanel,
-    canvas_size: Size<u32>,
+    canvas_size: glam::UVec2,
     canvas_buf: BufferObj,
     simulator: Box<dyn Simulator>,
     depth_view: TextureView,
@@ -30,10 +30,10 @@ impl SimuverseApp {
         let egui_layer = EguiLayer::new(&app, event_loop, format);
         let ctrl_panel = ControlPanel::new(&app, &egui_layer.ctx);
 
-        let canvas_size: Size<u32> = (&app.config).into();
+        let canvas_size = glam::UVec2::new(app.config.width, app.config.height);
         let canvas_buf = crate::util::BufferObj::create_empty_storage_buffer(
             &app.device,
-            (canvas_size.width * canvas_size.height * 12) as u64,
+            (canvas_size.x * canvas_size.y * 12) as u64,
             false,
             Some("canvas_buf"),
         );
@@ -94,14 +94,14 @@ impl SimuverseApp {
         self.depth_view = Self::create_depth_tex(&self.app);
         self.egui_layer.resize(&self.app);
 
-        let canvas_size: Size<u32> = (&self.app.config).into();
+        let canvas_size = glam::UVec2::new(self.app.config.width, self.app.config.height);
         self.ctrl_panel
             .setting
             .update_canvas_size(&self.app, canvas_size);
         self.canvas_size = canvas_size;
         self.canvas_buf = crate::util::BufferObj::create_empty_storage_buffer(
             &self.app.device,
-            (canvas_size.width * canvas_size.height * 12) as u64,
+            (canvas_size.x * canvas_size.y * 12) as u64,
             false,
             Some("canvas_buf"),
         );
@@ -115,11 +115,11 @@ impl SimuverseApp {
         self.egui_layer.on_ui_event(event);
     }
 
-    pub fn on_click(&mut self, pos: app_surface::math::Position) {
+    pub fn on_click(&mut self, pos: glam::Vec2) {
         self.simulator.on_click(&self.app, pos);
     }
 
-    pub fn touch_move(&mut self, pos: app_surface::math::Position) {
+    pub fn touch_move(&mut self, pos: glam::Vec2) {
         self.simulator.touch_move(&self.app, pos);
     }
 

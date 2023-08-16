@@ -5,7 +5,6 @@ use crate::{
     util::BufferObj,
     FieldAnimationType, SettingObj, Simulator,
 };
-use app_surface::math::{Position, Size};
 use wgpu::TextureFormat;
 
 use crate::create_shader_module;
@@ -14,7 +13,7 @@ use crate::create_shader_module;
 pub struct FluidSimulator {
     lattice: wgpu::Extent3d,
     lattice_pixel_size: u32,
-    pre_pos: Position,
+    pre_pos: glam::Vec2,
     fluid_compute_node: D2Q9Node,
     _curl_cal_node: ComputeNode,
     particle_update_node: ComputeNode,
@@ -25,7 +24,7 @@ pub struct FluidSimulator {
 impl FluidSimulator {
     pub fn new(
         app: &app_surface::AppSurface,
-        canvas_size: Size<u32>,
+        canvas_size: glam::UVec2,
         canvas_buf: &BufferObj,
         setting: &SettingObj,
     ) -> Self {
@@ -123,7 +122,7 @@ impl FluidSimulator {
         FluidSimulator {
             lattice,
             lattice_pixel_size: fluid_compute_node.lattice_pixel_size,
-            pre_pos: Position::new(0.0, 0.0),
+            pre_pos: glam::Vec2::ZERO,
             fluid_compute_node,
             _curl_cal_node: curl_cal_node,
             particle_update_node,
@@ -134,7 +133,7 @@ impl FluidSimulator {
 }
 
 impl Simulator for FluidSimulator {
-    fn on_click(&mut self, app: &app_surface::AppSurface, pos: Position) {
+    fn on_click(&mut self, app: &app_surface::AppSurface, pos: glam::Vec2) {
         if pos.x <= 0.0 || pos.y <= 0.0 {
             return;
         }
@@ -152,15 +151,15 @@ impl Simulator for FluidSimulator {
     }
 
     fn touch_begin(&mut self, _app: &app_surface::AppSurface) {
-        self.pre_pos = Position::new(0.0, 0.0);
+        self.pre_pos = glam::Vec2::ZERO;
     }
 
-    fn touch_move(&mut self, app: &app_surface::AppSurface, pos: Position) {
+    fn touch_move(&mut self, app: &app_surface::AppSurface, pos: glam::Vec2) {
         if pos.x <= 0.0 || pos.y <= 0.0 {
-            self.pre_pos = Position::zero();
+            self.pre_pos = glam::Vec2::ZERO;
             return;
         }
-        let dis = pos.distance(&self.pre_pos);
+        let dis = pos.distance(self.pre_pos);
         if (self.pre_pos.x == 0.0 && self.pre_pos.y == 0.0) || dis > 300.0 {
             self.pre_pos = pos;
             return;
@@ -211,7 +210,7 @@ impl Simulator for FluidSimulator {
         self.fluid_compute_node
             .reset_lattice_info(&app.device, &app.queue);
 
-        self.pre_pos = Position::new(0.0, 0.0);
+        self.pre_pos = glam::Vec2::ZERO;
     }
 
     fn compute(&mut self, encoder: &mut wgpu::CommandEncoder) {

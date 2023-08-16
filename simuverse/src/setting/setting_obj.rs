@@ -1,9 +1,8 @@
 use crate::util::BufferObj;
 use crate::{get_particles_data, FieldAnimationType, ParticleColorType, ParticleUniform, SimuType};
-use app_surface::math::Size;
 
 pub struct SettingObj {
-    canvas_size: Size<u32>,
+    canvas_size: glam::UVec2,
     pub simu_type: SimuType,
     pub animation_type: FieldAnimationType,
     pub color_ty: ParticleColorType,
@@ -73,7 +72,7 @@ impl SettingObj {
         }
     }
 
-    pub fn update_canvas_size(&mut self, app: &app_surface::AppSurface, canvas_size: Size<u32>) {
+    pub fn update_canvas_size(&mut self, app: &app_surface::AppSurface, canvas_size: glam::UVec2) {
         self.canvas_size = canvas_size;
         self.update_particles_data(app);
     }

@@ -8,7 +8,6 @@ use crate::{
     util::{AnyTexture, BufferObj},
     FieldAnimationType, FieldUniform, SettingObj,
 };
-use app_surface::math::{Position, Size};
 use wgpu::TextureFormat;
 
 pub struct D2Q9Node {
@@ -31,15 +30,15 @@ pub struct D2Q9Node {
 impl D2Q9Node {
     pub fn new(
         app: &app_surface::AppSurface,
-        canvas_size: Size<u32>,
+        canvas_size: glam::UVec2,
         setting: &SettingObj,
     ) -> Self {
         let device = &app.device;
         let queue = &app.queue;
         let lattice_pixel_size = (2.0 * app.scale_factor).ceil() as u32;
         let lattice = wgpu::Extent3d {
-            width: canvas_size.width / lattice_pixel_size,
-            height: canvas_size.height / lattice_pixel_size,
+            width: canvas_size.x / lattice_pixel_size,
+            height: canvas_size.y / lattice_pixel_size,
             depth_or_array_layers: 1,
         };
 
@@ -60,17 +59,17 @@ impl D2Q9Node {
             LbmUniform::new(tau, fluid_ty, (lattice.width * lattice.height) as i32);
 
         let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
-            (canvas_size.width as f32, canvas_size.height as f32).into(),
+            (canvas_size.x as f32, canvas_size.y as f32).into(),
             75.0 / 180.0 * std::f32::consts::PI,
         );
         let field_uniform_data = FieldUniform {
             lattice_size: [lattice.width as i32, lattice.height as i32],
             lattice_pixel_size: [lattice_pixel_size as f32, lattice_pixel_size as f32],
-            canvas_size: [canvas_size.width as i32, canvas_size.height as i32],
+            canvas_size: [canvas_size.x as i32, canvas_size.y as i32],
             proj_ratio: [sx, sy],
             ndc_pixel: [
-                sx * 2.0 / canvas_size.width as f32,
-                sy * 2.0 / canvas_size.height as f32,
+                sx * 2.0 / canvas_size.x as f32,
+                sy * 2.0 / canvas_size.y as f32,
             ],
             speed_ty: 1,
             _padding: 0.0,
@@ -216,7 +215,7 @@ impl D2Q9Node {
             vx: 0.0,
             vy: 0.0,
         };
-        let center = Position::new(x as f32 + 0.5, y as f32 + 0.5);
+        let center = glam::Vec2::new(x as f32 + 0.5, y as f32 + 0.5);
         let mut info: Vec<LatticeInfo> = vec![];
 
         let min_y = y - OBSTACLE_RADIUS as u32;
@@ -225,7 +224,7 @@ impl D2Q9Node {
             for x in 0..self.lattice.width {
                 let index = (self.lattice.width * y) + x;
                 if is_sd_sphere(
-                    &Position::new(x as f32 + 0.5, y as f32 + 0.5).minus(&center),
+                    &(glam::Vec2::new(x as f32 + 0.5, y as f32 + 0.5) - center),
                     OBSTACLE_RADIUS,
                 ) {
                     self.lattice_info_data[index as usize] = obstacle;
@@ -257,13 +256,19 @@ impl D2Q9Node {
         queue.submit(Some(encoder.finish()));
     }
 
-    pub fn add_external_force(&mut self, queue: &wgpu::Queue, pos: Position, pre_pos: Position) {
-        let dis = pos.distance(&pre_pos);
+    pub fn add_external_force(
+        &mut self,
+        queue: &wgpu::Queue,
+        pos: glam::Vec2,
+        pre_pos: glam::Vec2,
+    ) {
+        let dis = pos.distance(pre_pos);
         let mut force = 0.1 * (dis / 20.0);
         if force > 0.12 {
             force = 0.12;
         }
-        let ridian = pos.slope_ridian(&pre_pos);
+        // atan2 求出的θ取值范围是[-PI, PI]
+        let ridian = (pos.y - pre_pos.y).atan2(pos.x - pre_pos.x);
         let vx: f32 = force * ridian.cos();
         let vy = force * ridian.sin();
         let info: Vec<LatticeInfo> = vec![LatticeInfo {
@@ -274,8 +279,12 @@ impl D2Q9Node {
         }];
         let c = (dis / (self.lattice_pixel_size - 1) as f32).ceil();
         let step = dis / c;
+        // 基于斜率及距离，计算点的坐标
+        fn new_by_slope_n_dis(p: glam::Vec2, slope: f32, distance: f32) -> glam::Vec2 {
+            glam::Vec2::new(p.x + distance * slope.cos(), p.y + distance * slope.sin())
+        }
         for i in 0..c as i32 {
-            let p = pre_pos.new_by_slope_n_dis(ridian, step * i as f32).round();
+            let p = new_by_slope_n_dis(pre_pos, ridian, step * i as f32).round();
             let x = p.x as u32 / self.lattice_pixel_size;
             let y = p.y as u32 / self.lattice_pixel_size;
             if x < 1 || x >= self.lattice.width - 2 || y < 1 || y >= self.lattice.height - 2 {

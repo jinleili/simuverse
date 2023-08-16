@@ -1,5 +1,4 @@
 use crate::util::BufferObj;
-use app_surface::math::Size;
 use wgpu::util::DeviceExt;
 
 use crate::{create_shader_module, TrajectoryUniform};
@@ -15,7 +14,7 @@ pub struct ParticleRenderNode {
 
 #[allow(dead_code)]
 impl ParticleRenderNode {
-    pub fn new(app: &app_surface::AppSurface, point_size: f32, canvas_size: Size<u32>) -> Self {
+    pub fn new(app: &app_surface::AppSurface, point_size: f32, canvas_size: glam::UVec2) -> Self {
         let device = &app.device;
         let sampler = crate::util::load_texture::bilinear_sampler(device);
         // Render pipeline is incompatible with render pass
@@ -25,8 +24,8 @@ impl ParticleRenderNode {
             device,
             format,
             wgpu::Extent3d {
-                width: canvas_size.width,
-                height: canvas_size.height,
+                width: canvas_size.x,
+                height: canvas_size.y,
                 depth_or_array_layers: 2,
             },
             Some(wgpu::TextureViewDimension::D2Array),
@@ -53,8 +52,8 @@ impl ParticleRenderNode {
         }
         let uniform_data = TrajectoryUniform {
             screen_factor: [
-                2.0 / canvas_size.width as f32,
-                2.0 / canvas_size.height as f32,
+                2.0 / canvas_size.x as f32,
+                2.0 / canvas_size.y as f32,
             ],
             trajectory_view_index: 0,
             bg_view_index: 1,

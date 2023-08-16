@@ -41,7 +41,7 @@ impl ControlPanel {
             lifetime as f32,
             particle_size,
         );
-        setting.update_canvas_size(app, (&app.config).into());
+        setting.update_canvas_size(app, glam::UVec2::new(app.config.width, app.config.height));
 
         let margin = 8.0;
         let panel_width = 320.0;
@@ -116,7 +116,7 @@ impl ControlPanel {
                 self.lifetime as f32,
                 self.particle_size,
             );
-            setting.update_canvas_size(app, (&app.config).into());
+            setting.update_canvas_size(app, glam::UVec2::new(app.config.width, app.config.height));
             self.setting = setting;
 
             simu_ty_changed = true;

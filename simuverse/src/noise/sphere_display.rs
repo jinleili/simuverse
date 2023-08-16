@@ -27,8 +27,9 @@ impl SphereDisplay {
         permulation_buf: &BufferObj,
         gradient_buf: &BufferObj,
     ) -> Self {
-        let (p_matrix, mut mv_matrix, _factor) =
-            crate::util::matrix_helper::perspective_mvp((&app.config).into());
+        let (p_matrix, mut mv_matrix, _factor) = crate::util::matrix_helper::perspective_mvp(
+            glam::Vec2::new(app.config.width as f32, app.config.height as f32),
+        );
         let transelate = glam::Mat4::from_translation(glam::Vec3::new(0., 0., -1.));
         mv_matrix *= transelate;
 

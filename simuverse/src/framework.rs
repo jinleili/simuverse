@@ -1,4 +1,3 @@
-use app_surface::math::Position;
 use winit::{
     dpi::PhysicalSize,
     event::*,
@@ -163,7 +162,7 @@ impl crate::SimuverseApp {
 
     fn start_event_loop(event_loop: EventLoop<CustomJsTriggerEvent>, instance: Self) {
         let mut app = instance;
-        let mut last_touch_point = Position::zero();
+        let mut last_touch_point = glam::Vec2::ZERO;
         event_loop.run(move |event, _, control_flow| {
             match event {
                 Event::WindowEvent {
@@ -214,7 +213,7 @@ impl crate::SimuverseApp {
                         WindowEvent::CursorMoved { position, .. } => {
                             app.cursor_moved(*position);
 
-                            last_touch_point = Position::new(position.x as f32, position.y as f32);
+                            last_touch_point = glam::Vec2::new(position.x as f32, position.y as f32);
                             app.touch_move(last_touch_point);
                         }
                         WindowEvent::MouseWheel { delta, phase, .. } => {

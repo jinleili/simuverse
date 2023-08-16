@@ -4,7 +4,7 @@ use crate::util::{vertex::PosParticleIndex, BufferObj};
 
 use super::{ClothFabric, ClothUniform, MeshColoringObj};
 
-use app_surface::{math::Size, AppSurface};
+use app_surface::AppSurface;
 
 pub struct Cloth {
     mvp_uniform_data: crate::MVPMatUniform,
@@ -31,7 +31,8 @@ pub struct Cloth {
 
 impl Cloth {
     pub fn new(app_view: &AppSurface, fabric: ClothFabric, _texture: Option<&AnyTexture>) -> Self {
-        let viewport_size: Size<f32> = (&app_view.config).into();
+        let viewport_size =
+            glam::Vec2::new(app_view.config.width as f32, app_view.config.height as f32);
         let mvp_uniform_data = Self::get_mvp_uniform_data(viewport_size);
         let mvp_buf = BufferObj::create_uniform_buffer(&app_view.device, &mvp_uniform_data, None);
 
@@ -276,7 +277,10 @@ impl Cloth {
     }
 
     pub fn resize(&mut self, app: &app_surface::AppSurface) -> bool {
-        self.mvp_uniform_data = Self::get_mvp_uniform_data((&app.config).into());
+        self.mvp_uniform_data = Self::get_mvp_uniform_data(glam::Vec2::new(
+            app.config.width as f32,
+            app.config.height as f32,
+        ));
         app.queue.write_buffer(
             &self.mvp_buf.buffer,
             0,
@@ -347,7 +351,7 @@ impl Cloth {
         self.frame_count += 1;
     }
 
-    fn get_mvp_uniform_data(viewport: Size<f32>) -> crate::MVPMatUniform {
+    fn get_mvp_uniform_data(viewport: glam::Vec2) -> crate::MVPMatUniform {
         let (proj_mat, mut mv_mat, _factor) = crate::util::matrix_helper::perspective_mvp(viewport);
         mv_mat *= glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -0.4));
         crate::MVPMatUniform {

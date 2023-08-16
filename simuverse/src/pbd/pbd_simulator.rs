@@ -1,6 +1,5 @@
 use super::{Cloth, ClothFabric};
 use crate::{util::AnyTexture, Simulator};
-use app_surface::math::Size;
 use app_surface::AppSurface;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{sync::mpsc, thread};
@@ -13,7 +12,7 @@ pub struct PBDSimulator {
 
 impl PBDSimulator {
     pub fn new(app: &AppSurface, _texture: Option<&AnyTexture>) -> Self {
-        let viewport_size: Size<f32> = (&app.config).into();
+        let viewport_size = glam::Vec2::new(app.config.width as f32, app.config.height as f32);
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -90,13 +89,13 @@ impl Simulator for PBDSimulator {
     }
 }
 
-fn create_cloth_fabric(viewport_size: Size<f32>) -> ClothFabric {
-    let horizontal_pixel = viewport_size.width;
+fn create_cloth_fabric(viewport_size: glam::Vec2) -> ClothFabric {
+    let horizontal_pixel = viewport_size.x;
     let vertical_pixel = horizontal_pixel;
 
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
     let factor = crate::util::matrix_helper::fullscreen_factor(viewport_size, fovy);
-    let a_pixel_on_ndc = factor.1 / viewport_size.width;
+    let a_pixel_on_ndc = factor.1 / viewport_size.x;
 
     let particle_x_num = 50;
     let particle_y_num = 50;

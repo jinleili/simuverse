@@ -64,6 +64,6 @@ pub struct TickTock {
     _pading1: i32,
 }
 
-fn is_sd_sphere(p: &app_surface::math::Position, r: f32) -> bool {
+fn is_sd_sphere(p: &glam::Vec2, r: f32) -> bool {
     p.length() <= r
 }

@@ -1,6 +1,5 @@
 use super::{is_sd_sphere, OBSTACLE_RADIUS};
 use crate::FieldAnimationType;
-use app_surface::math::Position;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -33,9 +32,9 @@ pub fn init_lattice_material(
         lattice_size.height,
         lattice_size.depth_or_array_layers,
     );
-    let s0 = Position::new(nx as f32 / 7.0 - OBSTACLE_RADIUS, ny as f32 / 2.0);
-    let s1 = Position::new(nx as f32 / 5.0, ny as f32 / 4.0);
-    let s2 = Position::new(nx as f32 / 5.0, ny as f32 * 0.75);
+    let s0 = glam::Vec2::new(nx as f32 / 7.0 - OBSTACLE_RADIUS, ny as f32 / 2.0);
+    let s1 = glam::Vec2::new(nx as f32 / 5.0, ny as f32 / 4.0);
+    let s2 = glam::Vec2::new(nx as f32 / 5.0, ny as f32 * 0.75);
     for z in 0..nz {
         for y in 0..ny {
             for x in 0..nx {
@@ -72,10 +71,10 @@ pub fn init_lattice_material(
                             material = LatticeType::Outlet as i32;
                         } else {
                             // obstacle
-                            let p = Position::new(x as f32, y as f32);
-                            if is_sd_sphere(&p.minus(&s0), OBSTACLE_RADIUS)
-                                || is_sd_sphere(&p.minus(&s1), OBSTACLE_RADIUS)
-                                || is_sd_sphere(&p.minus(&s2), OBSTACLE_RADIUS)
+                            let p = glam::Vec2::new(x as f32, y as f32);
+                            if is_sd_sphere(&(p - s0), OBSTACLE_RADIUS)
+                                || is_sd_sphere(&(p - s1), OBSTACLE_RADIUS)
+                                || is_sd_sphere(&(p - s2), OBSTACLE_RADIUS)
                             {
                                 material = LatticeType::Obstacle as i32;
                             }

@@ -1,16 +1,14 @@
-use app_surface::math::Size;
-
 // 将[-1, 1]的矩形空间映射到刚好填充整个视口
-pub fn perspective_fullscreen_mvp(viewport: Size<f32>) -> (glam::Mat4, glam::Mat4) {
+pub fn perspective_fullscreen_mvp(viewport: glam::Vec2) -> (glam::Mat4, glam::Mat4) {
     let (p_matrix, vm_matrix, factor) = perspective_mvp(viewport);
     let scale_matrix = glam::Mat4::from_scale(glam::Vec3::new(factor.1, factor.2, 1.0));
 
     (p_matrix, vm_matrix * scale_matrix)
 }
 
-pub fn perspective_mvp(viewport: Size<f32>) -> (glam::Mat4, glam::Mat4, (f32, f32, f32)) {
+pub fn perspective_mvp(viewport: glam::Vec2) -> (glam::Mat4, glam::Mat4, (f32, f32, f32)) {
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
-    let p_matrix = glam::Mat4::perspective_rh(fovy, viewport.width / viewport.height, 0.1, 100.0);
+    let p_matrix = glam::Mat4::perspective_rh(fovy, viewport.x / viewport.y, 0.1, 100.0);
 
     let factor = fullscreen_factor(viewport, fovy);
     let vm_matrix = glam::Mat4::from_translation(glam::vec3(0.0, 0.0, factor.0));
@@ -18,7 +16,7 @@ pub fn perspective_mvp(viewport: Size<f32>) -> (glam::Mat4, glam::Mat4, (f32, f3
     (p_matrix, vm_matrix, (factor.1, factor.2, factor.0))
 }
 
-pub fn fullscreen_factor(viewport: Size<f32>, fovy: f32) -> (f32, f32, f32) {
+pub fn fullscreen_factor(viewport: glam::Vec2, fovy: f32) -> (f32, f32, f32) {
     // 缩放到贴合屏幕
     //
     // 移动近裁剪平面,屏幕上的投影并不会缩放,
@@ -29,12 +27,12 @@ pub fn fullscreen_factor(viewport: Size<f32>, fovy: f32) -> (f32, f32, f32) {
     let mut sx = 1.0;
     let mut sy = 1.0;
 
-    let ratio = if viewport.height > viewport.width {
-        let ratio = viewport.height / viewport.width;
+    let ratio = if viewport.y > viewport.x {
+        let ratio = viewport.y / viewport.x;
         sy = ratio;
         ratio
     } else {
-        sx = viewport.width / viewport.height;
+        sx = viewport.x / viewport.y;
         1.0
     };
     let translate_z = -(ratio / (fovy / 2.0).tan());
@@ -43,7 +41,7 @@ pub fn fullscreen_factor(viewport: Size<f32>, fovy: f32) -> (f32, f32, f32) {
 }
 
 #[allow(dead_code)]
-pub fn ortho_mvp(viewport_size: Size<f32>) -> [[f32; 4]; 4] {
+pub fn ortho_mvp(viewport_size: glam::Vec2) -> [[f32; 4]; 4] {
     let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
     let factor = fullscreen_factor(viewport_size, fovy);
     let p_matrix = glam::Mat4::orthographic_rh(

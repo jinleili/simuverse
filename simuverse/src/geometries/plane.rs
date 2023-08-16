@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
-use crate::util::vertex::{PosUv, PosUv2};
-use app_surface::math::Rect;
+use crate::util::vertex::PosUv;
 
 pub struct Plane {
     width: f32,
@@ -35,46 +34,6 @@ impl Plane {
         }
     }
 
-    // 指定矩形坐标区域来生成平面对象
-    pub fn new_by_rect(rect: Rect, h_segments: u32, v_segments: u32) -> Self {
-        Plane {
-            width: rect.width,
-            height: rect.height,
-            x_offset: rect.x,
-            y_offset: rect.y,
-            h_segments,
-            v_segments,
-        }
-    }
-
-    // 支持指定纹理区域
-    pub fn generate_vertices_by_texcoord(&self, tex_rect: Rect) -> (Vec<PosUv>, Vec<u32>) {
-        let segment_width = self.width / self.h_segments as f32;
-        let segment_height = self.height / self.v_segments as f32;
-        let h_gap = tex_rect.width / (self.h_segments as f32);
-        let v_gap = tex_rect.height / (self.v_segments as f32);
-
-        let mut vertices: Vec<PosUv> = Vec::new();
-
-        // 从左下角开始，按列遍历
-        // 下边的写法等同于 for (let h=0; h<(h_segments + 1); h++) {}
-        for h in 0..=self.h_segments {
-            let x: f32 = self.most_left_x() + segment_width * (h as f32);
-            let tex_coord_u: f32 = tex_rect.x + h_gap * (h as f32);
-
-            for v in 0..=self.v_segments {
-                let y: f32 = self.most_bottom_y() + segment_height * (v as f32);
-                let tex_coord_v: f32 = tex_rect.y + tex_rect.height - v_gap * (v as f32);
-                vertices.push(PosUv {
-                    pos: [x, y, 0.0],
-                    uv: [tex_coord_u, tex_coord_v],
-                });
-            }
-        }
-
-        (vertices, self.get_element_indices())
-    }
-
     //  最左边的 x 坐标
     fn most_left_x(&self) -> f32 {
         if self.x_offset != 0.0 {
@@ -92,60 +51,34 @@ impl Plane {
         }
     }
 
-    // 支持指定纹理区域
-    pub fn generate_vertices_by_texcoord2(
-        &self,
-        tex_rect: Rect,
-        rect2: Option<Rect>,
-    ) -> (Vec<PosUv2>, Vec<u32>) {
+    pub fn generate_vertices(&self) -> (Vec<PosUv>, Vec<u32>) {
+        // z，w 表示宽高
+        let tex_rect = glam::Vec4::new(0.0, 0.0, 1.0, 1.0);
         let segment_width = self.width / self.h_segments as f32;
         let segment_height = self.height / self.v_segments as f32;
-        let h_gap = tex_rect.width / (self.h_segments as f32);
-        let v_gap = tex_rect.height / (self.v_segments as f32);
-        let (h_gap1, v_gap1, rect2_x, rect2_y) = if let Some(rect2) = rect2 {
-            (
-                rect2.width / (self.h_segments as f32),
-                rect2.height / (self.v_segments as f32),
-                rect2.x,
-                rect2.y,
-            )
-        } else {
-            (
-                1.0 / (self.h_segments as f32),
-                1.0 / (self.v_segments as f32),
-                0.0,
-                0.0,
-            )
-        };
+        let h_gap = tex_rect.z / (self.h_segments as f32);
+        let v_gap = tex_rect.w / (self.v_segments as f32);
 
-        let mut vertices: Vec<PosUv2> = Vec::new();
+        let mut vertices: Vec<PosUv> = Vec::new();
 
         // 从左下角开始，按列遍历
         // 下边的写法等同于 for (let h=0; h<(h_segments + 1); h++) {}
         for h in 0..=self.h_segments {
             let x: f32 = self.most_left_x() + segment_width * (h as f32);
             let tex_coord_u: f32 = tex_rect.x + h_gap * (h as f32);
-            let tex_coord_u1: f32 = rect2_x + h_gap1 * (h as f32);
 
             for v in 0..=self.v_segments {
                 let y: f32 = self.most_bottom_y() + segment_height * (v as f32);
-                let tex_coord_v: f32 = tex_rect.y + v_gap * (self.v_segments - v) as f32;
-                let tex_coord_v1: f32 = rect2_y + v_gap1 * (self.v_segments - v) as f32;
-
-                vertices.push(PosUv2 {
+                let tex_coord_v: f32 = tex_rect.y + tex_rect.w - v_gap * (v as f32);
+                // println!("tex_coord: {}, {} ", tex_coord_u, tex_coord_v);
+                vertices.push(PosUv {
                     pos: [x, y, 0.0],
-                    uv0: [tex_coord_u, tex_coord_v],
-                    uv1: [tex_coord_u1, tex_coord_v1],
+                    uv: [tex_coord_u, tex_coord_v],
                 });
             }
         }
 
         (vertices, self.get_element_indices())
-        // (vertices, self.get_line_indices())
-    }
-
-    pub fn generate_vertices(&self) -> (Vec<PosUv>, Vec<u32>) {
-        self.generate_vertices_by_texcoord(Rect::from_origin_n_size(0.0, 0.0, 1.0, 1.0))
     }
 
     // 返回的是线段列表，而不是线段条带

@@ -1,7 +1,7 @@
 use crate::node::{BindGroupData, BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
 use crate::{FieldUniform, SettingObj, Simulator};
-use app_surface::{math::Size, AppSurface};
+use app_surface::AppSurface;
 use wgpu::CommandEncoderDescriptor;
 
 use crate::{create_shader_module, insert_code_then_create};
@@ -21,35 +21,34 @@ impl FieldSimulator {
     pub fn new(
         app: &app_surface::AppSurface,
         canvas_format: wgpu::TextureFormat,
-        canvas_size: Size<u32>,
+        canvas_size: glam::UVec2,
         canvas_buf: &BufferObj,
         setting: &SettingObj,
     ) -> Self {
         let pixel_distance = 4;
-        let field_size: app_surface::math::Size<u32> = (
-            canvas_size.width / pixel_distance,
-            canvas_size.height / pixel_distance,
-        )
-            .into();
+        let field_size = glam::UVec2::new(
+            canvas_size.x / pixel_distance,
+            canvas_size.y / pixel_distance,
+        );
 
         let field_workgroup_count = (
-            (field_size.width + 15) / 16,
-            (field_size.height + 15) / 16,
+            (field_size.x + 15) / 16,
+            (field_size.y + 15) / 16,
             1,
         );
         let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
-            (canvas_size.width as f32, canvas_size.height as f32).into(),
+            (canvas_size.x as f32, canvas_size.y as f32).into(),
             75.0 / 180.0 * std::f32::consts::PI,
         );
 
         let field_uniform_data = FieldUniform {
-            lattice_size: [field_size.width as i32, field_size.height as i32],
+            lattice_size: [field_size.x as i32, field_size.y as i32],
             lattice_pixel_size: [pixel_distance as f32; 2],
-            canvas_size: [canvas_size.width as i32, canvas_size.height as i32],
+            canvas_size: [canvas_size.x as i32, canvas_size.y as i32],
             proj_ratio: [sx, sy],
             ndc_pixel: [
-                sx * 2.0 / canvas_size.width as f32,
-                sy * 2.0 / canvas_size.height as f32,
+                sx * 2.0 / canvas_size.x as f32,
+                sy * 2.0 / canvas_size.y as f32,
             ],
             speed_ty: 0,
             _padding: 0.0,
@@ -61,7 +60,7 @@ impl FieldSimulator {
         );
         let field_buf = BufferObj::create_empty_storage_buffer(
             &app.device,
-            (field_size.width * field_size.height * 16) as u64,
+            (field_size.x * field_size.y * 16) as u64,
             false,
             Some("field buf"),
         );

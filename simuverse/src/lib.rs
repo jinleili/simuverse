@@ -1,4 +1,3 @@
-use app_surface::math::{Position, Size};
 use app_surface::AppSurface;
 use std::usize;
 
@@ -66,10 +65,10 @@ use winit::{
 pub trait Simulator {
     fn update_uniforms(&mut self, _app: &AppSurface, _setting: &crate::SettingObj) {}
 
-    fn on_click(&mut self, _app: &AppSurface, _pos: Position) {}
+    fn on_click(&mut self, _app: &AppSurface, _pos: glam::Vec2) {}
 
     fn touch_begin(&mut self, _app: &AppSurface) {}
-    fn touch_move(&mut self, _app: &AppSurface, _pos: Position) {}
+    fn touch_move(&mut self, _app: &AppSurface, _pos: glam::Vec2) {}
     fn touch_end(&mut self, _app: &AppSurface) {}
 
     fn mouse_input(&mut self, _app: &AppSurface, _state: &ElementState, _button: &MouseButton) {}
@@ -240,11 +239,11 @@ use rand::{prelude::Distribution, Rng};
 
 const MAX_PARTICLE_COUNT: usize = 205000;
 fn get_particles_data(
-    canvas_size: Size<u32>,
+    canvas_size: glam::UVec2,
     count: i32,
     life_time: f32,
 ) -> (wgpu::Extent3d, (u32, u32, u32), Vec<TrajectoryParticle>) {
-    let ratio = canvas_size.width as f32 / canvas_size.height as f32;
+    let ratio = canvas_size.x as f32 / canvas_size.y as f32;
     let x = (count as f32 * ratio).sqrt().ceil();
     let particles_size = wgpu::Extent3d {
         width: x as u32,
@@ -267,14 +266,14 @@ fn get_particles_data(
 }
 
 fn init_trajectory_particles(
-    canvas_size: Size<u32>,
+    canvas_size: glam::UVec2,
     num: wgpu::Extent3d,
     life_time: f32,
 ) -> Vec<TrajectoryParticle> {
     let mut data: Vec<TrajectoryParticle> = vec![];
     let mut rng = rand::thread_rng();
-    let step_x = canvas_size.width as f32 / (num.width - 1) as f32;
-    let step_y = canvas_size.height as f32 / (num.height - 1) as f32;
+    let step_x = canvas_size.x as f32 / (num.width - 1) as f32;
+    let step_y = canvas_size.y as f32 / (num.height - 1) as f32;
     let unif_x = rand::distributions::Uniform::new_inclusive(-step_x, step_x);
     let unif_y = rand::distributions::Uniform::new_inclusive(-step_y, step_y);
     let unif_life = rand::distributions::Uniform::new_inclusive(
