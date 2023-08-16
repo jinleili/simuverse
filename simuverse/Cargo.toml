@@ -3,7 +3,7 @@ name = "simuverse"
 version = "0.1.0"
 authors = ["Jinlei Li <jinleili0@outlook.com>"]
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.67"
 
 [dependencies]
 # 兼容 egui-winit

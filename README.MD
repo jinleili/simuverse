@@ -1,6 +1,6 @@
 # Simuverse
 
-![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.65-green.svg)
+![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.67-green.svg)
 [![Build Status](https://github.com/jinleili/simuverse/workflows/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jinleili/simuverse#license)
 
