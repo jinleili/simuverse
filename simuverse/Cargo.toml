@@ -6,16 +6,13 @@ edition = "2021"
 rust-version = "1.67"
 
 [dependencies]
-# 兼容 egui-winit
-app-surface = { git = "https://github.com/jinleili/wgpu-in-app", package = "app-surface", branch = "winit0.28" }
-# app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
-
+app-surface = { version = "0.3.3"}
 egui = { git = "https://github.com/emilk/egui", rev = "481f448", default-features = false }
 egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "481f448" }
 egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "481f448", default-features = false }
 
 webbrowser = { version = "0.8.3" }
-winit = { version = "0.28" }
+winit = { version = "0.28.7" }
 raw-window-handle = "0.5"
 wgpu = "0.17"
 # wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "7c25c00f" }
@@ -24,8 +21,8 @@ wgpu = "0.17"
 glam = "0.24"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
-bytemuck = "1.4"
-env_logger = "0.9"
+bytemuck = "1.14"
+env_logger = "0.10"
 log = "0.4"
 rand = "0.8"
 image = { version = "*" }
@@ -45,7 +42,7 @@ truck-polymesh = { version = "0.5.0" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 instant = { version = "0.1.12", features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
-console_log = "0.2.0"
+console_log = "1.0"
 js-sys = "0.3.64"
 reqwest = "0.11.15"
 wasm-bindgen = "0.2.87"
