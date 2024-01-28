@@ -85,7 +85,7 @@ impl EguiLayer {
         }
         self.egui_repaint -= 1;
 
-        let raw_input = self.egui_state.take_egui_input(app.view.as_ref().unwrap());
+        let raw_input = self.egui_state.take_egui_input(app.get_view());
         let full_output = self.ctx.run(raw_input, |ctx| {
             egui_app.ui_contents(ctx);
         });

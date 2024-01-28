@@ -24,7 +24,12 @@ impl SimuverseApp {
     pub async fn new(app: AppSurface, event_loop: &dyn HasDisplayHandle) -> Self {
         let mut app = app;
         let format = app.config.format.remove_srgb_suffix();
-        app.sdq.update_config_format(format);
+        // 设置一个最小 surface 大小，使得在 Web 环境，egui 面板能有合适的展示大小
+        let size = app.get_view().inner_size();
+        app.sdq.config.width = size.width.max(375);
+        app.sdq.config.height = size.height.max(500);
+        app.sdq.config.format = format;
+        app.surface.configure(&app.sdq.device, &app.sdq.config);
 
         // egui
         let egui_layer = EguiLayer::new(&app, event_loop, format);
