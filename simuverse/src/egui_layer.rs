@@ -4,7 +4,8 @@ use crate::{
     ControlPanel,
 };
 use app_surface::AppSurface;
-use raw_window_handle::HasRawDisplayHandle;
+use raw_window_handle::HasDisplayHandle;
+use winit::{event::WindowEvent, window::Window};
 
 pub struct EguiLayer {
     format: wgpu::TextureFormat,
@@ -22,7 +23,7 @@ pub struct EguiLayer {
 impl EguiLayer {
     pub fn new(
         app: &AppSurface,
-        event_loop: &dyn HasRawDisplayHandle,
+        display_target: &dyn HasDisplayHandle,
         format: wgpu::TextureFormat,
     ) -> Self {
         let shader = create_shader_module(&app.device, "egui_layer_compose", None);
@@ -35,8 +36,13 @@ impl EguiLayer {
         let ctx = egui::Context::default();
         crate::setup_custom_fonts(&ctx);
 
-        let mut egui_state = egui_winit::State::new(event_loop);
-        egui_state.set_pixels_per_point(app.scale_factor);
+        let egui_state = egui_winit::State::new(
+            ctx.clone(),
+            egui::ViewportId::default(),
+            display_target,
+            Some(app.scale_factor),
+            None,
+        );
         let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
 
         Self {
@@ -52,8 +58,8 @@ impl EguiLayer {
         }
     }
 
-    pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        let response = self.egui_state.on_event(&self.ctx, event);
+    pub fn on_ui_event(&mut self, window: &Window, event: &WindowEvent) {
+        let response = self.egui_state.on_window_event(window, event);
         self.egui_repaint = if response.consumed {
             20
         } else {
@@ -79,11 +85,11 @@ impl EguiLayer {
         }
         self.egui_repaint -= 1;
 
-        let raw_input = self.egui_state.take_egui_input(&app.view);
+        let raw_input = self.egui_state.take_egui_input(app.view.as_ref().unwrap());
         let full_output = self.ctx.run(raw_input, |ctx| {
             egui_app.ui_contents(ctx);
         });
-        let clipped_primitives = self.ctx.tessellate(full_output.shapes);
+        let clipped_primitives = self.ctx.tessellate(full_output.shapes, app.scale_factor);
         let textures_delta = full_output.textures_delta;
         let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
             size_in_pixels: [app.config.width, app.config.height],
@@ -109,11 +115,11 @@ impl EguiLayer {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
-                label: None,
+                ..Default::default()
             });
             // egui ui 渲染
             self.egui_renderer

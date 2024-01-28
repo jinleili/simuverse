@@ -12,7 +12,7 @@ pub struct CADObjViewer {
 impl CADObjViewer {
     pub fn new(app: &AppSurface, control_panel: &ControlPanel) -> Self {
         let render_texture = RenderTextureConfig {
-            canvas_size: app.view.inner_size().into(),
+            canvas_size: app.get_view().inner_size().into(),
             format: app.config.format,
         };
         let desc = SceneDescriptor {

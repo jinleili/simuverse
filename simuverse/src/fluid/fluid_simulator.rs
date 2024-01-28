@@ -216,6 +216,7 @@ impl Simulator for FluidSimulator {
     fn compute(&mut self, encoder: &mut wgpu::CommandEncoder) {
         let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             label: Some("fluid solver"),
+            ..Default::default()
         });
 
         for _ in 0..1 {

@@ -269,10 +269,10 @@ impl ControlPanel {
             ui.selectable_value(&mut self.selected_code_snippet, Some(3), "黑洞");
         });
 
-        let theme = crate::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
 
         let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
-            let mut layout_job = crate::syntax_highlighting::highlight(
+            let mut layout_job = egui_extras::syntax_highlighting::highlight(
                 ui.ctx(),
                 &theme,
                 &crate::remove_leading_indentation(string),
@@ -281,10 +281,12 @@ impl ControlPanel {
             layout_job.wrap.max_width = wrap_width;
             ui.fonts(|f| f.layout_job(layout_job))
         };
-
-        crate::syntax_highlighting::code_view_ui(
+        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+        egui_extras::syntax_highlighting::code_view_ui(
             ui,
+            &theme,
             "fn get_velocity(p: vec2<i32>) -> vec2<f32> {",
+            "rs",
         );
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add(
@@ -297,8 +299,7 @@ impl ControlPanel {
                     .layouter(&mut layouter),
             );
         });
-        crate::syntax_highlighting::code_view_ui(ui, "}");
-
+        egui_extras::syntax_highlighting::code_view_ui(ui, &theme, "}", "rs");
         ui.collapsing("矢量场计算着色器源码", |ui| {
             egui::ScrollArea::both().show(ui, |ui| {
                 crate::show_code(

@@ -1,9 +1,8 @@
-#[allow(dead_code)]
-pub mod syntax_highlighting;
-
 pub(crate) fn show_code(ui: &mut egui::Ui, code: &str) {
     let code = remove_leading_indentation(code.trim_start_matches('\n'));
-    syntax_highlighting::code_view_ui(ui, &code);
+    let language = "rs";
+    let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+    egui_extras::syntax_highlighting::code_view_ui(ui, &theme, &code, language);
 }
 
 pub(crate) fn remove_leading_indentation(code: &str) -> String {

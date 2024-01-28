@@ -1,7 +1,8 @@
 use winit::{
     dpi::PhysicalSize,
     event::*,
-    event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
+    event_loop::{EventLoop, EventLoopBuilder, EventLoopWindowTarget},
+    keyboard::{Key, NamedKey},
     window::WindowBuilder,
 };
 
@@ -29,7 +30,7 @@ fn try_call_canvas_resize_completed() {
 }
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct CustomJsTriggerEvent {
     ty: &'static str,
     value: String,
@@ -68,7 +69,9 @@ impl crate::SimuverseApp {
     }
 
     async fn create_action_instance() -> (EventLoop<CustomJsTriggerEvent>, Self) {
-        let event_loop = EventLoopBuilder::<CustomJsTriggerEvent>::with_user_event().build();
+        let event_loop = EventLoopBuilder::<CustomJsTriggerEvent>::with_user_event()
+            .build()
+            .unwrap();
         #[cfg(target_arch = "wasm32")]
         let proxy = event_loop.create_proxy();
 
@@ -86,7 +89,7 @@ impl crate::SimuverseApp {
         let width = (height as f32 * 1.6) as u32;
 
         if cfg!(not(target_arch = "wasm32")) {
-            window.set_inner_size(PhysicalSize::new(width, height));
+            let _ = window.request_inner_size(PhysicalSize::new(width, height));
         }
 
         #[cfg(target_arch = "wasm32")]
@@ -97,18 +100,14 @@ impl crate::SimuverseApp {
             web_sys::window()
                 .and_then(|win| win.document())
                 .map(|doc| {
-                    let canvas = window.canvas();
-
+                    let canvas = window.canvas().unwrap();
+                    let scale_factor = window.scale_factor() as f32;
+                    let mut w = width as f32 / scale_factor;
+                    let mut h = height as f32 / scale_factor;
                     if let Some(container) = doc.get_element_by_id("simuverse_container") {
                         let rect = container.get_bounding_client_rect();
-                        let scale_factor = window.scale_factor();
-                        let w = rect.width() * scale_factor;
-                        let h = rect.height() * scale_factor;
-                        window.set_inner_size(PhysicalSize::new(w, h));
-                        canvas.style().set_css_text(
-                            &(canvas.style().css_text()
-                                + "background-color: black; display: block; margin: 0px;"),
-                        );
+                        w = rect.width() as f32;
+                        h = rect.height() as f32;
                         let _ = container.append_child(&web_sys::Element::from(canvas));
 
                         let target: web_sys::EventTarget = container.into();
@@ -134,15 +133,17 @@ impl crate::SimuverseApp {
                         }
                         call_back.forget();
                     } else {
-                        window.set_inner_size(PhysicalSize::new(width, height));
-                        let canvas = window.canvas();
-                        canvas.style().set_css_text(
-                            &(canvas.style().css_text()
-                                + "background-color: black; display: block; margin: 20px auto;"),
-                        );
                         doc.body()
                             .map(|body| body.append_child(&web_sys::Element::from(canvas)));
                     }
+                    // winit 0.29 开始，通过 request_inner_size, canvas.set_width 都无法设置 canvas 的大小
+                    let canvas = window.canvas().unwrap();
+                    canvas.set_width((w * scale_factor) as u32);
+                    canvas.set_height((h * scale_factor) as u32);
+                    canvas.style().set_css_text(
+                        &(canvas.style().css_text()
+                            + &format!("background-color: black; display: block; margin: 20px auto; width: {}px; max-width: {}px; height: {}px; max-height: {}px", w, w, h, h)),
+                    );
                 })
                 .expect("Couldn't append canvas to document body.");
         };
@@ -163,41 +164,42 @@ impl crate::SimuverseApp {
     fn start_event_loop(event_loop: EventLoop<CustomJsTriggerEvent>, instance: Self) {
         let mut app = instance;
         let mut last_touch_point = glam::Vec2::ZERO;
-        event_loop.run(move |event, _, control_flow| {
-            match event {
-                Event::WindowEvent {
-                    ref event,
-                    window_id,
-                } if window_id == app.current_window_id() => {
-                    app.on_ui_event(event);
+        cfg_if::cfg_if! {
+            if #[cfg(target_arch = "wasm32")] {
+                use winit::platform::web::EventLoopExtWebSys;
+                let event_loop_function = EventLoop::<CustomJsTriggerEvent>::spawn;
+            } else {
+                let event_loop_function = EventLoop::<CustomJsTriggerEvent>::run;
+            }
+        }
+        let _ = (event_loop_function)(
+            event_loop,
+            move |event: Event<CustomJsTriggerEvent>,
+                  elwt: &EventLoopWindowTarget<CustomJsTriggerEvent>| {
+                if event == Event::NewEvents(StartCause::Init) {
+                    app.start();
+                }
+                if let Event::WindowEvent { event, .. } = event {
+                    app.on_ui_event(&event);
                     match event {
-                        WindowEvent::CloseRequested
-                        | WindowEvent::KeyboardInput {
-                            input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                        WindowEvent::KeyboardInput {
+                            event:
+                                KeyEvent {
+                                    logical_key: Key::Named(NamedKey::Escape),
                                     ..
                                 },
                             ..
-                        } => *control_flow = ControlFlow::Exit,
+                        }
+                        | WindowEvent::CloseRequested => elwt.exit(),
                         WindowEvent::Resized(physical_size) => {
                             if physical_size.width == 0 || physical_size.height == 0 {
                                 // 处理最小化窗口的事件
                                 println!("Window minimized!");
                             } else {
-                                app.resize(physical_size);
+                                app.resize(&physical_size);
                                 #[cfg(target_arch = "wasm32")]
                                 try_call_canvas_resize_completed();
                             }
-                        }
-                        WindowEvent::ScaleFactorChanged {
-                            scale_factor: _,
-                            new_inner_size,
-                        } => {
-                            app.resize(new_inner_size);
-                            #[cfg(target_arch = "wasm32")]
-                            try_call_canvas_resize_completed();
                         }
                         WindowEvent::MouseInput {
                             device_id: _,
@@ -205,47 +207,30 @@ impl crate::SimuverseApp {
                             button,
                             ..
                         } => {
-                            app.mouse_input(state, button);
-                            if button == &MouseButton::Left && *state == ElementState::Pressed {
+                            app.mouse_input(&state, &button);
+                            if button == MouseButton::Left && state == ElementState::Pressed {
                                 app.on_click(last_touch_point);
                             }
                         }
                         WindowEvent::CursorMoved { position, .. } => {
-                            app.cursor_moved(*position);
+                            app.cursor_moved(position);
 
-                            last_touch_point = glam::Vec2::new(position.x as f32, position.y as f32);
+                            last_touch_point =
+                                glam::Vec2::new(position.x as f32, position.y as f32);
                             app.touch_move(last_touch_point);
                         }
                         WindowEvent::MouseWheel { delta, phase, .. } => {
-                            app.mouse_wheel(delta, phase)
+                            app.mouse_wheel(&delta, &phase)
+                        }
+                        WindowEvent::RedrawRequested => {
+                            app.render();
+                            // 除非我们手动请求，RedrawRequested 将只会触发一次。
+                            app.request_redraw();
                         }
                         _ => {}
                     }
                 }
-                #[cfg(target_arch = "wasm32")]
-                Event::UserEvent(event) => {
-                    if event.ty == CANVAS_SIZE_NEED_CHANGE {
-                        if let Some(doc) = web_sys::window().and_then(|win| win.document()) {
-                            if let Some(container) = doc.get_element_by_id("simuverse_container") {
-                                let window = app.get_view_mut();
-                                let rect = container.get_bounding_client_rect();
-                                let scale_factor = window.scale_factor();
-                                let w = rect.width() * scale_factor;
-                                let h = rect.height() * scale_factor;
-                                window.set_inner_size(PhysicalSize::new(w, h));
-                            }
-                        }
-                    }
-                }
-                Event::RedrawRequested(window_id) if window_id == app.current_window_id() => {
-                    app.render();
-                }
-                Event::RedrawEventsCleared => {
-                    // 除非我们手动请求，RedrawRequested 将只会触发一次。
-                    app.request_redraw();
-                }
-                _ => {}
-            }
-        });
+            },
+        );
     }
 }

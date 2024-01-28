@@ -86,10 +86,11 @@ impl BufferlessFullscreenNode {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: load_op,
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            ..Default::default()
         });
         self.draw_by_pass(&mut rpass);
     }

@@ -3,7 +3,7 @@ use crate::{
     FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
 };
 use app_surface::{AppSurface, SurfaceFrame};
-use raw_window_handle::HasRawDisplayHandle;
+use raw_window_handle::HasDisplayHandle;
 use std::iter;
 use wgpu::TextureView;
 use winit::dpi::PhysicalSize;
@@ -21,7 +21,7 @@ pub struct SimuverseApp {
 }
 
 impl SimuverseApp {
-    pub async fn new(app: AppSurface, event_loop: &dyn HasRawDisplayHandle) -> Self {
+    pub async fn new(app: AppSurface, event_loop: &dyn HasDisplayHandle) -> Self {
         let mut app = app;
         let format = app.config.format.remove_srgb_suffix();
         app.sdq.update_config_format(format);
@@ -78,12 +78,18 @@ impl SimuverseApp {
         self.app.adapter.get_info()
     }
 
-    pub fn get_view_mut(&mut self) -> &mut winit::window::Window {
-        &mut self.app.view
+    pub fn get_view(&mut self) -> &winit::window::Window {
+        self.app.get_view()
     }
 
     pub fn current_window_id(&self) -> WindowId {
-        self.app.view.id()
+        self.app.get_view().id()
+    }
+
+    pub fn start(&mut self) {
+        //  只有在进入事件循环之后，才有可能真正获取到窗口大小。
+        let size = self.app.get_view().inner_size();
+        self.resize(&size);
     }
 
     pub fn resize(&mut self, size: &PhysicalSize<u32>) {
@@ -111,8 +117,8 @@ impl SimuverseApp {
         }
     }
 
-    pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent<'_>) {
-        self.egui_layer.on_ui_event(event);
+    pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent) {
+        self.egui_layer.on_ui_event(self.app.get_view(), event);
     }
 
     pub fn on_click(&mut self, pos: glam::Vec2) {
@@ -142,7 +148,7 @@ impl SimuverseApp {
     }
 
     pub fn request_redraw(&mut self) {
-        self.app.view.request_redraw();
+        self.app.get_view().request_redraw();
     }
 
     pub fn render(&mut self) {
@@ -176,18 +182,18 @@ impl SimuverseApp {
                             b: 0.17,
                             a: 1.0,
                         }),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                     view: &self.depth_view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     }),
                     stencil_ops: None,
                 }),
-                label: None,
+                ..Default::default()
             });
             self.simulator
                 .draw_by_rpass(&self.app, &mut rpass, &mut self.ctrl_panel.setting);

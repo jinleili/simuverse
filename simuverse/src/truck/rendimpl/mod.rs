@@ -19,7 +19,7 @@ use std::sync::Arc;
 use wgpu::*;
 /// Re-exports `truck_polymesh`.
 pub mod polymesh {
-    pub use truck_polymesh::{base::*, PolygonMesh, PolylineCurve, StandardVertex, StructuredMesh};
+    pub use truck_polymesh::{base::*, PolygonMesh, PolylineCurve, StructuredMesh};
 }
 pub use polymesh::*;
 

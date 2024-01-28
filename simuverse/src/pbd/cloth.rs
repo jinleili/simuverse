@@ -307,6 +307,7 @@ impl Cloth {
         // 64*64，8 约束，迭代20 ：Xs Max, 12ms -> 8ms
         let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             label: Some("solver pass"),
+            ..Default::default()
         });
 
         let dynamic_offset = 256;

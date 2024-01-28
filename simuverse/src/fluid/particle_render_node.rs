@@ -51,10 +51,7 @@ impl ParticleRenderNode {
             );
         }
         let uniform_data = TrajectoryUniform {
-            screen_factor: [
-                2.0 / canvas_size.x as f32,
-                2.0 / canvas_size.y as f32,
-            ],
+            screen_factor: [2.0 / canvas_size.x as f32, 2.0 / canvas_size.y as f32],
             trajectory_view_index: 0,
             bg_view_index: 1,
         };
@@ -193,10 +190,11 @@ impl ParticleRenderNode {
                         b: 0.0,
                         a: 0.0,
                     }),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            ..Default::default()
         });
         // fade out previous frame trajectory
         rpass.set_pipeline(&self.fade_out_pipeline);
