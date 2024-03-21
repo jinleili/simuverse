@@ -3,10 +3,11 @@ name = "simuverse"
 version = "0.1.0"
 authors = ["Jinlei Li <jinleili0@outlook.com>"]
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.76"
 
 [dependencies]
 app-surface = { version = "0.4.1" }
+# app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
 egui = { git = "https://github.com/emilk/egui", rev = "5d0bc2b", default-features = false }
 egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "5d0bc2b" }
 egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "5d0bc2b" }
@@ -15,7 +16,7 @@ egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", re
 webbrowser = { version = "0.8.3" }
 winit = { version = "0.29.10" }
 raw-window-handle = "0.6"
-wgpu = "0.19"
+wgpu = "0.19.3"
 # wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "7c25c00f" }
 # wgpu = { path = "../../forks/wgpu/wgpu" }
 
