@@ -217,6 +217,7 @@ impl ViewNode {
                 module: attributes.shader_module,
                 entry_point: "vs_main",
                 buffers: &vertex_buffer_layouts,
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: attributes.shader_module,
@@ -226,6 +227,7 @@ impl ViewNode {
                     blend: attributes.color_blend_state,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState {
                 topology: attributes.primitive_topology,

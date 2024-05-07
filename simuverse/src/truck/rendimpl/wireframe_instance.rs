@@ -105,6 +105,7 @@ impl Rendered for WireFrameInstance {
                         shader_location: 0,
                     }],
                 }],
+                compilation_options: Default::default(),
             },
             fragment: Some(FragmentState {
                 module: &self.shaders.fragment_module,
@@ -114,6 +115,7 @@ impl Rendered for WireFrameInstance {
                     blend: Some(BlendState::REPLACE),
                     write_mask: ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: PrimitiveState {
                 topology: PrimitiveTopology::LineList,

@@ -32,6 +32,7 @@ impl BufferlessFullscreenNode {
                 module: shader_module,
                 entry_point: "vs_main",
                 buffers: &pipeline_vertex_buffers,
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: shader_module,
@@ -41,6 +42,7 @@ impl BufferlessFullscreenNode {
                     blend: blend_state,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             // the bufferless vertices are in clock-wise order
             primitive: wgpu::PrimitiveState {

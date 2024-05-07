@@ -150,6 +150,7 @@ impl Rendered for PolygonInstance {
                         },
                     ],
                 }],
+                compilation_options: Default::default(),
             },
             fragment: Some(FragmentState {
                 module: fragment_module,
@@ -159,6 +160,7 @@ impl Rendered for PolygonInstance {
                     blend,
                     write_mask: ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: PrimitiveState {
                 topology: PrimitiveTopology::TriangleList,

@@ -255,11 +255,13 @@ fn generate_pipeline(
             module: shader,
             entry_point: entry_points.0,
             buffers: &buffers,
+            compilation_options: Default::default(),
         },
         fragment: Some(wgpu::FragmentState {
             module: shader,
             entry_point: entry_points.1,
             targets: &targets,
+            compilation_options: Default::default(),
         }),
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleStrip,

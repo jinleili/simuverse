@@ -144,7 +144,7 @@ impl ControlPanel {
             .resizable(false)
             .collapsible(true)
             .title_bar(true)
-            .scroll2([false, true])
+            .scroll([false, true])
             .movable(false)
             .fixed_size(self.window_size)
             .frame(self.panel_frame)

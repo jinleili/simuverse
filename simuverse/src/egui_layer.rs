@@ -91,7 +91,7 @@ impl EguiLayer {
         });
         let clipped_primitives = self.ctx.tessellate(full_output.shapes, app.scale_factor);
         let textures_delta = full_output.textures_delta;
-        let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
+        let screen_descriptor = egui_wgpu::ScreenDescriptor {
             size_in_pixels: [app.config.width, app.config.height],
             pixels_per_point: app.scale_factor,
         };
