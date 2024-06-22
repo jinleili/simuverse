@@ -1,6 +1,6 @@
 [package]
 name = "simuverse"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jinlei Li <jinleili0@outlook.com>"]
 edition = "2021"
 rust-version = "1.76"
