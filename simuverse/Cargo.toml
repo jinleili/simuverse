@@ -8,10 +8,14 @@ rust-version = "1.76"
 [dependencies]
 app-surface = { version = "0.4.2" }
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
-egui = { git = "https://github.com/emilk/egui", rev = "ded8dbd", default-features = false }
-egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "ded8dbd" }
-egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "ded8dbd" }
-egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "ded8dbd", default-features = false }
+# egui = { git = "https://github.com/emilk/egui", rev = "ded8dbd", default-features = false }
+# egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "ded8dbd" }
+# egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "ded8dbd" }
+# egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "ded8dbd", default-features = false }
+egui = { version="0.28.1", default-features = false }
+egui_extras = { version="0.28.1" }
+egui-wgpu = { version="0.28.1" }
+egui-winit = { version="0.28.1", default-features = false }
 
 webbrowser = { version = "1.0.1" }
 # 需要 egui 先升级到 winit 0.30 后才能使用

@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, u32};
+use std::borrow::BorrowMut;
 
 use super::{init_lattice_material, is_sd_sphere, LatticeInfo, LatticeType, OBSTACLE_RADIUS};
 use crate::{

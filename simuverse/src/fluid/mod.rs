@@ -54,16 +54,6 @@ impl LbmUniform {
     }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct TickTock {
-    // A-A pattern lattice offset
-    read_offset: i32,
-    write_offset: i32,
-    _pading0: i32,
-    _pading1: i32,
-}
-
 fn is_sd_sphere(p: &glam::Vec2, r: f32) -> bool {
     p.length() <= r
 }

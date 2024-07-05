@@ -168,10 +168,10 @@ impl PolygonState {
     pub fn storage_bgl_entry() -> PreBindGroupLayoutEntry {
         PreBindGroupLayoutEntry {
             visibility: ShaderStages::FRAGMENT,
-            ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Storage { read_only: true },
+            ty: BindingType::Buffer {
+                ty: BufferBindingType::Storage { read_only: true },
                 has_dynamic_offset: false,
-                min_binding_size: wgpu::BufferSize::new(0),
+                min_binding_size: BufferSize::new(0),
             },
             count: None,
         }

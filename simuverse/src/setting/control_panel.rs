@@ -3,7 +3,7 @@ use crate::{
     SimuType,
 };
 use app_surface::AppSurface;
-use egui::{Color32, Context, Ui};
+use egui::{CollapsingHeader, Color32, Context, Ui};
 
 pub struct ControlPanel {
     pub setting: SettingObj,
@@ -43,12 +43,11 @@ impl ControlPanel {
         );
         setting.update_canvas_size(app, glam::UVec2::new(app.config.width, app.config.height));
 
-        let margin = 8.0;
         let panel_width = 320.0;
-        let panel_height = app.config.height as f32 / app.scale_factor - margin * 2.0;
+        let panel_height = 632.;
 
         // 实测出来的数值，避免圆角被裁剪
-        let window_size: egui::emath::Vec2 = [panel_width - 26.0, panel_height - 12.].into();
+        let window_size: egui::emath::Vec2 = [panel_width - 26.0, panel_height].into();
 
         let mut bg = egui_ctx.style().visuals.window_fill();
         bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 230);
@@ -300,11 +299,13 @@ impl ControlPanel {
             );
         });
         egui_extras::syntax_highlighting::code_view_ui(ui, &theme, "}", "rs");
-        ui.collapsing("矢量场计算着色器源码", |ui| {
-            egui::ScrollArea::both().show(ui, |ui| {
-                crate::show_code(
-                    ui,
-                    r#"
+        CollapsingHeader::new("矢量场计算着色器源码")
+            .default_open(true)
+            .show(ui, |ui| {
+                egui::ScrollArea::both().show(ui, |ui| {
+                    crate::show_code(
+                        ui,
+                        r#"
 struct FieldUniform {
   // 矢量场格子数
   lattice_size: vec2<i32>,
@@ -340,9 +341,9 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3<u32>) {
 }
   
     "#,
-                );
+                    );
+                });
             });
-        });
     }
 }
 

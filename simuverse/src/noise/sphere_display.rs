@@ -7,11 +7,6 @@ use crate::{
 use app_surface::AppSurface;
 use wgpu::ShaderStages;
 
-#[repr(C)]
-#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-struct TexDimention {
-    xy: [f32; 2],
-}
 pub struct SphereDisplay {
     gen_tex_node: ViewNode,
     p_matrix: glam::Mat4,

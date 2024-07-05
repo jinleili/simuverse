@@ -15,14 +15,6 @@ pub use pbd_simulator::PBDSimulator;
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-struct TriangleObj {
-    p0: i32,
-    p1: i32,
-    p2: i32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct FrameUniform {
     // 帧绘制计数
     frame_index: i32,

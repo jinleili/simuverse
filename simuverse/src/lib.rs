@@ -1,5 +1,4 @@
 use app_surface::AppSurface;
-use std::usize;
 
 mod simuverse_app;
 pub use simuverse_app::SimuverseApp;

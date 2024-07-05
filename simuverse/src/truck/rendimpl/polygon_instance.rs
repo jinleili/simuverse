@@ -106,7 +106,7 @@ impl Rendered for PolygonInstance {
             false => (&self.shaders.fragment_module, self.shaders.fragment_entry),
         };
         let cull_mode = match self.state.backface_culling {
-            true => Some(wgpu::Face::Back),
+            true => Some(Face::Back),
             false => None,
         };
         let blend = match self.state.material.alpha_blend {
@@ -117,7 +117,7 @@ impl Rendered for PolygonInstance {
             true => Some(DepthStencilState {
                 format: TextureFormat::Depth32Float,
                 depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
+                depth_compare: CompareFunction::Less,
                 stencil: Default::default(),
                 bias: Default::default(),
             }),
