@@ -43,7 +43,7 @@ impl EguiLayer {
             Some(app.scale_factor),
             None,
         );
-        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1);
+        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1, false);
 
         Self {
             format,

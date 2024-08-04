@@ -244,7 +244,7 @@ impl ControlPanel {
                 egui::ComboBox::from_label("")
                     .selected_text(get_color_ty_name(self.particle_color))
                     .show_ui(ui, |ui| {
-                        ui.style_mut().wrap = Some(false);
+                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
                         ui.set_min_width(60.0);
                         ui.selectable_value(&mut self.particle_color, 0, get_color_ty_name(0));
                         ui.selectable_value(&mut self.particle_color, 1, get_color_ty_name(1));

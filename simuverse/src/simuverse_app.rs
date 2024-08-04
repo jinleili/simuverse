@@ -10,7 +10,7 @@ use winit::dpi::PhysicalSize;
 use winit::window::WindowId;
 
 pub struct SimuverseApp {
-    app: AppSurface,
+    pub(crate) app_surface: AppSurface,
     egui_layer: EguiLayer,
     ctrl_panel: ControlPanel,
     canvas_size: glam::UVec2,
@@ -68,7 +68,7 @@ impl SimuverseApp {
         let depth_view = Self::create_depth_tex(&app);
 
         Self {
-            app,
+            app_surface: app,
             egui_layer,
             ctrl_panel,
             canvas_buf,
@@ -80,101 +80,108 @@ impl SimuverseApp {
     }
 
     pub fn get_adapter_info(&self) -> wgpu::AdapterInfo {
-        self.app.adapter.get_info()
+        self.app_surface.adapter.get_info()
     }
 
     pub fn get_view(&mut self) -> &winit::window::Window {
-        self.app.get_view()
+        self.app_surface.get_view()
     }
 
     pub fn current_window_id(&self) -> WindowId {
-        self.app.get_view().id()
+        self.app_surface.get_view().id()
     }
 
     pub fn start(&mut self) {
         //  只有在进入事件循环之后，才有可能真正获取到窗口大小。
-        let size = self.app.get_view().inner_size();
+        let size = self.app_surface.get_view().inner_size();
         self.resize(&size);
     }
 
     pub fn resize(&mut self, size: &PhysicalSize<u32>) {
-        if self.app.config.width == size.width && self.app.config.height == size.height {
+        if self.app_surface.config.width == size.width
+            && self.app_surface.config.height == size.height
+        {
             return;
         }
-        self.app.resize_surface();
-        self.depth_view = Self::create_depth_tex(&self.app);
-        self.egui_layer.resize(&self.app);
+        self.app_surface.resize_surface();
+        self.depth_view = Self::create_depth_tex(&self.app_surface);
+        self.egui_layer.resize(&self.app_surface);
 
-        let canvas_size = glam::UVec2::new(self.app.config.width, self.app.config.height);
+        let canvas_size = glam::UVec2::new(
+            self.app_surface.config.width,
+            self.app_surface.config.height,
+        );
         self.ctrl_panel
             .setting
-            .update_canvas_size(&self.app, canvas_size);
+            .update_canvas_size(&self.app_surface, canvas_size);
         self.canvas_size = canvas_size;
         self.canvas_buf = crate::util::BufferObj::create_empty_storage_buffer(
-            &self.app.device,
+            &self.app_surface.device,
             (canvas_size.x * canvas_size.y * 12) as u64,
             false,
             Some("canvas_buf"),
         );
 
-        if !self.simulator.resize(&self.app) {
+        if !self.simulator.resize(&self.app_surface) {
             self.create_simulator();
         }
     }
 
     pub fn on_ui_event(&mut self, event: &winit::event::WindowEvent) {
-        self.egui_layer.on_ui_event(self.app.get_view(), event);
+        self.egui_layer
+            .on_ui_event(self.app_surface.get_view(), event);
     }
 
     pub fn on_click(&mut self, pos: glam::Vec2) {
-        self.simulator.on_click(&self.app, pos);
+        self.simulator.on_click(&self.app_surface, pos);
     }
 
     pub fn touch_move(&mut self, pos: glam::Vec2) {
-        self.simulator.touch_move(&self.app, pos);
+        self.simulator.touch_move(&self.app_surface, pos);
     }
 
     pub fn cursor_moved(&mut self, position: winit::dpi::PhysicalPosition<f64>) {
-        self.simulator.cursor_moved(&self.app, position);
+        self.simulator.cursor_moved(&self.app_surface, position);
     }
     pub fn mouse_input(
         &mut self,
         state: &winit::event::ElementState,
         button: &winit::event::MouseButton,
     ) {
-        self.simulator.mouse_input(&self.app, state, button);
+        self.simulator.mouse_input(&self.app_surface, state, button);
     }
     pub fn mouse_wheel(
         &mut self,
         delta: &winit::event::MouseScrollDelta,
         touch_phase: &winit::event::TouchPhase,
     ) {
-        self.simulator.mouse_wheel(&self.app, delta, touch_phase);
+        self.simulator
+            .mouse_wheel(&self.app_surface, delta, touch_phase);
     }
 
     pub fn request_redraw(&mut self) {
-        self.app.get_view().request_redraw();
+        self.app_surface.get_view().request_redraw();
     }
 
     pub fn render(&mut self) {
-        let mut encoder = self
-            .app
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
+        let mut encoder =
+            self.app_surface
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Render Encoder"),
+                });
 
         // egui ui 更新
         let egui_app = &mut self.ctrl_panel;
-        let egui_cmd_buffers = self
-            .egui_layer
-            .refresh_ui(&self.app, egui_app, &mut encoder);
+        let egui_cmd_buffers =
+            self.egui_layer
+                .refresh_ui(&self.app_surface, egui_app, &mut encoder);
 
         self.simulator.compute(&mut encoder);
 
         let (output, frame_view) = self
-            .app
-            .get_current_frame_view(Some(self.app.config.format.remove_srgb_suffix()));
+            .app_surface
+            .get_current_frame_view(Some(self.app_surface.config.format.remove_srgb_suffix()));
         {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -200,20 +207,23 @@ impl SimuverseApp {
                 }),
                 ..Default::default()
             });
-            self.simulator
-                .draw_by_rpass(&self.app, &mut rpass, &mut self.ctrl_panel.setting);
+            self.simulator.draw_by_rpass(
+                &self.app_surface,
+                &mut rpass,
+                &mut self.ctrl_panel.setting,
+            );
 
             self.egui_layer.compose_by_pass(&mut rpass);
         }
 
         if let Some(egui_cmd_bufs) = egui_cmd_buffers {
-            self.app.queue.submit(
+            self.app_surface.queue.submit(
                 egui_cmd_bufs
                     .into_iter()
                     .chain(iter::once(encoder.finish())),
             );
         } else {
-            self.app.queue.submit(iter::once(encoder.finish()));
+            self.app_surface.queue.submit(iter::once(encoder.finish()));
         }
         output.present();
 
@@ -221,7 +231,7 @@ impl SimuverseApp {
     }
 
     fn create_simulator<'a, 'b: 'a>(&'b mut self) {
-        let app = &self.app;
+        let app = &self.app_surface;
         let canvas_size = self.canvas_size;
         let canvas_buf = &self.canvas_buf;
         let ctrl_panel = &self.ctrl_panel;
@@ -251,19 +261,21 @@ impl SimuverseApp {
     }
 
     fn update_setting(&mut self) {
-        let res = self.ctrl_panel.update_setting(&self.app);
+        let res = self.ctrl_panel.update_setting(&self.app_surface);
         if res.1 {
             // 改变了模拟类型
             self.create_simulator();
         } else if self.ctrl_panel.selected_simu_type == SimuType::Noise {
-            self.simulator.update_by(&self.app, &mut self.ctrl_panel);
+            self.simulator
+                .update_by(&self.app_surface, &mut self.ctrl_panel);
         } else {
             if let Some(workgroup_count) = res.0 {
                 // 更新了粒子数后，还须更新 workgroup count
                 self.simulator
-                    .update_workgroup_count(&self.app, workgroup_count);
+                    .update_workgroup_count(&self.app_surface, workgroup_count);
             }
-            self.simulator.update_by(&self.app, &mut self.ctrl_panel);
+            self.simulator
+                .update_by(&self.app_surface, &mut self.ctrl_panel);
         }
     }
 

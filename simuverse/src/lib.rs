@@ -3,7 +3,7 @@ use app_surface::AppSurface;
 mod simuverse_app;
 pub use simuverse_app::SimuverseApp;
 
-pub mod framework;
+pub mod app_handler;
 
 mod egui_lib;
 pub(crate) use egui_lib::*;

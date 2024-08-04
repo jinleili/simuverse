@@ -155,6 +155,7 @@ impl D2Q9Node {
                     module: &collide_stream_shader,
                     entry_point: "cs_main",
                     compilation_options: Default::default(),
+                    cache: None,
                 });
             let boundary_pipeline =
                 device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
@@ -163,6 +164,7 @@ impl D2Q9Node {
                     module: &boundary_shader,
                     entry_point: "cs_main",
                     compilation_options: Default::default(),
+                    cache: None,
                 });
             setting_nodes.push(setting_node);
             collide_stream_pipelines.push(collide_stream_pipeline);
