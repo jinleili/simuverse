@@ -201,7 +201,7 @@ impl ApplicationHandler for SimuverseAppHandler {
             } => {
                 app.as_mut().unwrap().mouse_input(&state, &button);
                 if button == MouseButton::Left && state == ElementState::Pressed {
-                    let point = self.last_touch_point.clone();
+                    let point = self.last_touch_point;
                     app.as_mut().unwrap().on_click(point);
                 }
             }
@@ -209,7 +209,7 @@ impl ApplicationHandler for SimuverseAppHandler {
                 app.as_mut().unwrap().cursor_moved(position);
 
                 let point = Vec2::new(position.x as f32, position.y as f32);
-                app.as_mut().unwrap().touch_move(point.clone());
+                app.as_mut().unwrap().touch_move(point);
                 self.last_touch_point = point;
             }
             WindowEvent::MouseWheel { delta, phase, .. } => {
