@@ -1,4 +1,4 @@
-use std::{sync::Mutex, thread};
+use std::{rc::Rc, sync::Mutex, thread};
 
 use crate::SimuverseApp;
 use app_surface::AppSurface;
@@ -71,7 +71,7 @@ struct SimuverseAppHandler {
     wait_cancelled: bool,
     close_requested: bool,
     last_touch_point: Vec2,
-    app: Arc<Mutex<Option<SimuverseApp>>>,
+    app: Rc<Mutex<Option<SimuverseApp>>>,
 }
 
 impl SimuverseAppHandler {
@@ -128,7 +128,7 @@ impl SimuverseAppHandler {
             simu_app.start();
             simu_app.app_surface.request_redraw();
 
-            self.app = Arc::new(Mutex::new(Some(simu_app)));
+            self.app = Rc::new(Mutex::new(Some(simu_app)));
         }
         #[cfg(target_arch = "wasm32")]
         {

@@ -25,7 +25,7 @@ wgpu = { version = "22.1", features = ["fragile-send-sync-non-atomic-wasm"] }
 glam = "0.28"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
-bytemuck = "1.15"
+bytemuck = "1.18"
 env_logger = "0.10"
 log = "0.4"
 rand = "0.8"
