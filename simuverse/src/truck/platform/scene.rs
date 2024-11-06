@@ -510,7 +510,7 @@ impl Scene {
                 continue;
             }
             rpass.set_pipeline(&object.pipeline);
-            rpass.set_bind_group(1, &object.bind_group, &[]);
+            rpass.set_bind_group(1, object.bind_group.as_ref(), &[]);
             rpass.set_vertex_buffer(0, object.vertex_buffer.buffer.slice(..));
             match object.index_buffer {
                 Some(ref index_buffer) => {

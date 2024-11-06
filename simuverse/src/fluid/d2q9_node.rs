@@ -153,7 +153,7 @@ impl D2Q9Node {
                     label: Some("collid_stream pipeline"),
                     layout: Some(&pipeline_layout),
                     module: &collide_stream_shader,
-                    entry_point: "cs_main",
+                    entry_point: Some("cs_main"),
                     compilation_options: Default::default(),
                     cache: None,
                 });
@@ -162,7 +162,7 @@ impl D2Q9Node {
                     label: Some("boundary_pipeline pipeline"),
                     layout: Some(&pipeline_layout),
                     module: &boundary_shader,
-                    entry_point: "cs_main",
+                    entry_point: Some("cs_main"),
                     compilation_options: Default::default(),
                     cache: None,
                 });

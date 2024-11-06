@@ -268,11 +268,12 @@ impl ControlPanel {
             ui.selectable_value(&mut self.selected_code_snippet, Some(3), "黑洞");
         });
 
-        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx(), &ui.style());
 
         let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
             let mut layout_job = egui_extras::syntax_highlighting::highlight(
                 ui.ctx(),
+                &ui.style(),
                 &theme,
                 &crate::remove_leading_indentation(string),
                 "rs",
@@ -280,7 +281,7 @@ impl ControlPanel {
             layout_job.wrap.max_width = wrap_width;
             ui.fonts(|f| f.layout_job(layout_job))
         };
-        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+        let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx(), &ui.style());
         egui_extras::syntax_highlighting::code_view_ui(
             ui,
             &theme,
@@ -353,7 +354,12 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
     fonts.font_data.insert(
         ZH_TINY.to_owned(),
-        egui::FontData::from_static(include_bytes!("../../../assets/fonts/PingFangTiny.ttf")),
+        egui::FontData::from_static(include_bytes!("../../../assets/fonts/PingFangTiny.ttf"))
+            .tweak(egui::FontTweak {
+                scale: 1.2,
+                ..Default::default()
+            })
+            .into(),
     );
     // Some good looking emojis.
     fonts.font_data.insert(
@@ -366,7 +372,8 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
             y_offset_factor: -0.15, // move it up
             y_offset: 0.0,
             ..Default::default()
-        }),
+        })
+        .into(),
     );
     // Bigger emojis, and more. <http://jslegers.github.io/emoji-icon-font/>:
     fonts.font_data.insert(
@@ -377,7 +384,8 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
                 y_offset_factor: 0.07, // move it down slightly
                 y_offset: 0.0,
                 ..Default::default()
-            }),
+            })
+            .into(),
     );
     fonts.families.insert(
         egui::FontFamily::Proportional,
@@ -388,7 +396,6 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
         ],
     );
 
-    // Put my font as last fallback for monospace:
     // 如果没有这项设置，`syntax_highlighting::code_view_ui` 无法渲染任何字符
     fonts
         .families

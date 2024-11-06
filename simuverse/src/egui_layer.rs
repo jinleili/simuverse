@@ -42,6 +42,7 @@ impl EguiLayer {
             display_target,
             Some(app.scale_factor),
             None,
+            None,
         );
         let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1, false);
 
@@ -109,18 +110,21 @@ impl EguiLayer {
             )
         };
         {
-            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &self.canvas.tex_view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                ..Default::default()
-            });
+            let mut rpass = encoder
+                .begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &self.canvas.tex_view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    ..Default::default()
+                })
+                .forget_lifetime();
+
             // egui ui 渲染
             self.egui_renderer
                 .render(&mut rpass, &clipped_primitives, &screen_descriptor);

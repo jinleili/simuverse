@@ -9,6 +9,7 @@ use std::vec::Vec;
 pub struct ComputeNode {
     pub bg_setting: BindGroupSetting,
     pub dy_uniform_bg: Option<DynamicUniformBindGroup>,
+    #[allow(dead_code)]
     pub pipeline_layout: wgpu::PipelineLayout,
     pub pipeline: wgpu::ComputePipeline,
     pub workgroup_count: (u32, u32, u32),
@@ -57,7 +58,7 @@ impl ComputeNode {
             label: None,
             layout: Some(&pipeline_layout),
             module: shader_module,
-            entry_point: "cs_main",
+            entry_point: Some("cs_main"),
             compilation_options: Default::default(),
             cache: None,
         });
@@ -106,7 +107,7 @@ impl ComputeNode {
             label: None,
             layout: Some(&pipeline_layout),
             module: shader_module,
-            entry_point: "cs_main",
+            entry_point: Some("cs_main"),
             compilation_options: Default::default(),
             cache: None,
         });

@@ -3,14 +3,17 @@ use crate::{
     FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
 };
 use app_surface::{AppSurface, SurfaceFrame};
-use raw_window_handle::HasDisplayHandle;
 use std::iter;
+use std::sync::Arc;
 use wgpu::TextureView;
 use winit::dpi::PhysicalSize;
-use winit::window::WindowId;
+use winit::window::{Window, WindowId};
 
 pub struct SimuverseApp {
     pub(crate) app_surface: AppSurface,
+    size: PhysicalSize<u32>,
+    size_changed: bool,
+    frame_count: u32,
     egui_layer: EguiLayer,
     ctrl_panel: ControlPanel,
     canvas_size: glam::UVec2,
@@ -21,18 +24,19 @@ pub struct SimuverseApp {
 }
 
 impl SimuverseApp {
-    pub async fn new(app: AppSurface, event_loop: &dyn HasDisplayHandle) -> Self {
-        let mut app = app;
+    pub async fn new(window: Arc<Window>) -> Self {
+        // 创建 wgpu 应用
+        let mut app = AppSurface::new(window.clone()).await;
         let format = app.config.format.remove_srgb_suffix();
         // 设置一个最小 surface 大小，使得在 Web 环境，egui 面板能有合适的展示大小
         let size = app.get_view().inner_size();
-        app.sdq.config.width = size.width.max(375);
-        app.sdq.config.height = size.height.max(500);
-        app.sdq.config.format = format;
-        app.surface.configure(&app.sdq.device, &app.sdq.config);
+        app.ctx.config.width = size.width.max(375);
+        app.ctx.config.height = size.height.max(500);
+        app.ctx.config.format = format;
+        app.surface.configure(&app.ctx.device, &app.ctx.config);
 
         // egui
-        let egui_layer = EguiLayer::new(&app, event_loop, format);
+        let egui_layer = EguiLayer::new(&app, &window, format);
         let ctrl_panel = ControlPanel::new(&app, &egui_layer.ctx);
 
         let canvas_size = glam::UVec2::new(app.config.width, app.config.height);
@@ -67,8 +71,13 @@ impl SimuverseApp {
         ));
         let depth_view = Self::create_depth_tex(&app);
 
+        let size = PhysicalSize::new(app.config.width, app.config.height);
+
         Self {
             app_surface: app,
+            size,
+            size_changed: true,
+            frame_count: 0,
             egui_layer,
             ctrl_panel,
             canvas_buf,
@@ -91,39 +100,47 @@ impl SimuverseApp {
         self.app_surface.get_view().id()
     }
 
-    pub fn start(&mut self) {
-        //  只有在进入事件循环之后，才有可能真正获取到窗口大小。
-        let size = self.app_surface.get_view().inner_size();
-        self.resize(&size);
-    }
-
-    pub fn resize(&mut self, size: &PhysicalSize<u32>) {
-        if self.app_surface.config.width == size.width
-            && self.app_surface.config.height == size.height
-        {
+    pub fn set_window_resized(&mut self, new_size: PhysicalSize<u32>) {
+        if self.size == new_size {
             return;
         }
-        self.app_surface.resize_surface();
-        self.depth_view = Self::create_depth_tex(&self.app_surface);
-        self.egui_layer.resize(&self.app_surface);
+        self.size = new_size;
+        self.size_changed = true;
+    }
 
-        let canvas_size = glam::UVec2::new(
-            self.app_surface.config.width,
-            self.app_surface.config.height,
-        );
-        self.ctrl_panel
-            .setting
-            .update_canvas_size(&self.app_surface, canvas_size);
-        self.canvas_size = canvas_size;
-        self.canvas_buf = crate::util::BufferObj::create_empty_storage_buffer(
-            &self.app_surface.device,
-            (canvas_size.x * canvas_size.y * 12) as u64,
-            false,
-            Some("canvas_buf"),
-        );
+    /// 必要的时候调整 surface 大小
+    ///
+    /// resize 在缩放窗口时会高频触发，所以需要限制 resize 的频率
+    fn resize_surface_if_needed(&mut self) {
+        if self.size_changed && self.frame_count > 10 {
+            //  需先 resize surface
+            self.app_surface
+                .resize_surface_by_size((self.size.width, self.size.height));
 
-        if !self.simulator.resize(&self.app_surface) {
-            self.create_simulator();
+            self.depth_view = Self::create_depth_tex(&self.app_surface);
+            self.egui_layer.resize(&self.app_surface);
+
+            let canvas_size = glam::UVec2::new(
+                self.app_surface.config.width,
+                self.app_surface.config.height,
+            );
+            self.ctrl_panel
+                .setting
+                .update_canvas_size(&self.app_surface, canvas_size);
+            self.canvas_size = canvas_size;
+            self.canvas_buf = crate::util::BufferObj::create_empty_storage_buffer(
+                &self.app_surface.device,
+                (canvas_size.x * canvas_size.y * 12) as u64,
+                false,
+                Some("canvas_buf"),
+            );
+
+            if !self.simulator.resize(&self.app_surface) {
+                self.create_simulator();
+            }
+
+            self.size_changed = false;
+            self.frame_count = 0;
         }
     }
 
@@ -164,6 +181,9 @@ impl SimuverseApp {
     }
 
     pub fn render(&mut self) {
+        self.frame_count += 1;
+        self.resize_surface_if_needed();
+
         let mut encoder =
             self.app_surface
                 .device

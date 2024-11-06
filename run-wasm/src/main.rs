@@ -17,5 +17,36 @@ fn main() {
     let _ = std::fs::create_dir_all(&out_dir);
     let _ = copy_items(&[&wgsl_path, &img_path], out_dir, &copy_options);
 
-    cargo_run_wasm::run_wasm_with_css("body { margin: 0px; }");
+    cargo_run_wasm::run_wasm_with_css(
+        r#"
+    body, div, canvas { margin: 0px; padding: 0px; } 
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg,
+          white 0%,
+          white 49%,
+          black 49%,
+          black 51%,
+          white 51%,
+          white 100%) repeat;
+        background-size: 20px 20px;
+        width: 100vw;
+        height: 100vh;
+    }
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-color: #454545;
+    }
+    #simuverse_container {
+        width: 100vw;
+        height: 100vh;
+        min-width: 600px;
+        min-height: 450px;
+    }
+    "#,
+    );
 }

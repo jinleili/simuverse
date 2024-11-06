@@ -253,13 +253,13 @@ fn generate_pipeline(
         layout: Some(pipeline_layout),
         vertex: wgpu::VertexState {
             module: shader,
-            entry_point: entry_points.0,
+            entry_point: Some(entry_points.0),
             buffers: &buffers,
             compilation_options: Default::default(),
         },
         fragment: Some(wgpu::FragmentState {
             module: shader,
-            entry_point: entry_points.1,
+            entry_point: Some(entry_points.1),
             targets: &targets,
             compilation_options: Default::default(),
         }),

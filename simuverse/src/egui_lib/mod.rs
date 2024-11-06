@@ -1,7 +1,7 @@
 pub(crate) fn show_code(ui: &mut egui::Ui, code: &str) {
     let code = remove_leading_indentation(code.trim_start_matches('\n'));
     let language = "rs";
-    let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
+    let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx(), &ui.style());
     egui_extras::syntax_highlighting::code_view_ui(ui, &theme, &code, language);
 }
 

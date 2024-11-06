@@ -30,13 +30,13 @@ impl BufferlessFullscreenNode {
             layout: None,
             vertex: wgpu::VertexState {
                 module: shader_module,
-                entry_point: "vs_main",
+                entry_point: Some("vs_main"),
                 buffers: &pipeline_vertex_buffers,
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: shader_module,
-                entry_point: "fs_main",
+                entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format,
                     blend: blend_state,

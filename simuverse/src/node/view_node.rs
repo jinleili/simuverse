@@ -215,13 +215,13 @@ impl ViewNode {
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
                 module: attributes.shader_module,
-                entry_point: "vs_main",
+                entry_point: Some("vs_main"),
                 buffers: &vertex_buffer_layouts,
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: attributes.shader_module,
-                entry_point: "fs_main",
+                entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: corlor_format,
                     blend: attributes.color_blend_state,
