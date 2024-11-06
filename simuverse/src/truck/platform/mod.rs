@@ -268,6 +268,7 @@ pub struct Scene {
 #[derive(Debug, Clone)]
 pub struct DeviceHandler {
     pub device: Arc<Device>,
+    #[allow(dead_code)]
     pub queue: Arc<Queue>,
 }
 
