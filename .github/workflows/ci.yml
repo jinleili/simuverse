@@ -6,7 +6,7 @@ env:
   CARGO_INCREMENTAL: false
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: full
-  MSRV: 1.80
+  MSRV: 1.79
 
 jobs:
   check-msrv:
@@ -63,7 +63,7 @@ jobs:
   #       run: rustup target add wasm32-unknown-unknown
 
   #     - name: Install wasm-bindgen-cli
-  #       run: cargo install wasm-bindgen-cli --version=0.2.84
+  #       run: cargo install wasm-bindgen-cli --version=0.2.95
 
   #     - name: Clippy
   #       run: RUSTFLAGS=--cfg=web_sys_unstable_apis cargo clippy --target wasm32-unknown-unknown
