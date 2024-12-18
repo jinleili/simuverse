@@ -6,7 +6,7 @@ edition = "2021"
 rust-version = "1.79"
 
 [dependencies]
-app-surface = "1.2.4"
+app-surface = "1.3.2"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
 egui = { git = "https://github.com/emilk/egui", rev = "5d6a58b", default-features = false }
 egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "5d6a58b" }
@@ -52,14 +52,15 @@ truck-polymesh = { version = "0.5.0" }
 instant = { version = "0.1.12", features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
-fern = "0.6"
-js-sys = "0.3.72"
+fern = "0.7"
+js-sys = "0.3.76"
 reqwest = "0.11.15"
-wasm-bindgen = "0.2.95"
-wasm-bindgen-futures = "0.4.45"
-web-sys = { version = "0.3.72", features = [
+wasm-bindgen = "0.2.99"
+wasm-bindgen-futures = "0.4.49"
+web-sys = { version = "0.3.76", features = [
     "Blob",
     "Document",
+    "Location",
     'Element',
     'HtmlElement',
     "Node",
