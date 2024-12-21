@@ -25,7 +25,7 @@ wgpu = { version = "23", features = ["fragile-send-sync-non-atomic-wasm"] }
 glam = "0.29"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
-bytemuck = "1.18"
+bytemuck = "1.19"
 env_logger = "0.10"
 log = "0.4"
 parking_lot = "0.12"
@@ -39,7 +39,7 @@ cfg-if = "1"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster = "0.3"
 # truck dependencies
-instant = { version = "0.1.12", features = ["now"] }
+instant = { version = "0.1.13", features = ["now"] }
 rayon = "1.8"
 rustc-hash = "1.1.0"
 serde_json = "1.0.93"
@@ -49,7 +49,7 @@ truck-modeling = { version = "0.5.1" }
 truck-polymesh = { version = "0.5.0" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-instant = { version = "0.1.12", features = ["now", "wasm-bindgen"] }
+instant = { version = "0.1.13", features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
 fern = "0.7"

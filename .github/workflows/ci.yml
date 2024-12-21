@@ -21,8 +21,8 @@ jobs:
             target: x86_64-pc-windows-msvc
 
           # MacOS
-          - name: MacOS x86_64
-            os: macos-12
+          - name: MacOS
+            os: macos-15
             target: x86_64-apple-darwin
 
           # Linux
