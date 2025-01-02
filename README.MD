@@ -1,7 +1,7 @@
 # Simuverse
 
 ![Minimum Rust Version](https://img.shields.io/badge/min%20rust-1.79-green.svg)
-[![Build Status](https://github.com/jinleili/simuverse/workflows/CI/badge.svg?branch=main)](https://github.com/jinleili/simuverse/actions)
+[![Build Status](https://github.com/jinleili/simuverse/workflows/CI/badge.svg)](https://github.com/jinleili/simuverse/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jinleili/simuverse#license)
 
 Simulate particle vector fields, fluid dynamics, procedural textures, and position-based dynamics based on [wgpu](https://github.com/gfx-rs/wgpu) + [egui](https://github.com/emilk/egui).
