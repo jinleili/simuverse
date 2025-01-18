@@ -47,6 +47,7 @@ impl ParticleRenderNode {
                         mip_level_count: None,
                         base_array_layer: i,
                         array_layer_count: Some(1),
+                        ..Default::default()
                     }),
             );
         }

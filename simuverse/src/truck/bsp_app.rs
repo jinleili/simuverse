@@ -24,7 +24,7 @@ impl BSplineApp {
         let creator = scene.instance_creator();
         let surface = Self::init_surface(3, 4);
         let object = creator.create_instance(
-            &StructuredMesh::from_surface(&surface, surface.parameter_range(), 0.01),
+            &StructuredMesh::from_surface(&surface, surface.range_tuple(), 0.01),
             &Default::default(),
         );
         scene.add_object(&object);
@@ -97,7 +97,7 @@ impl BSplineApp {
                     drop(surface);
                     mesh = Some(StructuredMesh::from_surface(
                         &surface0,
-                        surface0.parameter_range(),
+                        surface0.range_tuple(),
                         0.01,
                     ));
                 }

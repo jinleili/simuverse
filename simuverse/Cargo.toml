@@ -3,15 +3,17 @@ name = "simuverse"
 version = "0.2.0"
 authors = ["Jinlei Li <jinleili0@outlook.com>"]
 edition = "2021"
-rust-version = "1.79"
+rust-version = "1.83"
 
 [dependencies]
-app-surface = "1.3.2"
+app-surface = "1.4.2"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
-egui = { git = "https://github.com/emilk/egui", rev = "5d6a58b", default-features = false }
-egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "5d6a58b" }
-egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "5d6a58b" }
-egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "5d6a58b", default-features = false }
+bytemuck = { version = "1.21", features = ["derive", "min_const_generics"] }
+
+egui = { git = "https://github.com/emilk/egui", rev = "cf965aa", default-features = false }
+egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "cf965aa" }
+egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "cf965aa" }
+egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "cf965aa", default-features = false }
 # egui = { version="0.28.1", default-features = false }
 # egui_extras = { version="0.28.1" }
 # egui-wgpu = { version="0.28.1" }
@@ -19,13 +21,12 @@ egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", re
 
 webbrowser = { version = "1.0.1" }
 # 与 egui 中使用的版本对齐
-winit = { version = "0.30.5" }
+winit = { version = "0.30.7" }
 raw-window-handle = "0.6"
-wgpu = { version = "23", features = ["fragile-send-sync-non-atomic-wasm"] }
+wgpu = { version = "24", features = ["fragile-send-sync-non-atomic-wasm"] }
 glam = "0.29"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
-bytemuck = "1.19"
 env_logger = "0.10"
 log = "0.4"
 parking_lot = "0.12"
@@ -40,24 +41,22 @@ cfg-if = "1"
 pollster = "0.3"
 # truck dependencies
 instant = { version = "0.1.13", features = ["now"] }
-rayon = "1.8"
-rustc-hash = "1.1.0"
-serde_json = "1.0.93"
-truck-base = { version = "0.4.0" }
-truck-meshalgo = { version = "0.3.0" }
-truck-modeling = { version = "0.5.1" }
-truck-polymesh = { version = "0.5.0" }
+rustc-hash = "2.1"
+truck-base = { version = "0.5" }
+truck-meshalgo = { version = "0.4" }
+truck-modeling = { version = "0.6" }
+truck-polymesh = { version = "0.6" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 instant = { version = "0.1.13", features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
 fern = "0.7"
-js-sys = "0.3.76"
-reqwest = "0.11.15"
-wasm-bindgen = "0.2.99"
-wasm-bindgen-futures = "0.4.49"
-web-sys = { version = "0.3.76", features = [
+js-sys = "0.3.77"
+reqwest = "0.12"
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", features = [
     "Blob",
     "Document",
     "Location",
