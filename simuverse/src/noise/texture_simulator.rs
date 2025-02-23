@@ -1,7 +1,7 @@
 use crate::{
+    Simulator,
     noise::{create_gradient_buf, create_permulation_buf},
     util::BufferObj,
-    Simulator,
 };
 
 use super::sphere_display::SphereDisplay;

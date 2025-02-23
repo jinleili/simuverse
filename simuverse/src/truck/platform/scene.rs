@@ -6,7 +6,7 @@ static MAXID: AtomicUsize = AtomicUsize::new(0);
 impl RenderID {
     /// Generate the unique `RenderID`.
     #[inline(always)]
-    pub fn gen() -> Self {
+    pub fn gen_id() -> Self {
         RenderID(MAXID.fetch_add(1, Ordering::SeqCst))
     }
 }

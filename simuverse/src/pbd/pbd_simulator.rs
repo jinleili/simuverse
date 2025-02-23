@@ -1,5 +1,5 @@
 use super::{Cloth, ClothFabric};
-use crate::{util::AnyTexture, Simulator};
+use crate::{Simulator, util::AnyTexture};
 use app_surface::AppSurface;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{sync::mpsc, thread};

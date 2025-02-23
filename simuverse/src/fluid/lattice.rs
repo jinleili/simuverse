@@ -1,4 +1,4 @@
-use super::{is_sd_sphere, OBSTACLE_RADIUS};
+use super::{OBSTACLE_RADIUS, is_sd_sphere};
 use crate::FieldAnimationType;
 
 #[repr(C)]

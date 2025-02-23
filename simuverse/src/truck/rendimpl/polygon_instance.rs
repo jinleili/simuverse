@@ -16,12 +16,13 @@ impl PolygonInstance {
 
     #[inline(always)]
     fn non_textured_bdl(&self, device: &Device) -> BindGroupLayout {
-        bind_group_util::create_bind_group_layout(device, {
+        bind_group_util::create_bind_group_layout(
+            device,
             &[
                 PolygonState::matrix_bgl_entry(),
                 PolygonState::material_bgl_entry(),
-            ]
-        })
+            ],
+        )
     }
 
     #[inline(always)]

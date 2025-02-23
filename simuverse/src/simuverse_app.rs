@@ -1,9 +1,8 @@
 use crate::{
-    noise::TextureSimulator, util::AnyTexture, util::BufferObj, ControlPanel, EguiLayer,
-    FieldSimulator, FluidSimulator, SimuType, Simulator, DEPTH_FORMAT,
+    ControlPanel, DEPTH_FORMAT, EguiLayer, FieldSimulator, FluidSimulator, SimuType, Simulator,
+    noise::TextureSimulator, util::AnyTexture, util::BufferObj,
 };
 use app_surface::{AppSurface, SurfaceFrame};
-use std::iter;
 use std::sync::Arc;
 use wgpu::TextureView;
 use winit::dpi::PhysicalSize;
@@ -237,13 +236,11 @@ impl SimuverseApp {
         }
 
         if let Some(egui_cmd_bufs) = egui_cmd_buffers {
-            self.app_surface.queue.submit(
-                egui_cmd_bufs
-                    .into_iter()
-                    .chain(iter::once(encoder.finish())),
-            );
+            self.app_surface
+                .queue
+                .submit(egui_cmd_bufs.into_iter().chain(Some(encoder.finish())));
         } else {
-            self.app_surface.queue.submit(iter::once(encoder.finish()));
+            self.app_surface.queue.submit(Some(encoder.finish()));
         }
         output.present();
 

@@ -1,5 +1,5 @@
 use crate::util::BufferObj;
-use crate::{get_particles_data, FieldAnimationType, ParticleColorType, ParticleUniform, SimuType};
+use crate::{FieldAnimationType, ParticleColorType, ParticleUniform, SimuType, get_particles_data};
 
 pub struct SettingObj {
     canvas_size: glam::UVec2,

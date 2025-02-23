@@ -1,6 +1,6 @@
 use crate::CADSetting;
 
-use super::{platform::*, rendimpl::*, CADApp, RenderMode};
+use super::{CADApp, RenderMode, platform::*, rendimpl::*};
 use app_surface::AppSurface;
 use std::io::Read;
 use truck_meshalgo::prelude::*;

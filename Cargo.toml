@@ -1,7 +1,11 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["simuverse", "run-wasm"]
 default-members = ["simuverse"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
 
 [profile.wasm-release]
 # Use release profile as default values

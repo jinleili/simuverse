@@ -1,12 +1,11 @@
 use std::borrow::BorrowMut;
 
-use super::{init_lattice_material, is_sd_sphere, LatticeInfo, LatticeType, OBSTACLE_RADIUS};
+use super::{LatticeInfo, LatticeType, OBSTACLE_RADIUS, init_lattice_material, is_sd_sphere};
 use crate::{
-    create_shader_module,
+    FieldAnimationType, FieldUniform, SettingObj, create_shader_module,
     fluid::LbmUniform,
     node::{BindGroupData, BindGroupSetting, ComputeNode},
     util::{AnyTexture, BufferObj},
-    FieldAnimationType, FieldUniform, SettingObj,
 };
 use wgpu::TextureFormat;
 

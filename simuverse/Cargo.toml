@@ -2,18 +2,18 @@
 name = "simuverse"
 version = "0.2.0"
 authors = ["Jinlei Li <jinleili0@outlook.com>"]
-edition = "2021"
-rust-version = "1.83"
+edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
-app-surface = "1.4.2"
+app-surface = "1.5"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
 bytemuck = { version = "1.21", features = ["derive", "min_const_generics"] }
 
-egui = { git = "https://github.com/emilk/egui", rev = "cf965aa", default-features = false }
-egui_extras = { git = "https://github.com/emilk/egui", package = "egui_extras", rev = "cf965aa" }
-egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "cf965aa" }
-egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "cf965aa", default-features = false }
+egui = { version = "0.31", default-features = false }
+egui_extras = { version = "0.31", package = "egui_extras" }
+egui-wgpu = { version = "0.31", package = "egui-wgpu" }
+egui-winit = { version = "0.31", package = "egui-winit", default-features = false }
 # egui = { version="0.28.1", default-features = false }
 # egui_extras = { version="0.28.1" }
 # egui-wgpu = { version="0.28.1" }
@@ -34,7 +34,7 @@ rand = "0.8"
 # 为了让 rand 支持 web 环境
 getrandom = { version = "0.2", features = ["js"] }
 
-image = { version = "*" }
+image = { version = "*", default-features = false, features = ["png", "jpeg"] }
 cfg-if = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -52,11 +52,11 @@ instant = { version = "0.1.13", features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
 fern = "0.7"
-js-sys = "0.3.77"
+js-sys = { version = "0.3.77", default-features = false }
 reqwest = "0.12"
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
-web-sys = { version = "0.3.77", features = [
+web-sys = { version = "0.3.77", default-features = false, features = [
     "Blob",
     "Document",
     "Location",
@@ -65,10 +65,7 @@ web-sys = { version = "0.3.77", features = [
     "Node",
     "NodeList",
     "HtmlCanvasElement",
-    "ImageBitmap",
-    "ImageBitmapRenderingContext",
     "Url",
     "Window",
-    "WorkerGlobalScope",
     "XmlHttpRequest",
 ] }

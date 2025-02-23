@@ -173,7 +173,7 @@ impl ToInstance<WireFrameInstance> for Vec<(Point3, Point3)> {
             strips: Arc::new(ib),
             state: state.clone(),
             shaders: shaders.clone(),
-            id: RenderID::gen(),
+            id: RenderID::gen_id(),
         }
     }
 }

@@ -33,10 +33,10 @@ pub mod pbd;
 #[cfg(not(target_arch = "wasm32"))]
 mod truck;
 #[cfg(not(target_arch = "wasm32"))]
+pub use truck::CADObjViewer;
+#[cfg(not(target_arch = "wasm32"))]
 #[allow(unused)]
 pub(crate) use truck::platform::rendered_macros;
-#[cfg(not(target_arch = "wasm32"))]
-pub use truck::CADObjViewer;
 
 pub mod util;
 use util::shader::{create_shader_module, insert_code_then_create};
@@ -234,7 +234,7 @@ pub struct Pixel {
     pub rho: f32,
 }
 
-use rand::{prelude::Distribution, Rng};
+use rand::{Rng, prelude::Distribution};
 
 const MAX_PARTICLE_COUNT: usize = 205000;
 fn get_particles_data(

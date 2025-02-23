@@ -82,7 +82,7 @@ impl SphereDisplay {
         //     &mut encoder,
         //     wgpu::LoadOp::Clear(wgpu::Color::BLACK),
         // );
-        // app.queue.submit(std::iter::once(encoder.finish()));
+        // app.queue.submit(Some(encoder.finish()));
     }
 
     pub fn draw_by_pass<'a, 'b: 'a>(

@@ -1,13 +1,13 @@
 use crate::CADSetting;
 
+use super::CADApp;
 use super::platform::*;
 use super::rendimpl::*;
-use super::CADApp;
 use app_surface::AppSurface;
 use std::ops::Deref;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
 };
 use std::thread::*;
 use truck_modeling::*;

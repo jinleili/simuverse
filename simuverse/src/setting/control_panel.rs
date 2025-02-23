@@ -53,7 +53,7 @@ impl ControlPanel {
         bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 230);
         let panel_frame = egui::Frame {
             fill: bg,
-            rounding: 10.0.into(),
+            corner_radius: 10.0.into(),
             stroke: egui_ctx.style().visuals.widgets.noninteractive.fg_stroke,
             outer_margin: 0.5.into(), // so the stroke is within the bounds
             inner_margin: 12.0.into(),
