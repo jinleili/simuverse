@@ -1,4 +1,4 @@
-use std::borrow::BorrowMut;
+use core::borrow::BorrowMut;
 
 use super::{LatticeInfo, LatticeType, OBSTACLE_RADIUS, init_lattice_material, is_sd_sphere};
 use crate::{
@@ -59,7 +59,7 @@ impl D2Q9Node {
 
         let (_, sx, sy) = crate::util::matrix_helper::fullscreen_factor(
             (canvas_size.x as f32, canvas_size.y as f32).into(),
-            75.0 / 180.0 * std::f32::consts::PI,
+            75.0 / 180.0 * core::f32::consts::PI,
         );
         let field_uniform_data = FieldUniform {
             lattice_size: [lattice.width as i32, lattice.height as i32],

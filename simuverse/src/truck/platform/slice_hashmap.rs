@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use core::hash::Hash;
 use rustc_hash::FxHashMap as HashMap;
-use std::hash::Hash;
 
 /// Hashmap for optimizing iteration.
 #[derive(Clone, Debug)]

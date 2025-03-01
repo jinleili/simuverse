@@ -11,7 +11,7 @@ impl PolygonInstance {
     /// swap vertex buffers and index buffers
     #[inline(always)]
     pub fn swap_vertex(&mut self, other: &mut PolygonInstance) {
-        std::mem::swap(&mut self.polygon, &mut other.polygon);
+        ::core::mem::swap(&mut self.polygon, &mut other.polygon);
     }
 
     #[inline(always)]

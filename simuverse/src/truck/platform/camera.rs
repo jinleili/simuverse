@@ -36,7 +36,7 @@ impl Camera {
     ///
     /// # Examples
     /// ```
-    /// use std::f64::consts::PI;
+    /// use core::f64::consts::PI;
     /// use truck_platform::*;
     /// use truck_base::{cgmath64::*, tolerance::Tolerance};
     /// let mut camera = Camera::default();
@@ -54,7 +54,7 @@ impl Camera {
     /// Returns the direction of the head vector, the y-axis of the camera matrix.
     /// # Examples
     /// ```
-    /// use std::f64::consts::PI;
+    /// use core::f64::consts::PI;
     /// use truck_platform::*;
     /// use truck_base::{cgmath64::*, tolerance::Tolerance};
     /// let mut camera = Camera::default();
@@ -78,7 +78,7 @@ impl Camera {
     /// * `far_clip`: distance to the farthest face of the view volume
     /// # Examples
     /// ```
-    /// use std::f64::consts::PI;
+    /// use core::f64::consts::PI;
     /// use truck_base::{cgmath64::*, tolerance::Tolerance};
     /// use truck_platform::*;
     /// let matrix = Matrix4::look_at_rh(
@@ -118,7 +118,7 @@ impl Camera {
     /// # Examples
     /// ```
     /// // perspective camera
-    /// use std::f64::consts::PI;
+    /// use core::f64::consts::PI;
     /// use truck_base::{assert_near, cgmath64::*, tolerance::*};
     /// use truck_platform::*;
     ///
@@ -226,7 +226,7 @@ impl Camera {
     /// # Examples
     /// ```
     /// // Perspective case
-    /// use std::f64::consts::PI;
+    /// use core::f64::consts::PI;
     /// use truck_base::{assert_near, cgmath64::*, tolerance::Tolerance};
     /// use truck_platform::*;
     ///
@@ -325,7 +325,7 @@ impl Default for Camera {
     fn default() -> Camera {
         Camera::perspective_camera(
             Matrix4::identity(),
-            Rad(std::f64::consts::PI / 4.0),
+            Rad(::core::f64::consts::PI / 4.0),
             0.1,
             10.0,
         )

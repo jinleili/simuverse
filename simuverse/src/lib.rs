@@ -317,7 +317,7 @@ pub fn generate_circle_plane(r: f32, fan_segment: usize) -> (Vec<PosOnly>, Vec<u
 
     let mut index_list: Vec<u32> = Vec::with_capacity(fan_segment * 3);
 
-    let step = (std::f32::consts::PI * 2.0) / fan_segment as f32;
+    let step = (core::f32::consts::PI * 2.0) / fan_segment as f32;
     for i in 1..=fan_segment {
         let angle = step * i as f32;
         vertex_list.push(PosOnly {
@@ -353,11 +353,11 @@ pub fn generate_disc_plane(
     });
 
     let tangent_r = 1.0;
-    let tan_offset_angle = std::f32::consts::FRAC_PI_2;
+    let tan_offset_angle = core::f32::consts::FRAC_PI_2;
 
     let mut index_list: Vec<u32> = Vec::with_capacity(fan_segment * 6);
 
-    let step = (std::f32::consts::PI * 2.0) / fan_segment as f32;
+    let step = (core::f32::consts::PI * 2.0) / fan_segment as f32;
     for i in 1..fan_segment {
         let angle = step * i as f32;
         // 切线只表达大小与方向，可以任意平移，so, Z 与平面的 Z 坐标无关

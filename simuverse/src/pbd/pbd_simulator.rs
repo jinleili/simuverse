@@ -93,7 +93,7 @@ fn create_cloth_fabric(viewport_size: glam::Vec2) -> ClothFabric {
     let horizontal_pixel = viewport_size.x;
     let vertical_pixel = horizontal_pixel;
 
-    let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
+    let fovy: f32 = 75.0 / 180.0 * core::f32::consts::PI;
     let factor = crate::util::matrix_helper::fullscreen_factor(viewport_size, fovy);
     let a_pixel_on_ndc = factor.1 / viewport_size.x;
 

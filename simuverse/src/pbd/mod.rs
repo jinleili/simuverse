@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 mod cloth_fabric;
 pub use cloth_fabric::ClothFabric;
@@ -94,7 +94,7 @@ impl BendingConstraintObj {
 }
 
 impl Debug for BendingConstraintObj {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "({}, {}, {})", self.v, self.b0, self.b1)
     }
 }

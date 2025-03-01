@@ -16,8 +16,8 @@ impl Sphere {
     }
 
     pub fn generate_vertices(&self) -> (Vec<PosNormalUv>, Vec<u32>) {
-        let phi_len = std::f32::consts::PI * 2.0;
-        let theta_len = std::f32::consts::PI;
+        let phi_len = core::f32::consts::PI * 2.0;
+        let theta_len = core::f32::consts::PI;
 
         let mut index: u32 = 0;
         let mut grid: Vec<Vec<u32>> = vec![];

@@ -1,5 +1,5 @@
 use super::*;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use ::core::sync::atomic::{AtomicUsize, Ordering};
 
 static MAXID: AtomicUsize = AtomicUsize::new(0);
 
@@ -157,7 +157,7 @@ impl SceneDescriptor {
 /// When this struct is dropped, the backend buffers of scene will be updated.
 pub struct SceneDescriptorMut<'a>(&'a mut Scene);
 
-impl std::ops::Deref for SceneDescriptorMut<'_> {
+impl ::core::ops::Deref for SceneDescriptorMut<'_> {
     type Target = SceneDescriptor;
     #[inline(always)]
     fn deref(&self) -> &SceneDescriptor {
@@ -165,7 +165,7 @@ impl std::ops::Deref for SceneDescriptorMut<'_> {
     }
 }
 
-impl std::ops::DerefMut for SceneDescriptorMut<'_> {
+impl ::core::ops::DerefMut for SceneDescriptorMut<'_> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut SceneDescriptor {
         &mut self.0.scene_desc
@@ -269,7 +269,7 @@ impl Scene {
 
     /// Returns the elapsed time since the scene was created.
     #[inline(always)]
-    pub fn elapsed(&self) -> std::time::Duration {
+    pub fn elapsed(&self) -> ::core::time::Duration {
         self.clock.elapsed()
     }
 

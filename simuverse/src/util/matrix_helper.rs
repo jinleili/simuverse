@@ -7,7 +7,7 @@ pub fn perspective_fullscreen_mvp(viewport: glam::Vec2) -> (glam::Mat4, glam::Ma
 }
 
 pub fn perspective_mvp(viewport: glam::Vec2) -> (glam::Mat4, glam::Mat4, (f32, f32, f32)) {
-    let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
+    let fovy: f32 = 75.0 / 180.0 * core::f32::consts::PI;
     let p_matrix = glam::Mat4::perspective_rh(fovy, viewport.x / viewport.y, 0.1, 100.0);
 
     let factor = fullscreen_factor(viewport, fovy);
@@ -42,7 +42,7 @@ pub fn fullscreen_factor(viewport: glam::Vec2, fovy: f32) -> (f32, f32, f32) {
 
 #[allow(dead_code)]
 pub fn ortho_mvp(viewport_size: glam::Vec2) -> [[f32; 4]; 4] {
-    let fovy: f32 = 75.0 / 180.0 * std::f32::consts::PI;
+    let fovy: f32 = 75.0 / 180.0 * core::f32::consts::PI;
     let factor = fullscreen_factor(viewport_size, fovy);
     let p_matrix = glam::Mat4::orthographic_rh(
         -1.0 * factor.1,

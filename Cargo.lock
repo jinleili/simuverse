@@ -171,9 +171,9 @@ checksum = "c1fd03a028ef38ba2276dce7e33fcd6369c158a1bca17946c4b1b701891c1ff7"
 
 [[package]]
 name = "app-surface"
-version = "1.5.0"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4dab4f7bba0567b69b7749c6bce5945e63cf369f258835b2895d5276247f7ed"
+checksum = "a5c26a20db3f8a5dc19920fbd23b45399f907d6b86a047a94d22569f1fa34f36"
 dependencies = [
  "android_logger",
  "cfg-if",
@@ -185,7 +185,7 @@ dependencies = [
  "log",
  "ndk-sys 0.6.0+11769913",
  "objc",
- "pollster",
+ "pollster 0.4.0",
  "raw-window-handle",
  "wasm-bindgen",
  "web-sys",
@@ -2366,6 +2366,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22686f4785f02a4fcc856d3b3bb19bf6c8160d103f7a99cc258bddd0251dc7f2"
 
 [[package]]
+name = "pollster"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2895,7 +2901,7 @@ dependencies = [
  "js-sys",
  "log",
  "parking_lot",
- "pollster",
+ "pollster 0.3.0",
  "rand",
  "raw-window-handle",
  "reqwest",

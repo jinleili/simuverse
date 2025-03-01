@@ -190,7 +190,7 @@ impl CADApp for ObjApp {
         );
         Camera::perspective_camera(
             matrix.invert().unwrap(),
-            Rad(std::f64::consts::PI / 4.0),
+            Rad(core::f64::consts::PI / 4.0),
             0.1,
             40.0,
         )

@@ -4,12 +4,13 @@ use super::CADApp;
 use super::platform::*;
 use super::rendimpl::*;
 use app_surface::AppSurface;
-use std::ops::Deref;
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+use core::{
+    ops::Deref,
+    sync::atomic::{AtomicBool, Ordering},
 };
+use std::sync::{Arc, Mutex};
 use std::thread::*;
+
 use truck_modeling::*;
 
 pub struct BSplineApp {
