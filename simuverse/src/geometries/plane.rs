@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::util::vertex::PosUv;
+use alloc::{vec, vec::Vec};
 
 pub struct Plane {
     width: f32,

@@ -1,4 +1,5 @@
 use crate::{ControlPanel, SettingObj, Simulator};
+use alloc::{boxed::Box, vec};
 use app_surface::AppSurface;
 
 use super::{CADApp, CADAppType, bsp_app::BSplineApp, obj_app::ObjApp, platform::*, rendimpl::*};

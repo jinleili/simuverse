@@ -41,10 +41,12 @@
     unused_import_braces,
     unused_qualifications
 )]
-
+use alloc::{
+    sync::Arc,
+    {vec, vec::Vec},
+};
 use app_surface::AppSurface;
 use bytemuck::{Pod, Zeroable};
-use std::sync::Arc;
 use truck_base::cgmath64::*;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::*;

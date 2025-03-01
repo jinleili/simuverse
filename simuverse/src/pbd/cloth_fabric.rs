@@ -1,5 +1,6 @@
 use super::{BendingConstraintObj, MeshColoringObj, StretchConstraintObj};
 use crate::util::vertex::PosParticleIndex;
+use alloc::{vec, vec::Vec};
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]

@@ -1,4 +1,5 @@
 use crate::FieldAnimationType;
+use alloc::string::String;
 
 pub fn get_velocity_code_snippet(ty: FieldAnimationType) -> String {
     match ty {

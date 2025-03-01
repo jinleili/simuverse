@@ -1,4 +1,5 @@
 use crate::util::vertex::PosNormalUv;
+use alloc::{vec, vec::Vec};
 
 pub struct Sphere {
     radius: f32,

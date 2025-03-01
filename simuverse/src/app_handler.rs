@@ -1,8 +1,8 @@
 use crate::SimuverseApp;
+use alloc::rc::Rc;
+use alloc::sync::Arc;
 use glam::Vec2;
 use parking_lot::Mutex;
-use std::rc::Rc;
-use std::sync::Arc;
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
@@ -185,7 +185,7 @@ impl ApplicationHandler for SimuverseAppHandler {
             WindowEvent::Resized(physical_size) => {
                 if physical_size.width == 0 || physical_size.height == 0 {
                     // 处理最小化窗口的事件
-                    println!("Window minimized!");
+                    log::info!("Window minimized!");
                 } else {
                     app.set_window_resized(physical_size);
                 }

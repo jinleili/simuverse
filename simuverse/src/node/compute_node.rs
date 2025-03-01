@@ -3,8 +3,8 @@ use wgpu::{PushConstantRange, ShaderModule};
 use super::{BindGroupSetting, DynamicUniformBindGroup};
 use crate::util::BufferObj;
 
+use alloc::{vec, vec::Vec};
 use core::ops::Range;
-use std::vec::Vec;
 
 pub struct ComputeNode {
     pub bg_setting: BindGroupSetting,

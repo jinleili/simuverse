@@ -2,6 +2,7 @@ use crate::{
     CADSetting, FieldAnimationType, NoiseSetting, PBDSetting, ParticleColorType, SettingObj,
     SimuType,
 };
+use alloc::{borrow::ToOwned, string::String, vec};
 use app_surface::AppSurface;
 use egui::{CollapsingHeader, Color32, Context, Ui};
 

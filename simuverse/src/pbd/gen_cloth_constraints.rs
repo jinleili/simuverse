@@ -1,5 +1,6 @@
 use super::cloth_fabric::ParticleBufferObj;
 use super::{BendingConstraintObj, MeshColoringObj, StretchConstraintObj};
+use alloc::{vec, vec::Vec};
 
 #[allow(dead_code)]
 pub fn generate_bend_constraints(

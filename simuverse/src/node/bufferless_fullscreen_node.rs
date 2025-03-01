@@ -1,4 +1,5 @@
 use crate::DEPTH_FORMAT;
+use alloc::{vec, vec::Vec};
 use wgpu::{PrimitiveTopology, ShaderModule, TextureFormat};
 
 use super::BindGroupData;

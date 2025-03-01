@@ -1,4 +1,5 @@
 use crate::util::BufferObj;
+use alloc::{vec, vec::Vec};
 use wgpu::util::DeviceExt;
 
 use crate::{TrajectoryUniform, create_shader_module};

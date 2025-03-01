@@ -1,3 +1,11 @@
+#![no_std]
+
+#[cfg(feature = "std")]
+extern crate std;
+
+extern crate alloc;
+use alloc::{vec, vec::Vec};
+
 use app_surface::AppSurface;
 
 mod simuverse_app;

@@ -3,6 +3,7 @@ use crate::{
     node::{BindGroupData, ComputeNode},
     noise::{create_gradient_buf, create_permulation_buf},
 };
+use alloc::vec;
 
 pub struct D3NoiseTexture {
     pub tex: crate::util::AnyTexture,

@@ -14,8 +14,8 @@
 )]
 
 use super::platform::*;
+use alloc::{string::ToString, sync::Arc, vec, vec::Vec};
 use bytemuck::{Pod, Zeroable};
-use std::sync::Arc;
 use wgpu::*;
 /// Re-exports `truck_polymesh`.
 pub mod polymesh {

@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use alloc::{vec, vec::Vec};
+
 pub trait Vertex {
     fn vertex_attributes(offset: u32) -> Vec<wgpu::VertexAttribute>;
 }

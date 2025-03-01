@@ -1,6 +1,7 @@
 use crate::node::{BindGroupData, BufferlessFullscreenNode, ComputeNode};
 use crate::util::BufferObj;
 use crate::{FieldUniform, SettingObj, Simulator};
+use alloc::vec;
 use app_surface::AppSurface;
 use wgpu::CommandEncoderDescriptor;
 

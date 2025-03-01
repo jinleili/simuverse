@@ -2,7 +2,7 @@
 //!
 //! 相关论文：http://staffwww.itn.liu.se/%7Estegu/simplexnoise/simplexnoise.pdf
 
-use std::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 mod d3_noise_texture;
 pub use d3_noise_texture::D3NoiseTexture;

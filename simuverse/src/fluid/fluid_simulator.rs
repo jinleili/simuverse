@@ -5,6 +5,7 @@ use crate::{
     node::{BindGroupData, BufferlessFullscreenNode, ComputeNode},
     util::BufferObj,
 };
+use alloc::vec;
 use wgpu::TextureFormat;
 
 use crate::create_shader_module;

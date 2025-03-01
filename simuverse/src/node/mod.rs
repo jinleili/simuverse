@@ -13,6 +13,7 @@ mod bufferless_fullscreen_node;
 pub use bufferless_fullscreen_node::BufferlessFullscreenNode;
 
 use crate::util::{AnyTexture, BufferObj};
+use alloc::vec::Vec;
 
 #[derive(Default, Clone)]
 pub struct BindGroupData<'a> {

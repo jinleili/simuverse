@@ -1,5 +1,5 @@
 use crate::util::BufferObj;
-use std::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 #[allow(dead_code)]
 pub struct DynamicUniformBindGroup {

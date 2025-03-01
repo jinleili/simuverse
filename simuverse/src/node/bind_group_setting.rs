@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use alloc::{vec, vec::Vec};
 use wgpu::TextureFormat;
 
 use super::BindGroupData;

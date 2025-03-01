@@ -3,13 +3,13 @@ use crate::CADSetting;
 use super::CADApp;
 use super::platform::*;
 use super::rendimpl::*;
+use alloc::{sync::Arc, vec::Vec};
 use app_surface::AppSurface;
 use core::{
     ops::Deref,
     sync::atomic::{AtomicBool, Ordering},
 };
-use std::sync::{Arc, Mutex};
-use std::thread::*;
+use std::{sync::Mutex, thread::*};
 
 use truck_modeling::*;
 
@@ -73,9 +73,9 @@ impl BSplineApp {
         std::thread::spawn(move || {
             let mut time: f64 = 0.0;
             let mut count = 0;
-            let mut instant = std::time::Instant::now();
+            // let mut instant = std::time::Instant::now();
             loop {
-                std::thread::sleep(std::time::Duration::from_millis(1));
+                std::thread::sleep(core::time::Duration::from_millis(1));
                 if closed.load(Ordering::SeqCst) {
                     break;
                 }
@@ -86,9 +86,9 @@ impl BSplineApp {
                 count += 1;
                 time += 0.1;
                 if count == 100 {
-                    let fps_inv = instant.elapsed().as_secs_f64();
-                    println!("{}", 100.0 / fps_inv);
-                    instant = std::time::Instant::now();
+                    // let fps_inv = instant.elapsed().as_secs_f64();
+                    // println!("{}", 100.0 / fps_inv);
+                    // instant = std::time::Instant::now();
                     count = 0;
                 }
                 let mut mesh = None;

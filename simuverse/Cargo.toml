@@ -5,6 +5,10 @@ authors = ["Jinlei Li <jinleili0@outlook.com>"]
 edition.workspace = true
 rust-version.workspace = true
 
+[features]
+default = ["std"]
+std = []
+
 [dependencies]
 app-surface = "1.5"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
@@ -23,7 +27,7 @@ webbrowser = { version = "1.0.1" }
 # 与 egui 中使用的版本对齐
 winit = { version = "0.30.7" }
 raw-window-handle = "0.6"
-wgpu = { version = "24", features = ["fragile-send-sync-non-atomic-wasm"] }
+wgpu = { version = "24" }
 glam = "0.29"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
@@ -38,7 +42,7 @@ image = { version = "*", default-features = false, features = ["png", "jpeg"] }
 cfg-if = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pollster = "0.3"
+pollster = "0.4"
 # truck dependencies
 instant = { version = "0.1.13", features = ["now"] }
 rustc-hash = "2.1"
@@ -57,13 +61,9 @@ reqwest = "0.12"
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
 web-sys = { version = "0.3.77", default-features = false, features = [
-    "Blob",
     "Document",
     "Location",
-    'Element',
     'HtmlElement',
-    "Node",
-    "NodeList",
     "HtmlCanvasElement",
     "Url",
     "Window",

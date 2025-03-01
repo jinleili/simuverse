@@ -4,6 +4,7 @@ use crate::{
     node::{BindGroupData, ViewNode, ViewNodeBuilder},
     util::BufferObj,
 };
+use alloc::vec;
 use app_surface::AppSurface;
 use wgpu::ShaderStages;
 

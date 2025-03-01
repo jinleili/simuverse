@@ -2,8 +2,8 @@ use crate::{
     ControlPanel, DEPTH_FORMAT, EguiLayer, FieldSimulator, FluidSimulator, SimuType, Simulator,
     noise::TextureSimulator, util::AnyTexture, util::BufferObj,
 };
+use alloc::{boxed::Box, sync::Arc};
 use app_surface::{AppSurface, SurfaceFrame};
-use std::sync::Arc;
 use wgpu::TextureView;
 use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowId};

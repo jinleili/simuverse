@@ -3,6 +3,7 @@ use crate::{
     node::{BindGroupData, BufferlessFullscreenNode},
     util::{AnyTexture, load_texture, shader::create_shader_module},
 };
+use alloc::{vec, vec::Vec};
 use app_surface::AppSurface;
 use raw_window_handle::HasDisplayHandle;
 use winit::{event::WindowEvent, window::Window};

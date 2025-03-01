@@ -1,3 +1,4 @@
+use alloc::{vec, vec::Vec};
 use core::borrow::BorrowMut;
 
 use super::{LatticeInfo, LatticeType, OBSTACLE_RADIUS, init_lattice_material, is_sd_sphere};

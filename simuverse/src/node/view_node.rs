@@ -2,6 +2,7 @@ use super::{BindGroupData, BindGroupSetting};
 use crate::DEPTH_FORMAT;
 use crate::util::BufferObj;
 use crate::util::vertex::Vertex;
+use alloc::{vec, vec::Vec};
 use bytemuck::Pod;
 use core::ops::{Deref, DerefMut};
 use glam::{Vec2 as Size, Vec4 as Rect};

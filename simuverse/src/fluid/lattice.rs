@@ -1,5 +1,6 @@
 use super::{OBSTACLE_RADIUS, is_sd_sphere};
 use crate::FieldAnimationType;
+use alloc::{vec, vec::Vec};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

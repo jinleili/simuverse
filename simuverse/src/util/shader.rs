@@ -1,4 +1,5 @@
-use std::{borrow::Cow, fs::read_to_string, path::PathBuf};
+use super::*;
+use std::{fs::read_to_string, path::PathBuf};
 use wgpu::{ShaderModule, ShaderModuleDescriptor, ShaderSource};
 
 const SHADER_IMPORT: &str = "#include ";
@@ -91,7 +92,7 @@ fn parse_shader_source(source: &str, output: &mut String, base_path: &str) {
                 if let Some(include) = get_shader_funcs(import, base_path) {
                     parse_shader_source(&include, output, base_path);
                 } else {
-                    println!("shader parse error \n can't find shader functions: {import}");
+                    log::info!("shader parse error \n can't find shader functions: {import}");
                 }
             }
         } else {

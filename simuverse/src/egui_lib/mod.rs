@@ -1,3 +1,5 @@
+use alloc::string::String;
+
 pub(crate) fn show_code(ui: &mut egui::Ui, code: &str) {
     let code = remove_leading_indentation(code.trim_start_matches('\n'));
     let language = "rs";
