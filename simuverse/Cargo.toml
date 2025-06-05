@@ -10,49 +10,49 @@ default = ["std"]
 std = []
 
 [dependencies]
-app-surface = "1.5"
+app-surface = "1.6"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
-bytemuck = { version = "1.21", features = ["derive", "min_const_generics"] }
+bytemuck = { version = "1.22", features = ["derive", "min_const_generics"] }
 
-egui = { version = "0.31", default-features = false }
-egui_extras = { version = "0.31", package = "egui_extras" }
-egui-wgpu = { version = "0.31", package = "egui-wgpu" }
-egui-winit = { version = "0.31", package = "egui-winit", default-features = false }
-# egui = { version="0.28.1", default-features = false }
-# egui_extras = { version="0.28.1" }
-# egui-wgpu = { version="0.28.1" }
-# egui-winit = { version="0.28.1", default-features = false }
+# egui = { version = "0.31", default-features = false }
+# egui_extras = { version = "0.31", package = "egui_extras" }
+# egui-wgpu = { version = "0.31", package = "egui-wgpu" }
+# egui-winit = { version = "0.31", package = "egui-winit", default-features = false }
+egui = { git = "https://github.com/emilk/egui", rev = "773232b", default-features = false }
+egui_extras = { git = "https://github.com/emilk/egui", rev = "773232b", package = "egui_extras" }
+egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "773232b", default-features = false }
+egui-winit = { git = "https://github.com/emilk/egui", package = "egui-winit", rev = "773232b", default-features = false }
 
 webbrowser = { version = "1.0.1" }
 # 与 egui 中使用的版本对齐
 winit = { version = "0.30.7" }
 raw-window-handle = "0.6"
-wgpu = { version = "24" }
+wgpu = { version = "25" }
 glam = "0.29"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
-env_logger = "0.10"
+env_logger = "0.11"
 log = "0.4"
 parking_lot = "0.12"
 rand = "0.8"
 # 为了让 rand 支持 web 环境
 getrandom = { version = "0.2", features = ["js"] }
 
-image = { version = "*", default-features = false, features = ["png", "jpeg"] }
+image = { version = "*", default-features = false, features = ["png"] }
 cfg-if = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster = "0.4"
 # truck dependencies
 instant = { version = "0.1.13", features = ["now"] }
-rustc-hash = "2.1"
+rustc-hash = { version = "2.1", default-features = false }
 truck-base = { version = "0.5" }
 truck-meshalgo = { version = "0.4" }
 truck-modeling = { version = "0.6" }
 truck-polymesh = { version = "0.6" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-instant = { version = "0.1.13", features = ["now", "wasm-bindgen"] }
+instant = { version = "0.1.13", default-features = false , features = ["now", "wasm-bindgen"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0"
 fern = "0.7"
@@ -63,7 +63,6 @@ wasm-bindgen-futures = "0.4.50"
 web-sys = { version = "0.3.77", default-features = false, features = [
     "Document",
     "Location",
-    'HtmlElement',
     "HtmlCanvasElement",
     "Url",
     "Window",
