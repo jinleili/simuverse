@@ -1,3 +1,9 @@
+#!/bin/bash
+
+set -e 
+
+export RUSTFLAGS='--cfg getrandom_backend="wasm_js"'
+
 cargo build --profile wasm-release --target wasm32-unknown-unknown --bin simuverse
 
 # Generate bindings

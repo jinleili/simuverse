@@ -5,6 +5,7 @@ use crate::{
 };
 use alloc::{vec, vec::Vec};
 use app_surface::AppSurface;
+use egui_wgpu::RendererOptions;
 use raw_window_handle::HasDisplayHandle;
 use winit::{event::WindowEvent, window::Window};
 
@@ -45,7 +46,14 @@ impl EguiLayer {
             None,
             None,
         );
-        let egui_renderer = egui_wgpu::Renderer::new(&app.device, format, None, 1, false);
+        let egui_renderer = egui_wgpu::Renderer::new(
+            &app.device,
+            format,
+            RendererOptions {
+                msaa_samples: 1,
+                ..Default::default()
+            },
+        );
 
         Self {
             format,
@@ -120,6 +128,7 @@ impl EguiLayer {
                             load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
                             store: wgpu::StoreOp::Store,
                         },
+                        depth_slice: None,
                     })],
                     depth_stencil_attachment: None,
                     ..Default::default()

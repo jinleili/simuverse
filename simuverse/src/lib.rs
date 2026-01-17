@@ -278,15 +278,14 @@ fn init_trajectory_particles(
     life_time: f32,
 ) -> Vec<TrajectoryParticle> {
     let mut data: Vec<TrajectoryParticle> = vec![];
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let step_x = canvas_size.x as f32 / (num.width - 1) as f32;
     let step_y = canvas_size.y as f32 / (num.height - 1) as f32;
-    let unif_x = rand::distributions::Uniform::new_inclusive(-step_x, step_x);
-    let unif_y = rand::distributions::Uniform::new_inclusive(-step_y, step_y);
-    let unif_life = rand::distributions::Uniform::new_inclusive(
-        0.0,
-        if life_time <= 0.0 { 1.0 } else { life_time },
-    );
+    let unif_x = rand::distr::Uniform::new_inclusive(-step_x, step_x).unwrap();
+    let unif_y = rand::distr::Uniform::new_inclusive(-step_y, step_y).unwrap();
+    let unif_life =
+        rand::distr::Uniform::new_inclusive(0.0, if life_time <= 0.0 { 1.0 } else { life_time })
+            .unwrap();
 
     for x in 0..num.width {
         let pixel_x = step_x * x as f32;
@@ -296,7 +295,7 @@ fn init_trajectory_particles(
                 step_y * y as f32 + unif_y.sample(&mut rng),
             ];
             let pos_initial = if life_time <= 1.0 {
-                [rng.gen_range(0.0..step_x), pos[1]]
+                [rng.random_range(0.0..step_x), pos[1]]
             } else {
                 pos
             };

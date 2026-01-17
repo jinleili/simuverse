@@ -284,7 +284,7 @@ impl ControlPanel {
                 "rs",
             );
             layout_job.wrap.max_width = wrap_width;
-            ui.fonts(|f| f.layout_job(layout_job))
+            ui.fonts_mut(|f| f.layout_job(layout_job))
         };
         let theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx(), ui.style());
         egui_extras::syntax_highlighting::code_view_ui(
