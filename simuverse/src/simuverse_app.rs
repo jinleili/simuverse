@@ -198,9 +198,14 @@ impl SimuverseApp {
 
         self.simulator.compute(&mut encoder);
 
-        let (output, frame_view) = self
+        let fv = self
             .app_surface
             .get_current_frame_view(Some(self.app_surface.config.format.remove_srgb_suffix()));
+        if fv.is_none() {
+            // 获取 frame 失败，可能是 surface lost，此时不进行 render，等待下一帧再尝试获取 frame
+            return;
+        }
+        let (output, frame_view) = fv.unwrap();
         {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {

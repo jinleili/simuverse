@@ -1,4 +1,4 @@
-use wgpu::{PushConstantRange, ShaderModule};
+use wgpu::ShaderModule;
 
 use super::{BindGroupSetting, DynamicUniformBindGroup};
 use crate::util::BufferObj;
@@ -49,10 +49,10 @@ impl ComputeNode {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[
-                &bg_setting.bind_group_layout,
-                &dy_uniform_bg.bind_group_layout,
+                Some(&bg_setting.bind_group_layout),
+                Some(&dy_uniform_bg.bind_group_layout),
             ],
-            push_constant_ranges: &[],
+            immediate_size: 0,
         });
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
@@ -76,7 +76,7 @@ impl ComputeNode {
         device: &wgpu::Device,
         bg_data: &super::BindGroupData,
         shader_module: &ShaderModule,
-        push_constants: Option<Vec<(wgpu::ShaderStages, Range<u32>)>>,
+        push_constants: Option<Vec<(wgpu::ShaderStages, u32)>>,
     ) -> Self {
         let mut visibilitys: Vec<wgpu::ShaderStages> = vec![];
         for _ in
@@ -88,20 +88,17 @@ impl ComputeNode {
         bg_data.visibilitys = visibilitys;
         let bg_setting = BindGroupSetting::new(device, &bg_data);
 
-        let mut ranges: Vec<PushConstantRange> = vec![];
+        let mut ranges: Vec<u32> = vec![];
         if let Some(constants) = push_constants {
             for (stage, range) in constants.iter() {
-                ranges.push(wgpu::PushConstantRange {
-                    stages: *stage,
-                    range: range.clone(),
-                })
+                ranges.push(*range)
             }
         }
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&bg_setting.bind_group_layout],
-            push_constant_ranges: &ranges,
+            bind_group_layouts: &[Some(&bg_setting.bind_group_layout)],
+            immediate_size: ranges.len() as u32,
         });
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: None,
