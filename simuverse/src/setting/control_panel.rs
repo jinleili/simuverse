@@ -50,12 +50,13 @@ impl ControlPanel {
         // 实测出来的数值，避免圆角被裁剪
         let window_size: egui::emath::Vec2 = [panel_width - 26.0, panel_height].into();
 
-        let mut bg = egui_ctx.style().visuals.window_fill();
+        let style = egui_ctx.global_style();
+        let mut bg = style.visuals.window_fill();
         bg = egui::Color32::from_rgba_premultiplied(bg.r(), bg.g(), bg.b(), 230);
         let panel_frame = egui::Frame {
             fill: bg,
             corner_radius: 10.0.into(),
-            stroke: egui_ctx.style().visuals.widgets.noninteractive.fg_stroke,
+            stroke: style.visuals.widgets.noninteractive.fg_stroke,
             outer_margin: 0.5.into(), // so the stroke is within the bounds
             inner_margin: 12.0.into(),
             ..Default::default()
@@ -125,7 +126,7 @@ impl ControlPanel {
         (workgroup_count_changed, simu_ty_changed)
     }
 
-    pub fn ui_contents(&mut self, ctx: &Context) {
+    pub fn ui_contents(&mut self, ui: &mut Ui) {
         match self.selected_code_snippet {
             Some(code_index) if code_index != self.last_selected_code_snippet => {
                 self.last_selected_code_snippet = code_index;
@@ -137,7 +138,7 @@ impl ControlPanel {
             _ => {}
         }
 
-        self.top_bar_ui(ctx);
+        self.top_bar_ui(ui);
 
         let window = egui::Window::new(" Settings")
             .id(egui::Id::new("particles_window_options")) // required since we change the title
@@ -150,7 +151,7 @@ impl ControlPanel {
             .frame(self.panel_frame)
             .enabled(true);
 
-        window.show(ctx, |ui| {
+        window.show(ui.ctx(), |ui| {
             match self.selected_simu_type {
                 SimuType::Field | SimuType::Fluid => self.particles_ctrl_ui(ui),
                 SimuType::Noise => self.noise_setting.ui_contents(ui),
@@ -185,7 +186,7 @@ impl ControlPanel {
     ///
     /// # NOTE:
     /// 下边的  字符不是乱码，它是 iconfont 中的一个图标，编辑器中无法正确显示
-    fn top_bar_ui(&mut self, ctx: &Context) {
+    fn top_bar_ui(&mut self, ui: &mut Ui) {
         let mut menu_items = vec![
             ("Vector Field", SimuType::Field),
             ("LBM Fluid", SimuType::Fluid),
@@ -195,7 +196,7 @@ impl ControlPanel {
         if cfg!(not(target_arch = "wasm32")) {
             menu_items.push((" CAD Kenel", SimuType::CAD));
         }
-        egui::TopBottomPanel::top("simuverse_top_bar").show(ctx, |ui| {
+        egui::Panel::top("simuverse_top_bar").show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.visuals_mut().button_frame = false;
                 if ui

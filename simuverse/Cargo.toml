@@ -10,14 +10,14 @@ default = ["std"]
 std = []
 
 [dependencies]
-app-surface = "1.10"
+app-surface = "=1.12"
 # app-surface = { path = "../../idroid/wgpu-in-app/app-surface" }
 bytemuck = { version = "1.22", features = ["derive", "min_const_generics"] }
 
-egui = { version = "0.34", default-features = false }
-egui_extras = { version = "0.34", package = "egui_extras" }
-egui-wgpu = { version = "0.34", package = "egui-wgpu" }
-egui-winit = { version = "0.34", package = "egui-winit", default-features = false }
+egui = { version = "0.35", default-features = false }
+egui_extras = { version = "0.35", package = "egui_extras" }
+egui-wgpu = { version = "0.35", package = "egui-wgpu" }
+egui-winit = { version = "0.35", package = "egui-winit", default-features = false }
 # egui = { git = "https://github.com/emilk/egui", rev = "773232b", default-features = false }
 # egui_extras = { git = "https://github.com/emilk/egui", rev = "773232b", package = "egui_extras" }
 # egui-wgpu = { git = "https://github.com/emilk/egui", package = "egui-wgpu", rev = "773232b", default-features = false }
@@ -28,7 +28,7 @@ webbrowser = { version = "1.0.1" }
 winit = { version = "0.30.12", default-features = false }
 raw-window-handle = "0.6"
 wgpu = { version = "29" }
-glam = "0.30"
+glam = "0.32"
 # syntax_highlighting 需要 enum-map
 enum-map = { version = "2", features = ["serde"] }
 env_logger = "0.11"

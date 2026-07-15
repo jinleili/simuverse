@@ -5,7 +5,7 @@ default-members = ["simuverse"]
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.92"
+rust-version = "1.95"
 
 [profile.wasm-release]
 inherits = "release"

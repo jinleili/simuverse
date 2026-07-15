@@ -96,8 +96,8 @@ impl EguiLayer {
         self.egui_repaint -= 1;
 
         let raw_input = self.egui_state.take_egui_input(app.get_view());
-        let full_output = self.ctx.run(raw_input, |ctx| {
-            egui_app.ui_contents(ctx);
+        let full_output = self.ctx.run_ui(raw_input, |ui| {
+            egui_app.ui_contents(ui);
         });
         let clipped_primitives = self.ctx.tessellate(full_output.shapes, app.scale_factor);
         let textures_delta = full_output.textures_delta;
